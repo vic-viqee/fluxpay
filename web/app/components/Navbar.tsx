@@ -115,11 +115,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                       style={{ width: '100%', textAlign: 'left', padding: 'var(--spacing-4)', color: 'var(--color-text-secondary)', backgroundColor: 'transparent', border: '1px solid var(--color-border)', borderTop: '1px solid var(--color-border)', borderBottom: 'none', borderLeft: 'none', borderRight: 'none', cursor: 'pointer', transition: 'all 200ms ease-in-out', borderRadius: 0 }}
                       onMouseEnter={(e) => {
                         (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-danger-light)'
-                        (e.currentTarget as HTMLElement).style.color = 'var(--color-danger)'
+                          (e.currentTarget as HTMLElement).style.color = 'var(--color-danger)'
                       }}
                       onMouseLeave={(e) => {
                         (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'
-                        (e.currentTarget as HTMLElement).style.color = 'var(--color-text-secondary)'
+                          (e.currentTarget as HTMLElement).style.color = 'var(--color-text-secondary)'
                       }}
                     >
                       Log Out
@@ -209,50 +209,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.color = 'var(--color-danger)'}
                     onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.color = 'var(--color-text-secondary)'}
                   >
-                    Log Out
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </nav>
-  )
-}
-                <Link href="/blog" className="py-2 text-neutral-700 hover:text-primary-600">
-                  Blog
-                </Link>
-                <Link href="/testimonials" className="py-2 text-neutral-700 hover:text-primary-600">
-                  Testimonials
-                </Link>
-                <Link href="/about" className="py-2 text-neutral-700 hover:text-primary-600">
-                  About
-                </Link>
-
-                <div className="pt-2 flex flex-col gap-2">
-                  <Link href="/login" className="py-2 text-neutral-700">
-                    Log In
-                  </Link>
-                  <Link href="/signup" className="btn-primary w-full text-center">
-                    Sign Up
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <Link href="/dashboard" className="py-2 text-neutral-700 hover:text-primary-600">
-                  Dashboard
-                </Link>
-                <Link href="/dashboard/payments" className="py-2 text-neutral-700 hover:text-primary-600">
-                  Payments
-                </Link>
-                <Link href="/support" className="py-2 text-neutral-700 hover:text-primary-600">
-                  Help
-                </Link>
-
-                <div className="pt-2">
-                  <button onClick={onLogout} className="w-full text-left px-3 py-2 text-neutral-700 hover:bg-danger-50 hover:text-danger-700 rounded-md">
                     Log Out
                   </button>
                 </div>
