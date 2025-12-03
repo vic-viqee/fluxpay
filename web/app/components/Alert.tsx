@@ -1,6 +1,6 @@
 import React from 'react'
 
-interface AlertProps {
+interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
   variant: 'success' | 'danger' | 'warning' | 'info'
   title?: string
   children: React.ReactNode
@@ -18,6 +18,7 @@ export const Alert: React.FC<AlertProps> = ({
   closable = false,
   onClose,
   className = '',
+  ...props
 }) => {
   const variantClasses = {
     success: 'alert-success',
@@ -34,7 +35,7 @@ export const Alert: React.FC<AlertProps> = ({
   }
 
   return (
-    <div className={`alert ${variantClasses[variant]} ${className}`}>
+    <div className={`alert ${variantClasses[variant]} ${className}`} {...props}>
       <div className="flex gap-3">
         <div className="text-lg">{icon || iconMap[variant]}</div>
         <div className="flex-1">

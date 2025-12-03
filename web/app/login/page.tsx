@@ -2,21 +2,45 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Navbar, Button, Input, Card, Alert } from '@/app/components'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email || !password) {
       setError('Please fill in all fields')
       return
     }
-    // TODO: Implement actual login logic
+
+    setLoading(true)
     setError('')
+
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setError(result.error || 'Login failed. Please try again.')
+      } else if (result?.ok) {
+        router.push('/dashboard')
+      }
+    } catch (err) {
+      setError('An error occurred during login. Please try again.')
+      console.error('Login error:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -66,8 +90,8 @@ export default function Login() {
                 </Link>
               </div>
 
-              <Button variant="primary" size="lg" fullWidth type="submit" className="hover-lift">
-                Log In
+              <Button variant="primary" size="lg" fullWidth type="submit" disabled={loading} className="hover-lift">
+                {loading ? 'Logging in...' : 'Log In'}
               </Button>
             </form>
 

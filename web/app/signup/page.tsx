@@ -2,10 +2,14 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Navbar, Button, Input, Card, Alert, Badge } from '@/app/components'
 
 export default function SignUp() {
   const [step, setStep] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -46,10 +50,34 @@ export default function SignUp() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (validateStep2()) {
-      // TODO: Implement signup logic
+    if (!validateStep2()) {
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      // For now, create account with the provided credentials
+      // TODO: Call backend /auth/register endpoint with formData
+      // Then sign in
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setErrors({ submit: result.error || 'Signup failed. Please try again.' })
+      } else if (result?.ok) {
+        router.push('/dashboard')
+      }
+    } catch (err) {
+      setErrors({ submit: 'An error occurred during signup. Please try again.' })
+      console.error('Signup error:', err)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -72,6 +100,13 @@ export default function SignUp() {
                 </Badge>
               </div>
             </div>
+
+            {/* Submit Error Alert */}
+            {errors.submit && (
+              <Alert variant="danger">
+                {errors.submit}
+              </Alert>
+            )}
 
             {/* Step 1: Personal Info */}
             {step === 1 && (
@@ -198,6 +233,7 @@ export default function SignUp() {
                     fullWidth
                     type="button"
                     onClick={() => setStep(1)}
+                    disabled={loading}
                   >
                     Back
                   </Button>
@@ -206,8 +242,9 @@ export default function SignUp() {
                     size="lg"
                     fullWidth
                     type="submit"
+                    disabled={loading}
                   >
-                    Create Account
+                    {loading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </div>
               </form>

@@ -112,12 +112,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onClick={onLogout}
                       style={{ width: '100%', textAlign: 'left', padding: 'var(--spacing-4)', color: 'var(--color-text-secondary)', backgroundColor: 'transparent', border: '1px solid var(--color-border)', borderTop: '1px solid var(--color-border)', borderBottom: 'none', borderLeft: 'none', borderRight: 'none', cursor: 'pointer', transition: 'all 200ms ease-in-out', borderRadius: 0 }}
                       onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-danger-light)'
-                          (e.currentTarget as HTMLElement).style.color = 'var(--color-danger)'
+                        ;(e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-danger-light)'
+                        ;(e.currentTarget as HTMLElement).style.color = 'var(--color-danger)'
                       }}
                       onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'
-                          (e.currentTarget as HTMLElement).style.color = 'var(--color-text-secondary)'
+                        ;(e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'
+                        ;(e.currentTarget as HTMLElement).style.color = 'var(--color-text-secondary)'
                       }}
                     >
                       Log Out

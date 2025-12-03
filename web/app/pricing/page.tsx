@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Navbar, Button, Card, Badge, Check, Footer } from '@/app/components'
+import { Navbar, Button, Card, Badge, Footer } from '@/app/components'
 
 const CheckIcon = () => <span className="text-success-500 font-bold">✓</span>
 
