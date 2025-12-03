@@ -13,11 +13,11 @@
 - **Phase 2:** ✅ Frontend Pages & Styling (23 pages complete)
 - **Task #1:** ✅ Visual QA Pass (footer, accessibility, responsive fixes)
 - **Task #2:** ✅ Scaffold Authentication (NextAuth.js with JWT)
+- **Task #3:** ✅ Provision Dev Infrastructure (docker-compose.yml with Postgres, Redis, pgAdmin, Mailhog)
 - **Task #6:** ✅ Frontend API Layer & DTOs
 - **Task #9:** ✅ Shared UI Utilities & States
 
 ### 🔄 In Progress / Up Next
-- **Task #3:** Provision Dev Infrastructure (Docker, PostgreSQL, Redis)
 - **Task #4:** Backend Skeleton (NestJS + Prisma)
 - **Task #5:** Auth + Merchant Onboarding API endpoints
 
@@ -120,11 +120,10 @@ fluxpay/
 │   ├── tailwind.config.cjs        # Tailwind CSS config
 │   └── package.json              # Dependencies
 ├── server/                       # Backend (NestJS) [TO BE CREATED]
-├── docker-compose.yml            # Local dev services [TO BE CREATED]
+├── docker-compose.yml            # COMPLETE: Postgres(5432), Redis(6379), pgAdmin(5050), Mailhog(1025/8025)
+├── .env.example                  # Environment variables template (DB, Redis, JWT, M-Pesa)
+├── .env                          # Local dev environment (gitignored)
 ├── AGENT.md                      # This file (consolidated guide)
-├── PROGRESS.md                   # Legacy progress file
-├── TESTING_GUIDE.md              # Legacy testing guide
-├── PHASE_2_COMPLETE.md           # Legacy phase 2 summary
 └── README.md                     # Main README
 ```
 
@@ -201,6 +200,39 @@ When backend `/auth/login` and `/auth/register` endpoints are ready:
 1. Update `web/app/lib/auth.ts` CredentialsProvider to call backend `/auth/login` instead of mock validation
 2. Update signup form to call backend `/auth/register` with user data (email, password, name, phone, business info)
 3. Backend should return `{ id, email, name, role, merchantId }` and optional access/refresh tokens
+
+---
+
+## ⚙️ Dev Infrastructure (Task #3 - COMPLETE)
+
+### Services Running (docker compose up -d)
+```
+NAME                IMAGE               PORTS
+postgres-1          postgres:15-alpine  0.0.0.0:5432->5432/tcp
+redis-1             redis:7-alpine      0.0.0.0:6379->6379/tcp
+pgadmin-1           dpage/pgadmin4      0.0.0.0:5050->80/tcp
+mailhog-1           mailhog/mailhog     0.0.0.0:1025->1025/tcp, 0.0.0.0:8025->8025/tcp
+```
+
+### Connection Details
+- **Postgres:** `fluxpay:fluxpay123@fluxpay` (localhost:5432)
+- **Redis:** `redis://localhost:6379`
+- **pgAdmin:** http://localhost:5050 (admin@fluxpay.com / admin123)
+- **Mailhog:** http://localhost:8025 (SMTP: localhost:1025)
+
+### Commands
+```bash
+docker compose up -d          # Start services
+docker compose down           # Stop services
+docker compose logs postgres  # View logs
+docker compose exec postgres psql -U fluxpay -d fluxpay  # Connect to DB
+```
+
+### Environment Variables Added
+`.env.example` and `.env` with:
+- `DATABASE_URL=postgresql://fluxpay:fluxpay123@localhost:5432/fluxpay`
+- `REDIS_URL=redis://localhost:6379`
+- `JWT_SECRET`, `M_PESA_*` placeholders
 
 ---
 
