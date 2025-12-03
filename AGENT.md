@@ -1,7 +1,7 @@
 # 🚀 FluxPay Development Agent Guide (AGENT.md)
 
-**Last Updated:** December 3, 2025 | **Commit:** a4ed35a  
-**Repository:** `vic-viqee/fluxpay` | **Current Branch:** `main`  
+**Last Updated:** December 3, 2025 | **Commit:** a4ed35a
+**Repository:** `vic-viqee/fluxpay` | **Current Branch:** `main`
 **Dev Server:** http://localhost:3000 | **API Server:** http://localhost:3001 (planned)
 
 ---
@@ -261,7 +261,7 @@ import { useToast } from '@/app/components/ToastProvider'
 
 const MyComponent = () => {
   const { addToast } = useToast()
-  
+
   return (
     <button onClick={() => addToast({
       type: 'success',

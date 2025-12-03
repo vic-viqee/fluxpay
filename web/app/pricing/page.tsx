@@ -88,8 +88,8 @@ export default function Pricing() {
               <Card
                 key={idx}
                 className={`flex flex-col h-full ${plan.highlighted
-                    ? 'ring-2 ring-primary-500 md:scale-105'
-                    : ''
+                  ? 'ring-2 ring-primary-500 md:scale-105'
+                  : ''
                   }`}
               >
                 {plan.highlighted && (
