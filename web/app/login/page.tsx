@@ -20,27 +20,27 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex flex-col">
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-surface-1)', display: 'flex', flexDirection: 'column' }} className="animate-page-in">
       <Navbar variant="public" />
 
-      <div className="flex-1 flex items-center justify-center py-12 px-4">
-        <div className="w-full max-w-md">
-          <Card className="space-y-8">
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 'var(--spacing-12)', paddingBottom: 'var(--spacing-12)', paddingLeft: 'var(--spacing-4)', paddingRight: 'var(--spacing-4)' }}>
+        <div style={{ width: '100%', maxWidth: '420px' }}>
+          <Card padding="lg" className="animate-scale-in">
             {/* Header */}
-            <div>
-              <h1 className="text-3xl font-bold text-neutral-900 mb-2">Welcome Back</h1>
-              <p className="text-neutral-600">Log in to your FluxPay account</p>
+            <div style={{ marginBottom: 'var(--spacing-8)' }}>
+              <h1 style={{ fontSize: 'clamp(1.5rem, 4vw, 2.25rem)', fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: 'var(--spacing-2)' }}>Welcome Back</h1>
+              <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)' }}>Log in to your FluxPay account</p>
             </div>
 
             {/* Error Alert */}
             {error && (
-              <Alert variant="danger">
+              <Alert variant="danger" style={{ marginBottom: 'var(--spacing-6)' }}>
                 {error}
               </Alert>
             )}
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
               <Input
                 label="Email Address"
                 type="email"
@@ -59,29 +59,30 @@ export default function Login() {
                 />
                 <Link
                   href="/forgot-password"
-                  className="text-sm text-primary-500 hover:text-primary-600 mt-2 block"
+                  style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-primary)', textDecoration: 'none', marginTop: 'var(--spacing-2)', display: 'block' }}
+                  className="hover-lift"
                 >
                   Forgot password?
                 </Link>
               </div>
 
-              <Button variant="primary" size="lg" fullWidth type="submit">
+              <Button variant="primary" size="lg" fullWidth type="submit" className="hover-lift">
                 Log In
               </Button>
             </form>
 
             {/* Divider */}
-            <div className="flex items-center gap-4">
-              <div className="flex-1 h-px bg-neutral-200" />
-              <span className="text-sm text-neutral-500">OR</span>
-              <div className="flex-1 h-px bg-neutral-200" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-4)', margin: 'var(--spacing-6) 0' }}>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }} />
+              <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)' }}>OR</span>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }} />
             </div>
 
             {/* Sign Up Link */}
-            <div className="text-center">
-              <p className="text-neutral-600 mb-3">Don't have an account?</p>
-              <Link href="/signup" className="block">
-                <Button variant="secondary" size="lg" fullWidth>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-3)', fontSize: 'var(--font-size-base)' }}>Don't have an account?</p>
+              <Link href="/signup" style={{ textDecoration: 'none' }}>
+                <Button variant="secondary" size="lg" fullWidth className="hover-lift">
                   Create Account
                 </Button>
               </Link>
@@ -89,7 +90,7 @@ export default function Login() {
           </Card>
 
           {/* Footer Text */}
-          <p className="text-center text-neutral-600 text-sm mt-6">
+          <p style={{ textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)', marginTop: 'var(--spacing-6)' }}>
             By logging in, you agree to our Terms of Service and Privacy Policy
           </p>
         </div>

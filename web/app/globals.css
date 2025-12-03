@@ -778,3 +778,203 @@ tbody tr:last-child td {
     display: none;
   }
 }
+
+/* ============================================
+   ADDITIONAL ANIMATIONS
+   ============================================ */
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-in {
+  animation: pageIn 400ms ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 300ms ease-out;
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* ============================================
+   INTERACTIVE TRANSITIONS
+   ============================================ */
+
+a, button {
+  transition: all 200ms ease-in-out;
+}
+
+/* ============================================
+   RESPONSIVE CONTAINERS
+   ============================================ */
+
+@media (max-width: 480px) {
+  .container-max {
+    padding-left: var(--spacing-4) !important;
+    padding-right: var(--spacing-4) !important;
+  }
+
+  h1 {
+    font-size: clamp(1.5rem, 6vw, 2.25rem) !important;
+  }
+
+  h2 {
+    font-size: clamp(1.25rem, 5vw, 1.875rem) !important;
+  }
+
+  h3 {
+    font-size: clamp(1.125rem, 4vw, 1.5rem) !important;
+  }
+
+  section {
+    padding-top: var(--spacing-16) !important;
+    padding-bottom: var(--spacing-16) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .container-max {
+    padding-left: var(--spacing-6) !important;
+    padding-right: var(--spacing-6) !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .container-max {
+    max-width: 90%;
+  }
+}
+
+/* ============================================
+   RESPONSIVE GRID HELPERS
+   ============================================ */
+
+.grid-auto-fit {
+  display: grid;
+  gap: var(--spacing-6);
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+@media (max-width: 768px) {
+  .grid-auto-fit {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-4);
+  }
+}
+
+.grid-auto-fit-sm {
+  display: grid;
+  gap: var(--spacing-4);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+@media (max-width: 640px) {
+  .grid-auto-fit-sm {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
+   FOCUS STATES (ACCESSIBILITY)
+   ============================================ */
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.grid-center {
+  display: grid;
+  place-items: center;
+}
+
+.hover-lift {
+  transition: all 200ms ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.hover-scale {
+  transition: all 200ms ease-out;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
