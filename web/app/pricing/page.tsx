@@ -9,7 +9,7 @@ export default function Pricing() {
   const plans = [
     {
       name: 'Starter',
-      price: 'Free',
+      price: 'KSh 0',
       period: 'Forever',
       description: 'Perfect for small businesses getting started',
       features: [
@@ -25,7 +25,7 @@ export default function Pricing() {
     },
     {
       name: 'Professional',
-      price: '$29',
+      price: 'KSh 2,900',
       period: '/month',
       description: 'Best for growing businesses',
       features: [

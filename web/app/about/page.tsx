@@ -4,13 +4,6 @@ import Link from 'next/link'
 import { Navbar, Button, Card, Badge, Footer } from '@/app/components'
 
 export default function About() {
-  const team = [
-    { name: 'Jane Kipchoge', role: 'CEO & Founder', avatar: '👩‍💼' },
-    { name: 'Samuel Okonkwo', role: 'CTO', avatar: '👨‍💻' },
-    { name: 'Grace Mutua', role: 'Head of Operations', avatar: '👩‍🔬' },
-    { name: 'David Kimani', role: 'Head of Customer Success', avatar: '👨‍💼' },
-  ]
-
   return (
     <div className="min-h-screen bg-white">
       <Navbar variant="public" />
@@ -66,24 +59,10 @@ export default function About() {
         </div>
       </section>
 
-      {/* Team */}
-      <section className="py-20 md:py-32 bg-neutral-50">
-        <div className="container-max">
-          <h2 className="text-4xl font-bold text-neutral-900 text-center mb-12">Meet Our Team</h2>
-          <div className="grid md:grid-cols-4 gap-8">
-            {team.map((member, idx) => (
-              <Card key={idx} hover className="text-center">
-                <div className="text-6xl mb-4">{member.avatar}</div>
-                <h3 className="text-xl font-bold text-neutral-900 mb-1">{member.name}</h3>
-                <p className="text-neutral-600">{member.role}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* Values */}
-      <section className="py-20 md:py-32 bg-white">
+      <section className="py-20 md:py-32 bg-neutral-50">
         <div className="container-max">
           <h2 className="text-4xl font-bold text-neutral-900 text-center mb-12">Our Values</h2>
           <div className="grid md:grid-cols-3 gap-8">
