@@ -788,6 +788,7 @@ tbody tr:last-child td {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -803,6 +804,7 @@ tbody tr:last-child td {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -814,9 +816,12 @@ tbody tr:last-child td {
 }
 
 @keyframes shimmer {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -830,13 +835,47 @@ tbody tr:last-child td {
    INTERACTIVE TRANSITIONS
    ============================================ */
 
-a, button {
+a,
+button {
   transition: all 200ms ease-in-out;
 }
 
 /* ============================================
    RESPONSIVE CONTAINERS
    ============================================ */
+
+/* Desktop Navigation */
+#desktop-nav {
+  display: none !important;
+}
+
+@media (min-width: 768px) {
+  #desktop-nav {
+    display: flex !important;
+  }
+}
+
+/* Mobile Controls */
+button.md\:hidden {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  button.md\:hidden {
+    display: none;
+  }
+}
+
+/* Mobile Menu */
+div.md\:hidden {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  div.md\:hidden {
+    display: none;
+  }
+}
 
 @media (max-width: 480px) {
   .container-max {

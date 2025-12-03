@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Navbar, Button, Card } from '@/app/components'
+import { Navbar, Button, Card, Footer } from '@/app/components'
 
 export default function Home() {
   return (
@@ -175,47 +175,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer style={{ backgroundColor: '#111827', color: 'white', paddingTop: 'clamp(1.5rem, 5vw, 3rem)', paddingBottom: 'clamp(1.5rem, 5vw, 3rem)' }}>
-        <div className="container-max">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--spacing-8)', marginBottom: 'var(--spacing-8)' }}>
-            <div>
-              <h3 style={{ fontWeight: '700', marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-lg)' }}>Product</h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
-                <li><Link href="/features" style={{ color: '#9ca3af', textDecoration: 'none' }} className="hover-lift">Features</Link></li>
-                <li><Link href="/pricing" style={{ color: '#9ca3af', textDecoration: 'none' }} className="hover-lift">Pricing</Link></li>
-                <li><Link href="/documentation" style={{ color: '#9ca3af', textDecoration: 'none' }} className="hover-lift">API</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 style={{ fontWeight: '700', marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-lg)' }}>Company</h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
-                <li><Link href="/about" style={{ color: '#9ca3af', textDecoration: 'none' }} className="hover-lift">About</Link></li>
-                <li><Link href="/blog" style={{ color: '#9ca3af', textDecoration: 'none' }} className="hover-lift">Blog</Link></li>
-                <li><Link href="/careers" style={{ color: '#9ca3af', textDecoration: 'none' }} className="hover-lift">Careers</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 style={{ fontWeight: '700', marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-lg)' }}>Resources</h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
-                <li><Link href="/documentation" style={{ color: '#9ca3af', textDecoration: 'none' }} className="hover-lift">Documentation</Link></li>
-                <li><Link href="/guides" style={{ color: '#9ca3af', textDecoration: 'none' }} className="hover-lift">Guides</Link></li>
-                <li><Link href="/contact" style={{ color: '#9ca3af', textDecoration: 'none' }} className="hover-lift">Support</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 style={{ fontWeight: '700', marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-lg)' }}>Legal</h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
-                <li><Link href="/privacy" style={{ color: '#9ca3af', textDecoration: 'none' }} className="hover-lift">Privacy</Link></li>
-                <li><Link href="/terms" style={{ color: '#9ca3af', textDecoration: 'none' }} className="hover-lift">Terms</Link></li>
-                <li><Link href="/security" style={{ color: '#9ca3af', textDecoration: 'none' }} className="hover-lift">Security</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div style={{ borderTop: '1px solid #374151', paddingTop: 'var(--spacing-8)', textAlign: 'center', color: '#9ca3af' }}>
-            <p>&copy; 2025 FluxPay. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer variant="dark" />
     </div>
   )
 }
