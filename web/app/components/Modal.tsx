@@ -21,24 +21,34 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   if (!isOpen) return null
 
-  const sizeClasses = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
+  const sizeStyles = {
+    sm: { maxWidth: '24rem' },
+    md: { maxWidth: '28rem' },
+    lg: { maxWidth: '32rem' },
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className={`bg-white rounded-lg shadow-lg ${sizeClasses[size]} w-full`}>
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="modal"
+        style={sizeStyles[size]}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         {(title || closeButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-neutral-200">
-            {title && <h2 className="text-lg font-bold text-neutral-900">{title}</h2>}
+          <div className="modal-header">
+            {title && <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: '600' }}>{title}</h2>}
             {!title && <div />}
             {closeButton && (
               <button
                 onClick={onClose}
-                className="text-neutral-500 hover:text-neutral-700 text-2xl leading-none"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: 'var(--color-text-secondary)',
+                }}
               >
                 ×
               </button>
@@ -47,10 +57,10 @@ export const Modal: React.FC<ModalProps> = ({
         )}
 
         {/* Body */}
-        <div className="p-6">{children}</div>
+        <div className="modal-body">{children}</div>
 
         {/* Footer */}
-        {footer && <div className="p-6 border-t border-neutral-200 flex gap-3 justify-end">{footer}</div>}
+        {footer && <div className="modal-footer">{footer}</div>}
       </div>
     </div>
   )

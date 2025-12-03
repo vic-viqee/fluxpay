@@ -31,14 +31,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }
 
     const sizeClasses = {
-      sm: 'px-3 py-1 text-sm',
-      md: 'px-4 py-2 text-base',
-      lg: 'px-6 py-3 text-lg',
+      sm: 'btn-sm',
+      md: '',
+      lg: 'btn-lg',
     }
 
-    const baseClasses = `${variantClasses[variant]} ${sizeClasses[size]} ${
-      fullWidth ? 'w-full' : ''
-    } ${isLoading ? 'opacity-70 cursor-not-allowed' : ''} ${className}`
+    const baseClasses = `${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? 'btn-full-width' : ''
+      } ${isLoading ? 'opacity-70 cursor-not-allowed' : ''} ${className}`
 
     return (
       <button
@@ -48,8 +47,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {isLoading ? (
-          <span className="flex items-center gap-2">
-            <span className="spinner h-4 w-4 border-2" />
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span className="spinner" style={{ width: '0.875rem', height: '0.875rem' }} />
             {children}
           </span>
         ) : (

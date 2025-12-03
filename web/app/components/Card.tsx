@@ -6,6 +6,7 @@ interface CardProps {
   hover?: boolean
   padding?: 'sm' | 'md' | 'lg'
   border?: boolean
+  variant?: 'default' | 'elevated' | 'outline' | 'highlighted'
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -14,22 +15,24 @@ export const Card: React.FC<CardProps> = ({
   hover = false,
   padding = 'md',
   border = true,
+  variant = 'default',
 }) => {
-  const paddingClasses = {
-    sm: 'p-3',
-    md: 'p-6',
-    lg: 'p-8',
+  const paddingStyle =
+    padding === 'sm' ? 'var(--spacing-4)' : padding === 'md' ? 'var(--spacing-6)' : 'var(--spacing-8)'
+
+  const variantClasses = {
+    default: 'card',
+    elevated: 'card card-elevated',
+    outline: 'card card-outline',
+    highlighted: 'card card-highlighted',
   }
 
   return (
     <div
-      className={`
-        bg-white rounded-lg shadow-sm
-        ${border ? 'border border-neutral-200' : ''}
-        ${hover ? 'hover:shadow-md transition-shadow' : ''}
-        ${paddingClasses[padding]}
-        ${className}
-      `}
+      className={`${variantClasses[variant]} ${hover ? 'transition-all' : ''} ${className}`}
+      style={{
+        padding: paddingStyle,
+      }}
     >
       {children}
     </div>

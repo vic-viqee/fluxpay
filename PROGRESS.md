@@ -1,7 +1,7 @@
 # FluxPay Development Progress Checklist
 
-**Last Updated:** December 2, 2025  
-**Current Status:** Next.js + Tailwind App Structure Complete - Ready for Feature Development
+**Last Updated:** December 3, 2025
+**Current Status:** Next.js + Tailwind App Structure Complete — Visual QA in progress; ready to scaffold backend and auth
 
 **Sitemap Reference:** Comprehensive FluxPay platform sitemap aligned (Public Site → Auth → Authenticated App)
 
@@ -9,8 +9,8 @@
 
 ## 🎯 Project Overview
 
-**Repository:** vic-viqee/fluxpay  
-**Location:** `/workspaces/fluxpay/web`  
+**Repository:** vic-viqee/fluxpay
+**Location:** `/workspaces/fluxpay/web`
 **Tech Stack:**
 - Next.js (latest)
 - React (latest)
@@ -42,9 +42,10 @@
 
 ### Phase 3: App Structure (App Router)
 - [x] Created `app/layout.tsx` (root layout with metadata)
-### Summary (updated Dec 2, 2025)
 
-Phase 2 complete: UI, components, and page styling finished. Visual QA is ongoing.
+### Summary (updated Dec 3, 2025)
+
+Phase 2 complete: UI, components, and page styling finished. Visual QA and responsive checks are ongoing.
 
 **What's done and working:**
 
@@ -62,11 +63,18 @@ Phase 2 complete: UI, components, and page styling finished. Visual QA is ongoin
 
 ---
 
+## Recent updates (Dec 3, 2025)
+
+- Updated progress document to reflect current status and readiness for backend/auth scaffolding.
+- No code changes were made in this edit — this is documentation-only.
+
+---
+
 ## Recommended Next Steps
 
-1. Finish visual QA and minor responsive fixes (I can run a pass and apply quick fixes).  
-2. Begin Phase 3: scaffold API routes and wire auth (NextAuth or custom JWT) to make pages dynamic.  
-3. Implement server-side route protection for dashboard pages.  
+1. Finish visual QA and fix responsive edge-cases (I can run a pass and apply quick fixes).
+2. Scaffold API routes and wire authentication (NextAuth or a custom JWT solution) to make pages dynamic.
+3. Implement server-side route protection for dashboard pages and connect to real backend/data sources.
 
 ---
 
