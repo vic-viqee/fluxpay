@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Navbar, Button, Card, Badge } from '@/app/components'
+import { Navbar, Button, Card, Badge, Input, Footer } from '@/app/components'
 
 export default function Blog() {
   const articles = [
@@ -132,49 +132,13 @@ export default function Blog() {
             Subscribe to our newsletter for payment tips, industry insights, and product updates
           </p>
           <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Your email"
-              className="flex-1 px-4 py-3 rounded-lg text-neutral-900"
-            />
+            <Input label="Email for newsletter" type="email" placeholder="Your email" className="flex-1 text-neutral-900" />
             <Button variant="tertiary">Subscribe</Button>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-neutral-900 text-white py-12">
-        <div className="container-max">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="font-bold mb-4">FluxPay</h3>
-              <p className="text-neutral-400">Making payments simple for African businesses.</p>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Product</h4>
-              <ul className="space-y-2 text-neutral-400">
-                <li><Link href="/features" className="hover:text-white">Features</Link></li>
-                <li><Link href="/pricing" className="hover:text-white">Pricing</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Company</h4>
-              <ul className="space-y-2 text-neutral-400">
-                <li><Link href="/about" className="hover:text-white">About</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Support</h4>
-              <ul className="space-y-2 text-neutral-400">
-                <li><Link href="/help-center" className="hover:text-white">Help Center</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-neutral-800 pt-8 text-center text-neutral-400">
-            <p>&copy; 2025 FluxPay. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer variant="dark" />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Navbar, Card, Button, Badge } from '@/app/components'
+import { Navbar, Card, Button, Badge, Footer } from '@/app/components'
 import { useState } from 'react'
 
 export default function Demo() {
@@ -42,59 +42,7 @@ export default function Demo() {
               <h3 className="font-bold text-neutral-900 mb-2">Payment Processing</h3>
               <p className="text-sm text-neutral-600">See payments in real-time</p>
             </Card>
-            <Card hover className="text-center">
-              <p className="text-4xl mb-3">📊</p>
-              <h3 className="font-bold text-neutral-900 mb-2">Dashboard Analytics</h3>
-              <p className="text-sm text-neutral-600">Track your business metrics</p>
-            </Card>
-          </div>
 
-          {/* Video Embed Area */}
-          <Card className="bg-gradient-to-br from-neutral-900 to-neutral-800 aspect-video rounded-lg overflow-hidden flex items-center justify-center mb-12">
-            <div className="text-center text-white">
-              <p className="text-6xl mb-4">▶️</p>
-              <p className="text-lg">Video Demo Area</p>
-              <p className="text-neutral-400 mt-2">Click to play interactive demo</p>
-            </div>
-          </Card>
-
-          {/* Features Highlighted in Demo */}
-          <h2 className="text-3xl font-bold text-neutral-900 mb-12">What You'll See In The Demo</h2>
-          <div className="grid md:grid-cols-2 gap-12 mb-12">
-            {[
-              {
-                title: 'Seamless Payment Collection',
-                desc: 'Experience instant payment processing with M-Pesa integration',
-                points: ['Real-time transactions', 'Instant settlement', 'Multi-till support']
-              },
-              {
-                title: 'Comprehensive Dashboard',
-                desc: 'Monitor your business performance with detailed analytics',
-                points: ['Revenue tracking', 'Transaction history', 'Customer insights']
-              },
-              {
-                title: 'Virtual Till Management',
-                desc: 'Manage multiple payment channels from one platform',
-                points: ['Create unlimited tills', 'Customize till settings', 'Generate till codes']
-              },
-              {
-                title: 'Advanced Reporting',
-                desc: 'Get actionable insights with comprehensive reports',
-                points: ['Custom date ranges', 'Export to CSV', 'Scheduled reports']
-              }
-            ].map((feature, idx) => (
-              <div key={idx} className="border-l-4 border-primary-500 pl-6 py-4">
-                <h3 className="font-bold text-lg text-neutral-900 mb-2">{feature.title}</h3>
-                <p className="text-neutral-600 mb-4">{feature.desc}</p>
-                <ul className="space-y-2">
-                  {feature.points.map((point, i) => (
-                    <li key={i} className="flex items-center gap-2 text-neutral-700">
-                      <span className="text-primary-500">✓</span> {point}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -185,44 +133,7 @@ export default function Demo() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-neutral-900 text-white py-12">
-        <div className="container-max">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <p className="font-bold mb-4">FluxPay</p>
-              <p className="text-neutral-400 text-sm">Simplifying payments for African SMBs</p>
-            </div>
-            <div>
-              <p className="font-bold mb-4">Product</p>
-              <ul className="space-y-2 text-sm text-neutral-400">
-                <li><Link href="/features" className="hover:text-white">Features</Link></li>
-                <li><Link href="/pricing" className="hover:text-white">Pricing</Link></li>
-                <li><Link href="/demo" className="hover:text-white">Demo</Link></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-bold mb-4">Company</p>
-              <ul className="space-y-2 text-sm text-neutral-400">
-                <li><Link href="/about" className="hover:text-white">About</Link></li>
-                <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
-                <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-bold mb-4">Legal</p>
-              <ul className="space-y-2 text-sm text-neutral-400">
-                <li><a href="#" className="hover:text-white">Privacy</a></li>
-                <li><a href="#" className="hover:text-white">Terms</a></li>
-                <li><a href="#" className="hover:text-white">Security</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-neutral-800 pt-8 text-center text-neutral-400">
-            <p>&copy; 2024 FluxPay. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer variant="dark" />
     </div>
   )
 }

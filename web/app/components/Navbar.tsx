@@ -25,9 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="container-max" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 'var(--spacing-4)', paddingBottom: 'var(--spacing-4)' }}>
         {/* Logo */}
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)', textDecoration: 'none' }}>
-          <div style={{ height: '2.25rem', width: '2.25rem', backgroundColor: 'var(--color-primary)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-sm)' }}>
-            <span style={{ color: 'white', fontWeight: '700', fontSize: '0.875rem' }}>FP</span>
-          </div>
+          <img src="/logo.png" alt="FluxPay Logo" style={{ height: '2.25rem', width: '2.25rem', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)', objectFit: 'contain', background: 'white' }} />
           <span style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--color-primary)', letterSpacing: '-0.02em' }}>FluxPay</span>
         </Link>
 

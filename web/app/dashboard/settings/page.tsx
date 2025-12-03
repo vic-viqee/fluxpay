@@ -44,11 +44,10 @@ export default function Settings() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full text-left px-4 py-3 font-medium transition-colors ${
-                    activeTab === tab.id
+                  className={`w-full text-left px-4 py-3 font-medium transition-colors ${activeTab === tab.id
                       ? 'bg-primary-50 text-primary-600'
                       : 'text-neutral-700 hover:bg-neutral-50'
-                  }`}
+                    }`}
                 >
                   {tab.icon} {tab.label}
                 </button>
@@ -87,15 +86,18 @@ export default function Settings() {
                     { label: 'Payment Failed', desc: 'Alert when a payment fails' },
                     { label: 'Daily Summary', desc: 'Receive daily transaction summary' },
                     { label: 'Weekly Report', desc: 'Get weekly business report' },
-                  ].map((notif, idx) => (
-                    <div key={idx} className="flex items-center justify-between py-3 border-b border-neutral-200 last:border-0">
-                      <div>
-                        <p className="font-medium text-neutral-900">{notif.label}</p>
-                        <p className="text-sm text-neutral-600">{notif.desc}</p>
+                  ].map((notif, idx) => {
+                    const labelId = `notif-${idx}-label`
+                    return (
+                      <div key={idx} className="flex items-center justify-between py-3 border-b border-neutral-200 last:border-0">
+                        <div id={labelId}>
+                          <p className="font-medium text-neutral-900">{notif.label}</p>
+                          <p className="text-sm text-neutral-600">{notif.desc}</p>
+                        </div>
+                        <input aria-labelledby={labelId} type="checkbox" defaultChecked className="w-5 h-5" />
                       </div>
-                      <input type="checkbox" defaultChecked className="w-5 h-5" />
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
                 <Button variant="primary">Save Preferences</Button>
               </Card>

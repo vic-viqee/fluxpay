@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Navbar, Card, Button, Badge, Input } from '@/app/components'
+import { Navbar, Card, Button, Badge, Input, Footer } from '@/app/components'
 import { useState } from 'react'
 
 export default function FAQ() {
@@ -84,7 +84,7 @@ export default function FAQ() {
   const filteredFAQs = faqs.filter(faq => {
     const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory
     const matchesSearch = faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          faq.answer.toLowerCase().includes(searchTerm.toLowerCase())
+      faq.answer.toLowerCase().includes(searchTerm.toLowerCase())
     return matchesCategory && matchesSearch
   })
 
@@ -123,11 +123,10 @@ export default function FAQ() {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all ${
-                  selectedCategory === cat.id
+                className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedCategory === cat.id
                     ? 'bg-primary-500 text-white'
                     : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
-                }`}
+                  }`}
               >
                 {cat.label}
               </button>
@@ -153,9 +152,9 @@ export default function FAQ() {
                       <h3 className="font-bold text-lg text-neutral-900">{faq.question}</h3>
                       <Badge variant={
                         faq.category === 'getting-started' ? 'info' :
-                        faq.category === 'payments' ? 'success' :
-                        faq.category === 'tills' ? 'secondary' :
-                        'warning'
+                          faq.category === 'payments' ? 'success' :
+                            faq.category === 'tills' ? 'secondary' :
+                              'warning'
                       } className="mt-2 inline-block">
                         {categories.find(c => c.id === faq.category)?.label}
                       </Badge>
@@ -220,43 +219,7 @@ export default function FAQ() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-neutral-900 text-white py-12">
-        <div className="container-max">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <p className="font-bold mb-4">FluxPay</p>
-              <p className="text-neutral-400 text-sm">Simplifying payments for African SMBs</p>
-            </div>
-            <div>
-              <p className="font-bold mb-4">Product</p>
-              <ul className="space-y-2 text-sm text-neutral-400">
-                <li><Link href="/features" className="hover:text-white">Features</Link></li>
-                <li><Link href="/pricing" className="hover:text-white">Pricing</Link></li>
-                <li><Link href="/demo" className="hover:text-white">Demo</Link></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-bold mb-4">Company</p>
-              <ul className="space-y-2 text-sm text-neutral-400">
-                <li><Link href="/about" className="hover:text-white">About</Link></li>
-                <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
-                <li><Link href="/faq" className="hover:text-white">FAQ</Link></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-bold mb-4">Legal</p>
-              <ul className="space-y-2 text-sm text-neutral-400">
-                <li><a href="#" className="hover:text-white">Privacy</a></li>
-                <li><a href="#" className="hover:text-white">Terms</a></li>
-                <li><a href="#" className="hover:text-white">Security</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-neutral-800 pt-8 text-center text-neutral-400">
-            <p>&copy; 2024 FluxPay. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer variant="dark" />
     </div>
   )
 }

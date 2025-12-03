@@ -10,21 +10,28 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
-    { label, error, helpText, icon, variant = 'default', className = '', ...props },
+    { label, error, helpText, icon, variant = 'default', className = '', id, ...props },
     ref
   ) => {
+    const generated = React.useId()
+    const inputId = (id as string) ?? `input-${generated}`
     const inputSize = variant === 'compact' ? 'py-1 px-3 text-sm' : 'py-2 px-4'
 
     return (
       <div className="w-full">
-        {label && <label className="label">{label}</label>}
+        {label && (
+          <label htmlFor={inputId} className="label">
+            {label}
+          </label>
+        )}
         <div className="relative">
           {icon && <div className="absolute left-3 top-1/2 -translate-y-1/2">{icon}</div>}
           <input
+            id={inputId}
             ref={ref}
-            className={`input ${inputSize} ${icon ? 'pl-10' : ''} ${
-              error ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-400' : ''
-            } ${className}`}
+            className={`input ${inputSize} ${icon ? 'pl-10' : ''} ${error ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-400' : ''
+              } ${className}`}
+            aria-invalid={error ? 'true' : undefined}
             {...props}
           />
         </div>

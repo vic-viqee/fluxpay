@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Navbar, Card, Button, Badge, Input } from '@/app/components'
-import { useState } from 'react'
+import { Navbar, Card, Button, Badge, Input, Footer } from '@/app/components'
+import { useState, useId } from 'react'
 
 export default function Contact() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -12,6 +12,7 @@ export default function Contact() {
     subject: '',
     message: ''
   })
+  const messageId = useId()
   const [submitted, setSubmitted] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -120,8 +121,9 @@ export default function Contact() {
                     required
                   />
                   <div>
-                    <label className="label">Message</label>
+                    <label htmlFor={messageId} className="label">Message</label>
                     <textarea
+                      id={messageId}
                       placeholder="Tell us how we can help..."
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -142,8 +144,8 @@ export default function Contact() {
               <Card className="mb-6 bg-gradient-to-br from-primary-50 to-secondary-50 border border-primary-200">
                 <h3 className="font-bold text-neutral-900 mb-2">Headquarters</h3>
                 <p className="text-neutral-700">
-                  FluxPay Ltd.<br/>
-                  Nairobi, Kenya<br/>
+                  FluxPay Ltd.<br />
+                  Nairobi, Kenya<br />
                   East Africa
                 </p>
               </Card>
@@ -232,11 +234,7 @@ export default function Contact() {
             Subscribe to our newsletter for product updates, tips, and special offers.
           </p>
           <div className="flex gap-3">
-            <input
-              type="email"
-              placeholder="your@email.com"
-              className="flex-1 px-4 py-3 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-white"
-            />
+            <Input label="Email for newsletter" type="email" placeholder="your@email.com" className="flex-1 text-neutral-900" />
             <Button variant="primary">Subscribe</Button>
           </div>
           <div className="flex justify-center gap-6 mt-12">
@@ -249,44 +247,7 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-neutral-900 text-white py-12">
-        <div className="container-max">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <p className="font-bold mb-4">FluxPay</p>
-              <p className="text-neutral-400 text-sm">Simplifying payments for African SMBs</p>
-            </div>
-            <div>
-              <p className="font-bold mb-4">Product</p>
-              <ul className="space-y-2 text-sm text-neutral-400">
-                <li><Link href="/features" className="hover:text-white">Features</Link></li>
-                <li><Link href="/pricing" className="hover:text-white">Pricing</Link></li>
-                <li><Link href="/demo" className="hover:text-white">Demo</Link></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-bold mb-4">Company</p>
-              <ul className="space-y-2 text-sm text-neutral-400">
-                <li><Link href="/about" className="hover:text-white">About</Link></li>
-                <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
-                <li><Link href="/faq" className="hover:text-white">FAQ</Link></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-bold mb-4">Legal</p>
-              <ul className="space-y-2 text-sm text-neutral-400">
-                <li><a href="#" className="hover:text-white">Privacy</a></li>
-                <li><a href="#" className="hover:text-white">Terms</a></li>
-                <li><a href="#" className="hover:text-white">Security</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-neutral-800 pt-8 text-center text-neutral-400">
-            <p>&copy; 2024 FluxPay. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer variant="dark" />
     </div>
   )
 }
