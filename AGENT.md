@@ -31,11 +31,9 @@ The FluxPay project is a full-stack application with a React frontend and a Node
 
 ## 3. What is Missing or Partially Complete
 
-*   **Logo and Favicon:** (Task 1) - The user has not provided filenames for these assets.
 *   **Complete Logo Upload Functionality:** Frontend has a placeholder for logo upload, but backend support for file storage and serving `logoUrl` is missing.
 *   **Robust Input Validation:** While basic validation exists, more comprehensive server-side validation (e.g., regex for phone numbers, KRA PIN formats, business details) could be added.
 *   **Actual Payment Processing:** The subscription checkout page has a mock STK push. Real-time handling of M-Pesa callbacks to update subscription statuses and process payments is implied but needs full implementation.
-*   **Subscription Management:** Creation of subscriptions is yet to be built (Task 5).
 *   **Dashboard Business Data Display:** While the `UserProfile` component has fields for business details, the dashboard's main view might need more prominent display of business-specific metrics or logo.
 *   **Comprehensive Error Handling:** Frontend error messages could be more user-friendly and specific.
 *   **Admin Panel:** No administrative interface for managing users, subscriptions, etc.
@@ -56,7 +54,12 @@ The FluxPay project is a full-stack application with a React frontend and a Node
 *   **Accessibility:** Ensure all new UI elements are accessible (ARIA labels, keyboard navigation, color contrast).
 *   **Responsiveness:** Design for mobile-first, ensuring full responsiveness across devices.
 
-## 5. How to Run the Project
+## 5. Resolved Frontend Issues
+
+*   **esbuild Template Literal Parsing Error**: Encountered a persistent "Syntax error `" ` error from `esbuild` (used by Vite) when processing template literals within JSX `className` attributes in `Navbar.tsx` and `Sidebar.tsx`.
+    *   **Workaround**: Modified `className` attributes in `Navbar.tsx` and `Sidebar.tsx` to use string concatenation (e.g., `{"string1 " + (condition ? "class2" : "class3") + " string4"}`) instead of direct template literals (e.g., `` `string1 ${condition ? "class2" : "class3"} string4` ``). This bypassed the `esbuild` parsing issue and allowed the frontend to compile and run correctly.
+
+## 6. How to Run the Project
 
 ### Prerequisites:
 *   Node.js (LTS recommended)
@@ -81,7 +84,7 @@ The FluxPay project is a full-stack application with a React frontend and a Node
 *   Ensure Docker Desktop is running.
 *   From the project root (`fluxpay/`), run `docker-compose up -d` to start a MongoDB container.
 
-## 6. What Tasks Are Safe for Automation and What Tasks Require Asking the User
+## 7. What Tasks Are Safe for Automation and What Tasks Require Asking the User
 
 **Safe for Automation:**
 *   Refactoring code for clarity, performance, or adherence to style guides (e.g., moving JSX to components, extracting logic to hooks/services).
@@ -102,16 +105,12 @@ The FluxPay project is a full-stack application with a React frontend and a Node
 *   **Asset Management:** Explicit filenames, paths, and usage instructions for images, logos, favicons, etc.
 *   **Deployment:** Changes to deployment configuration or process.
 
-## 7. Roadmap of Remaining Features (from initial instructions)
+## 8. Roadmap of Remaining Features (from initial instructions)
 
-1.  **Add Logo and Favicon:** (Currently Blocked - Awaiting user input on filenames)
-    *   Use assets from `C:\Users\Vic\Documents\Projects\fluxpay\img`.
-    *   Add to Navbar and Footer.
-    *   Set favicon.
-    *   Ensure responsiveness and cross-browser compatibility.
-2.  **Add “Business Setup” During Account Creation:** (Completed - Task 2 done)
-3.  **Customize Each STK Push With the Business Name:** (Completed - Task 3 done)
-4.  **Create AGENT.md:** (Current Task)
+1.  **Add Logo and Favicon:** (Completed)
+2.  **Add “Business Setup” During Account Creation:** (Completed)
+3.  **Customize Each STK Push With the Business Name:** (Completed)
+4.  **Create AGENT.md:** (Completed)
 5.  **Build a System to Add Subscriptions Seamlessly From the Dashboard.**
     *   UI: Customer name, phone, amount, billing frequency, start date, notes.
     *   Functional: Add without refresh, backend route, display in table, prep for recurring billing.
@@ -121,5 +120,11 @@ The FluxPay project is a full-stack application with a React frontend and a Node
 7.  **Push Project to GitHub.**
     *   Create repo, add `.gitignore`, exclude sensitive files.
 
+## 9. Current Blockers/Next Actions
+
+*   **Backend Server Startup**: The backend server has not yet been successfully started and connected to MongoDB.
+    *   **Action Needed**: User to ensure Docker Desktop is running. Agent will then attempt to start the backend server and verify database connection.
+*   **Push Project to GitHub**: The project needs to be pushed to GitHub.
+    *   **Action Needed**: User to manually execute Git commands and provide the repository URL.
+
 ---
-**This AGENT.md was created by an AI coding agent.**

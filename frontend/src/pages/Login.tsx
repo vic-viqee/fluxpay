@@ -27,7 +27,7 @@ const Login: React.FC = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <div className="text-center">
-          <img src="/img/fluxpay_logo.png" alt="FluxPay Logo" className="w-32 mx-auto" />
+          <img src="/img/fluxpay logo.png" alt="FluxPay Logo" className="w-32 mx-auto" />
           <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
           <p className="text-gray-600">Sign in to manage your payments</p>
         </div>
