@@ -1,0 +1,43 @@
+# Node.js
+node_modules/
+dist/
+.env
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+.vscode/
+
+# Frontend (create-react-app or Vite)
+build/
+frontend/dist/
+
+# Backend specific
+backend/dist/
+backend/.env
+backend/*.log
+
+# Project specific
+continuation_notes.txt
+opencodetmp/
+.gemini/tmp/
+
+# Dependency lock files (uncomment if you want to ignore them)
+# package-lock.json
+# yarn.lock
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.bak
+*.swo
