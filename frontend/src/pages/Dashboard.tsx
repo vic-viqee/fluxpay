@@ -22,7 +22,8 @@ interface ITransaction {
 
 // --- Main Component ---
 const Dashboard: React.FC = () => {
-  const { logout } = useAuth(); // kept for logic, but UI removed
+  // FIX: Removed unused 'logout' to satisfy TypeScript build
+  const { } = useAuth(); 
   
   // --- State ---
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -119,8 +120,6 @@ const Dashboard: React.FC = () => {
     return <div className="p-8 text-center text-gray-500">Loading Dashboard Data...</div>;
   }
 
-  // --- RENDER ---
-  // NOTICE: No <aside>, No <header>, No "FluxPay" Logo. Just the content.
   return (
     <div className="w-full"> 
       
