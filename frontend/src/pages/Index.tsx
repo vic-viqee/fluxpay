@@ -12,12 +12,7 @@ const Index: React.FC = () => {
       <section className="relative bg-gray-900 text-white py-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-800 to-indigo-900 opacity-20"></div>
         <div className="relative container mx-auto px-4 text-center">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 bg-indigo-500 bg-opacity-30 rounded-full text-sm font-medium mb-6">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-            </svg>
-            <span>Now with instant STK Push</span>
-          </div>
+
           
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
             Smart <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">M-Pesa</span> Payments<br />

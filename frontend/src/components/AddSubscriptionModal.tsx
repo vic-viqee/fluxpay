@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
 import api from '../services/api';
-import { ISubscription } from '../../backend/src/models/Subscription'; // Importing interface for type safety
+
+// FIX: Define the interface locally instead of importing from backend
+export interface ISubscription {
+  _id: string;
+  customerName: string;
+  phoneNumber: string;
+  amount: number;
+  billingFrequency: 'daily' | 'weekly' | 'monthly';
+  startDate: string;
+  status: string;
+  notes?: string;
+}
 
 interface AddSubscriptionModalProps {
   isOpen: boolean;

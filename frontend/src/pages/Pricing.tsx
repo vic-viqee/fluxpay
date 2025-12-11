@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaqItem from '../components/FaqItem';
@@ -199,19 +199,19 @@ const Pricing: React.FC = () => {
                 Frequently Asked Questions
               </h2>
               <div className="divide-y divide-gray-200">
-                <FaqItem
+                <FaqItem 
                   question="Do I need a Paybill or Till number to use FluxPay?"
                   answer="No, you don't! You can get started immediately using our shared virtual till number. This is perfect for freelancers, small businesses, and anyone who wants to start collecting payments without the hassle and cost of applying for their own Paybill."
                 />
-                <FaqItem
+                <FaqItem 
                   question="How is the 1.5% transaction fee applied?"
                   answer="The 1.5% fee is charged on each successful transaction processed through your account. For example, if a customer pays you KES 1,000, the fee would be KES 15, and you would receive KES 985. There are no hidden fees or charges."
                 />
-                <FaqItem
+                <FaqItem 
                   question="Can I switch between plans?"
                   answer="Yes, you can upgrade or downgrade your plan at any time from your account settings. When you upgrade, the changes are applied immediately. When you downgrade, the changes will take effect at the end of your current billing cycle."
                 />
-                 <FaqItem
+                 <FaqItem 
                   question="What happens if a subscription payment fails?"
                   answer="FluxPay's Smart Retry system automatically retries failed payments at intelligent intervals. We also send automated, friendly reminders to your customers, helping you recover revenue that might otherwise be lost."
                 />
