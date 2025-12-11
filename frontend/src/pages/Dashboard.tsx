@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { AddSubscriptionModal, ISubscription } from '../components/AddSubscriptionModal';
 import { useAuth } from '../context/AuthContext';
@@ -23,9 +22,8 @@ interface ITransaction {
 
 // --- Main Component ---
 const Dashboard: React.FC = () => {
-  const { logout } = useAuth(); // Keep logout if you need it, though usually handled by layout
-  const navigate = useNavigate();
-
+  const { logout } = useAuth(); // kept for logic, but UI removed
+  
   // --- State ---
   const [user, setUser] = useState<UserProfile | null>(null);
   const [subscriptions, setSubscriptions] = useState<ISubscription[]>([]);
@@ -118,27 +116,22 @@ const Dashboard: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">Loading Dashboard...</div>;
+    return <div className="p-8 text-center text-gray-500">Loading Dashboard Data...</div>;
   }
 
+  // --- RENDER ---
+  // NOTICE: No <aside>, No <header>, No "FluxPay" Logo. Just the content.
   return (
-    <div className="space-y-6"> 
-      {/* NOTE: I have removed the <aside> Sidebar and <header> Topbar. 
-         This component now strictly renders ONLY the dashboard content.
-      */}
-
-      {/* Action Bar / Title */}
-      <div className="flex flex-col md:flex-row justify-between items-center">
+    <div className="w-full"> 
+      
+      {/* Top Action Bar */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard - Live View</h1>
           <p className="text-sm text-gray-500 mt-1">Welcome back, {user?.username}</p>
         </div>
 
         <div className="flex space-x-3 mt-4 md:mt-0">
-          <button className="text-gray-600 hover:text-gray-900 font-medium px-3 py-2 border border-gray-300 rounded-md bg-white">
-            Export
-          </button>
-          
           <button 
             onClick={handleSimulateStkPush} 
             disabled={stkLoading}
@@ -157,12 +150,12 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         {/* Revenue */}
         <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-green-500">
           <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
           <dd className="mt-1 text-3xl font-bold text-gray-900">KES {stats.totalRevenue.toLocaleString()}</dd>
-          <dd className="text-xs text-green-600 mt-1 font-medium">+0.0% this month</dd>
+          <dd className="text-xs text-green-600 mt-1 font-medium">Verified Payments</dd>
         </div>
         {/* Subscriptions */}
         <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-blue-500">
@@ -185,7 +178,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Recent Subscriptions Table */}
-      <div className="bg-white shadow rounded-lg">
+      <div className="bg-white shadow rounded-lg mb-8">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">Recent Subscriptions</h3>
         </div>
