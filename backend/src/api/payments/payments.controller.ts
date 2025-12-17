@@ -3,6 +3,7 @@ import { initiateStkPush } from '../../services/mpesa.service';
 import logger from '../../utils/logger';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware';
 import User from '../../models/User'; // Import the User model
+import Transaction from '../../models/Transaction';
 
 export const initiatePayment = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
@@ -24,10 +25,18 @@ export const initiatePayment = async (req: AuthenticatedRequest, res: Response, 
 
     const businessName = user.businessName || 'FluxPay'; // Use user's business name, or default to 'FluxPay'
 
-    // You can also save the transaction to the database here with a 'pending' status
-    
     const response = await initiateStkPush(phone, amount, businessName); // Pass businessName
 
+    const newTransaction = new Transaction({
+      userId,
+      checkoutRequestID: response.CheckoutRequestID,
+      amount,
+      phone,
+      status: 'pending',
+    });
+
+    await newTransaction.save();
+    
     res.status(200).json({ message: 'STK push initiated successfully', data: response });
   } catch (error) {
     next(error);
@@ -40,18 +49,35 @@ export const handleCallback = async (req: AuthenticatedRequest, res: Response, n
 
     const callbackData = req.body.Body.stkCallback;
     const resultCode = callbackData.ResultCode;
+    const checkoutRequestID = callbackData.CheckoutRequestID;
 
-    // You would typically find the transaction in your database using MerchantRequestID or CheckoutRequestID
-    // and update its status based on the resultCode.
+
+    const transaction = await Transaction.findOne({ checkoutRequestID: checkoutRequestID });
+
+    if (!transaction) {
+      logger.error('Transaction not found for checkoutRequestID:', checkoutRequestID);
+      // Even if the transaction is not found, we must respond to Safaricom to acknowledge receipt.
+      return res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });
+    }
+    
     if (resultCode === 0) {
       // Payment was successful
       const amount = callbackData.CallbackMetadata.Item.find((i: any) => i.Name === 'Amount')?.Value;
       const mpesaReceiptNumber = callbackData.CallbackMetadata.Item.find((i: any) => i.Name === 'MpesaReceiptNumber')?.Value;
       logger.info(`Payment of ${amount} with receipt ${mpesaReceiptNumber} was successful.`);
+
+      transaction.status = 'successful';
+      transaction.mpesaReceiptNumber = mpesaReceiptNumber;
+      await transaction.save();
+      logger.info('Transaction updated successfully');
     } else {
       // Payment failed
       const resultDesc = callbackData.ResultDesc;
       logger.error(`Payment failed: ${resultDesc}`);
+
+      transaction.status = 'failed';
+      await transaction.save();
+      logger.info('Transaction updated to failed');
     }
 
     // Respond to Safaricom to acknowledge receipt of the callback
