@@ -7,94 +7,72 @@ import Transaction from '../../models/Transaction';
 
 export const initiatePayment = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    // 1. Accept EITHER 'phone' OR 'phoneNumber'
+    // 1. Handle variable name mismatch (phone vs phoneNumber)
     let { amount, phone, phoneNumber } = req.body;
-    
-    if (!phone && phoneNumber) {
-        phone = phoneNumber;
-    }
+    if (!phone && phoneNumber) phone = phoneNumber;
 
     if (!amount || !phone) {
       return res.status(400).json({ message: 'Amount and phone number are required' });
     }
 
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({ message: 'User not authenticated' });
-    }
-    const userId = req.user._id;
-
+    const userId = req.user?._id;
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    const businessName = user?.businessName || 'FluxPay'; 
 
-    const businessName = user.businessName || 'FluxPay'; 
-
-    // 2. FIX TS Error: Cast response to 'any' so we can access properties
+    // 2. Initiate STK Push
+    // Cast to 'any' to avoid TypeScript blocking access to properties
     const response: any = await initiateStkPush(phone, amount, businessName);
 
+    // 3. Save to DB
     const newTransaction = new Transaction({
       userId,
       checkoutRequestID: response.CheckoutRequestID,
       amount,
       phone,
-      status: 'pending',
+      status: 'pending', // This is safe
     });
 
     await newTransaction.save();
     
     res.status(200).json({ message: 'STK push initiated successfully', data: response });
   } catch (error) {
+    logger.error('STK Push Error:', error); 
     next(error);
   }
 };
 
 export const handleCallback = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    logger.info('M-Pesa Callback Received:', req.body);
-
-    // Safely access nested properties
     const body = req.body.Body || req.body; 
     const callbackData = body.stkCallback;
     
-    if (!callbackData) {
-        logger.error('Invalid Callback Data');
+    if (!callbackData) return res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });
+
+    const transaction = await Transaction.findOne({ checkoutRequestID: callbackData.CheckoutRequestID });
+    
+    if (!transaction) {
+        // Transaction might not exist if the initial save failed (like in your recent error)
         return res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });
     }
-
-    const resultCode = callbackData.ResultCode;
-    const checkoutRequestID = callbackData.CheckoutRequestID;
-
-    const transaction = await Transaction.findOne({ checkoutRequestID: checkoutRequestID });
-
-    if (!transaction) {
-      logger.error('Transaction not found for checkoutRequestID:', checkoutRequestID);
-      return res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });
-    }
     
-    if (resultCode === 0) {
-      // Payment was successful
+    if (callbackData.ResultCode === 0) {
+      // Payment Successful
       const meta = callbackData.CallbackMetadata?.Item || [];
-      const amount = meta.find((i: any) => i.Name === 'Amount')?.Value;
       const mpesaReceiptNumber = meta.find((i: any) => i.Name === 'MpesaReceiptNumber')?.Value;
       
-      logger.info(`Payment of ${amount} with receipt ${mpesaReceiptNumber} was successful.`);
-
-      // 3. FIX TS Error: Use 'completed' instead of 'successful' to match your Model
-      transaction.status = 'completed';
+      // CRITICAL FIX: Must be 'completed' to match Mongoose Enum. 'successful' will crash it.
+      transaction.status = 'completed'; 
       transaction.mpesaReceiptNumber = mpesaReceiptNumber;
       await transaction.save();
     } else {
-      // Payment failed
-      const resultDesc = callbackData.ResultDesc;
-      logger.error(`Payment failed: ${resultDesc}`);
-
+      // Payment Failed
       transaction.status = 'failed';
       await transaction.save();
     }
 
     res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });
   } catch (error) {
+    logger.error('Callback Error:', error);
     next(error);
   }
 };
