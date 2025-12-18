@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { AddSubscriptionModal } from '../components/AddSubscriptionModal';
+import { StkPushModal } from '../components/StkPushModal'; // Import the new modal
 import { SubscriptionsTable } from '../components/SubscriptionsTable';
 import { TransactionsTable } from '../components/TransactionsTable';
 import { useAuth } from '../context/AuthContext';
@@ -50,7 +51,10 @@ const Dashboard: React.FC = () => {
   const [subscriptions, setSubscriptions] = useState<ISubscription[]>([]);
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // UI State
+  const [isAddSubModalOpen, setIsAddSubModalOpen] = useState(false);
+  const [isStkModalOpen, setIsStkModalOpen] = useState(false); // State for the new modal
 
   // Stats State
   const [stats, setStats] = useState({
@@ -109,10 +113,14 @@ const Dashboard: React.FC = () => {
   }, []);
 
   // --- Handlers ---
-  const handleSubscriptionAdded = (newSub: any) => { // Use 'any' to avoid interface mismatch issues temporarily
+  const handleSubscriptionAdded = (newSub: any) => {
     setSubscriptions(prev => [newSub, ...prev]);
-    setIsModalOpen(false);
-    fetchData(); // Refetch all data to ensure stats are updated
+    setIsAddSubModalOpen(false);
+    fetchData(); // Refetch all data
+  };
+
+  const handleStkPushSuccess = () => {
+    fetchData(); // Refetch all data
   };
 
   if (loading) {
@@ -131,7 +139,13 @@ const Dashboard: React.FC = () => {
 
         <div className="flex space-x-3 mt-4 md:mt-0">
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsStkModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow transition font-medium text-sm"
+          >
+            Simulate STK Push
+          </button>
+          <button
+            onClick={() => setIsAddSubModalOpen(true)}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow transition font-medium text-sm"
           >
             Add Subscription
@@ -170,9 +184,14 @@ const Dashboard: React.FC = () => {
       </div>
 
       <AddSubscriptionModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isAddSubModalOpen}
+        onClose={() => setIsAddSubModalOpen(false)}
         onSuccess={handleSubscriptionAdded}
+      />
+      <StkPushModal
+        isOpen={isStkModalOpen}
+        onClose={() => setIsStkModalOpen(false)}
+        onSuccess={handleStkPushSuccess}
       />
     </div>
   );
