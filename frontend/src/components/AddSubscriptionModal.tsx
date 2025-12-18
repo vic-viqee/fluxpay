@@ -1,16 +1,27 @@
-import React, { useState } from 'react';
-import api from '../services/api';
+import React, { useState, useEffect } from 'react';
+import api, { getServicePlans, createClient } from '../services/api';
 
-// FIX: Define the interface locally instead of importing from backend
+// Re-define ISubscription locally based on the new backend model
 export interface ISubscription {
   _id: string;
-  customerName: string;
-  phoneNumber: string;
-  amount: number;
-  billingFrequency: 'daily' | 'weekly' | 'monthly';
+  clientId: string; // Reference to Client ID
+  planId: string;   // Reference to ServicePlan ID
+  ownerId: string;  // Reference to User ID
+  status: 'PENDING_ACTIVATION' | 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
   startDate: string;
-  status: string;
+  nextBillingDate: string;
   notes?: string;
+  // Potentially add populated client and plan data for display
+  client?: { name: string; phoneNumber: string; email?: string };
+  plan?: { name: string; amountKes: number; frequency: string };
+}
+
+interface ServicePlan {
+  _id: string;
+  name: string;
+  amountKes: number;
+  frequency: 'daily' | 'weekly' | 'monthly' | 'annually';
+  billingDay: number;
 }
 
 interface AddSubscriptionModalProps {
@@ -20,14 +31,36 @@ interface AddSubscriptionModalProps {
 }
 
 export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const [customerName, setCustomerName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [amount, setAmount] = useState('');
-  const [billingFrequency, setBillingFrequency] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]); // YYYY-MM-DD
+  const [clientName, setClientName] = useState('');
+  const [clientPhoneNumber, setClientPhoneNumber] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [selectedPlanId, setSelectedPlanId] = useState('');
+  const [servicePlans, setServicePlans] = useState<ServicePlan[]>([]);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [plansLoading, setPlansLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      const fetchPlans = async () => {
+        setPlansLoading(true);
+        try {
+          const fetchedPlans = await getServicePlans();
+          setServicePlans(fetchedPlans);
+          if (fetchedPlans.length > 0) {
+            setSelectedPlanId(fetchedPlans[0]._id); // Select first plan by default
+          }
+        } catch (err: any) {
+          setError(err.response?.data?.message || 'Failed to fetch service plans.');
+          console.error('Error fetching plans:', err);
+        } finally {
+          setPlansLoading(false);
+        }
+      };
+      fetchPlans();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -36,29 +69,56 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({ isOp
     setError('');
     setLoading(true);
 
-    if (!customerName || !phoneNumber || !amount || !billingFrequency || !startDate) {
-      setError('Please fill in all required fields.');
+    if (!clientName || !clientPhoneNumber || !selectedPlanId) {
+      setError('Client Name, Phone Number, and Service Plan are required.');
+      setLoading(false);
+      return;
+    }
+
+    if (!/^2547\d{8}$/.test(clientPhoneNumber)) {
+      setError('Invalid Kenyan M-Pesa phone number (e.g., 2547XXXXXXXX).');
       setLoading(false);
       return;
     }
 
     try {
+      // 1. Create or get Client
+      let clientId = '';
+      try {
+        const clientResponse = await createClient({
+          name: clientName,
+          phoneNumber: clientPhoneNumber,
+          email: clientEmail,
+        });
+        clientId = clientResponse._id; // Assuming createClient returns the created client object with _id
+      } catch (clientErr: any) {
+        // If client already exists (e.g., 409 Conflict), try to find them
+        if (clientErr.response && clientErr.response.status === 409) {
+          // In a real app, you'd fetch the existing client by phone number or email
+          // For simplicity, we'll just re-throw if it's not a clear 'already exists' scenario
+          setError(clientErr.response?.data?.message || 'Error creating client.');
+          setLoading(false);
+          return;
+        } else {
+          setError(clientErr.response?.data?.message || 'Error creating client.');
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 2. Create Subscription
       const response = await api.post('/subscriptions', {
-        customerName,
-        phoneNumber,
-        amount: parseFloat(amount),
-        billingFrequency,
-        startDate,
+        clientId,
+        planId: selectedPlanId,
         notes,
       });
 
       onSuccess(response.data); // Pass the new subscription back to the dashboard
       // Reset form
-      setCustomerName('');
-      setPhoneNumber('');
-      setAmount('');
-      setBillingFrequency('monthly');
-      setStartDate(new Date().toISOString().split('T')[0]);
+      setClientName('');
+      setClientPhoneNumber('');
+      setClientEmail('');
+      setSelectedPlanId(servicePlans.length > 0 ? servicePlans[0]._id : '');
       setNotes('');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to add subscription.');
@@ -73,7 +133,7 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({ isOp
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Add New Subscription</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 rounded-md">&times;</button>
+          <button onClick={onClose} className="btn btn-secondary">&times;</button>
         </div>
         
         {error && (
@@ -83,67 +143,68 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({ isOp
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Client Details</h3>
           <div>
-            <label htmlFor="customerName" className="block text-sm font-medium text-gray-700">Customer Name</label>
+            <label htmlFor="clientName" className="block text-sm font-medium text-gray-700">Client Name</label>
             <input
               type="text"
-              id="customerName"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
+              id="clientName"
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               required
+              disabled={loading}
             />
           </div>
           <div>
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
+            <label htmlFor="clientPhoneNumber" className="block text-sm font-medium text-gray-700">Client Phone Number (e.g., 2547XXXXXXXX)</label>
             <input
               type="tel"
-              id="phoneNumber"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
+              id="clientPhoneNumber"
+              value={clientPhoneNumber}
+              onChange={(e) => setClientPhoneNumber(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="e.g., 2547XXXXXXXX"
               required
+              disabled={loading}
             />
           </div>
           <div>
-            <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount (KES)</label>
+            <label htmlFor="clientEmail" className="block text-sm font-medium text-gray-700">Client Email (Optional)</label>
             <input
-              type="number"
-              id="amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              type="email"
+              id="clientEmail"
+              value={clientEmail}
+              onChange={(e) => setClientEmail(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              min="1"
-              step="0.01"
-              required
+              disabled={loading}
             />
           </div>
+
+          <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4 mt-6">Plan Details</h3>
           <div>
-            <label htmlFor="billingFrequency" className="block text-sm font-medium text-gray-700">Billing Frequency</label>
-            <select
-              id="billingFrequency"
-              value={billingFrequency}
-              onChange={(e) => setBillingFrequency(e.target.value as 'daily' | 'weekly' | 'monthly')}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              required
-            >
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
+            <label htmlFor="selectedPlanId" className="block text-sm font-medium text-gray-700">Service Plan</label>
+            {plansLoading ? (
+              <p className="mt-1 text-gray-600">Loading plans...</p>
+            ) : (
+              <select
+                id="selectedPlanId"
+                value={selectedPlanId}
+                onChange={(e) => setSelectedPlanId(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                required
+                disabled={loading || servicePlans.length === 0}
+              >
+                {servicePlans.length === 0 && <option value="">No plans available</option>}
+                {servicePlans.map((plan) => (
+                  <option key={plan._id} value={plan._id}>
+                    {plan.name} (KES {plan.amountKes} / {plan.frequency})
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
-          <div>
-            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">Start Date</label>
-            <input
-              type="date"
-              id="startDate"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              required
-            />
-          </div>
+          
           <div>
             <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes (Optional)</label>
             <textarea
@@ -152,12 +213,13 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({ isOp
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              disabled={loading}
             ></textarea>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
             <button type="button" onClick={onClose} className="btn btn-outline" disabled={loading}>Cancel</button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
+            <button type="submit" className="btn btn-primary" disabled={loading || plansLoading}>
               {loading ? 'Adding...' : 'Add Subscription'}
             </button>
           </div>

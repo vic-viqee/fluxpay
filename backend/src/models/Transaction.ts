@@ -1,22 +1,28 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { ISubscription } from './Subscription';
 import { IUser } from './User';
 
 export interface ITransaction extends Document {
-  user: IUser['_id'];
-  amount: number;
-  type: 'STK_PUSH' | 'RECURRING';
-  status: 'pending' | 'completed' | 'failed';
-  mpesaReceiptNumber?: string;
+  subscriptionId: ISubscription['_id'];
+  ownerId: IUser['_id']; // The user who owns the subscription (e.g., Alex)
+  amountKes: number;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  mpesaReceiptNo?: string;
+  darajaRequestId: string;
+  retryCount: number;
   transactionDate: Date;
 }
 
 const TransactionSchema: Schema = new Schema({
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  amount: { type: Number, required: true },
-  type: { type: String, enum: ['STK_PUSH', 'RECURRING'], required: true },
-  status: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
-  mpesaReceiptNumber: { type: String },
+  subscriptionId: { type: Schema.Types.ObjectId, ref: 'Subscription', required: true },
+  ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  amountKes: { type: Number, required: true },
+  status: { type: String, enum: ['PENDING', 'SUCCESS', 'FAILED'], default: 'PENDING' },
+  mpesaReceiptNo: { type: String },
+  darajaRequestId: { type: String, required: true, unique: true },
+  retryCount: { type: Number, default: 0 },
   transactionDate: { type: Date, default: Date.now },
 }, { timestamps: true });
 
 export default mongoose.model<ITransaction>('Transaction', TransactionSchema);
+

@@ -1,7 +1,20 @@
 import React from 'react';
+import moment from 'moment';
+
+interface ITransaction {
+  _id: string;
+  subscriptionId: string;
+  ownerId: string;
+  amountKes: number;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  mpesaReceiptNo?: string;
+  darajaRequestId: string;
+  retryCount: number;
+  transactionDate: string;
+}
 
 interface TransactionsTableProps {
-  transactions: any[];
+  transactions: ITransaction[];
 }
 
 export const TransactionsTable: React.FC<TransactionsTableProps> = ({ transactions }) => {
@@ -22,18 +35,19 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({ transactio
             <tbody className="bg-white divide-y divide-gray-200">
               {transactions.map((txn) => (
                 <tr key={txn._id}>
-                  <td className="px-6 py-4 whitespace-nowrap">KES {txn.amount.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">KES {txn.amountKes.toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      txn.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      txn.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
+                      txn.status === 'SUCCESS' ? 'bg-green-100 text-green-800' :
+                      txn.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                      txn.status === 'FAILED' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
                     }`}>
                       {txn.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{txn.mpesaReceiptNumber || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{new Date(txn.createdAt).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{txn.mpesaReceiptNo || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{moment(txn.transactionDate).format('YYYY-MM-DD')}</td>
                 </tr>
               ))}
             </tbody>

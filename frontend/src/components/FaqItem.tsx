@@ -11,7 +11,7 @@ const FaqItem: React.FC<FaqItemProps> = ({ question, answer }) => {
   return (
     <div className="border-b border-gray-200 py-6">
       <button
-        className="w-full flex justify-between items-center text-left text-lg font-semibold text-gray-800 focus:outline-none p-4 hover:bg-gray-50 rounded-lg"
+        className="w-full flex justify-between items-center text-left text-lg font-semibold text-gray-800 focus:outline-none p-4 rounded-lg btn btn-ghost"
         onClick={() => setIsOpen(!isOpen)}
       >
         <span>{question}</span>

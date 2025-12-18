@@ -1,30 +1,26 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { IClient } from './Client';
+import { IServicePlan } from './ServicePlan';
 import { IUser } from './User';
 
 export interface ISubscription extends Document {
-  user: IUser['_id'];
-  customerName: string; // New field
-  phoneNumber: string; // New field
-  amount: number;
-  billingFrequency: 'daily' | 'weekly' | 'monthly'; // New field
-  plan: string;
-  status: 'active' | 'inactive' | 'cancelled';
+  clientId: IClient['_id'];
+  planId: IServicePlan['_id'];
+  ownerId: IUser['_id']; // The user who created this subscription (e.g., Alex)
+  status: 'PENDING_ACTIVATION' | 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
   startDate: Date;
-  endDate?: Date;
-  notes?: string; // New field (optional)
+  nextBillingDate: Date;
+  notes?: string;
 }
 
 const SubscriptionSchema: Schema = new Schema({
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  customerName: { type: String, required: true }, // New field
-  phoneNumber: { type: String, required: true }, // New field
-  amount: { type: Number, required: true },
-  billingFrequency: { type: String, enum: ['daily', 'weekly', 'monthly'], required: true }, // New field
-  plan: { type: String, required: true, default: 'Custom' }, // Default to 'Custom' for dashboard created subs
-  status: { type: String, enum: ['active', 'inactive', 'cancelled'], default: 'active' },
+  clientId: { type: Schema.Types.ObjectId, ref: 'Client', required: true },
+  planId: { type: Schema.Types.ObjectId, ref: 'ServicePlan', required: true },
+  ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  status: { type: String, enum: ['PENDING_ACTIVATION', 'ACTIVE', 'CANCELLED', 'EXPIRED'], default: 'PENDING_ACTIVATION' },
   startDate: { type: Date, default: Date.now },
-  endDate: { type: Date },
-  notes: { type: String }, // New field
+  nextBillingDate: { type: Date, required: true },
+  notes: { type: String },
 }, { timestamps: true });
 
 export default mongoose.model<ISubscription>('Subscription', SubscriptionSchema);

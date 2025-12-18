@@ -4,32 +4,43 @@ import logger from '../../utils/logger';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware';
 import User from '../../models/User';
 import Transaction from '../../models/Transaction';
+import Subscription from '../../models/Subscription'; // Import Subscription model
 
 export const initiatePayment = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    // 1. Handle variable name mismatch (phone vs phoneNumber)
-    let { amount, phone, phoneNumber } = req.body;
+    // 1. Handle variable name mismatch and get required data
+    let { amount, phone, phoneNumber, subscriptionId } = req.body;
     if (!phone && phoneNumber) phone = phoneNumber;
 
-    if (!amount || !phone) {
-      return res.status(400).json({ message: 'Amount and phone number are required' });
+    if (!amount || !phone || !subscriptionId) {
+      return res.status(400).json({ message: 'Amount, phone number, and subscription ID are required.' });
     }
 
-    const userId = req.user?._id;
-    const user = await User.findById(userId);
+    const ownerId = req.user?._id;
+    if (!ownerId) {
+      return res.status(401).json({ message: 'User not authenticated.' });
+    }
+
+    // Verify subscription belongs to the owner
+    const subscription = await Subscription.findOne({ _id: subscriptionId, ownerId });
+    if (!subscription) {
+      return res.status(404).json({ message: 'Subscription not found or does not belong to this user.' });
+    }
+
+    const user = await User.findById(ownerId);
     const businessName = user?.businessName || 'FluxPay'; 
 
     // 2. Initiate STK Push
-    // Cast to 'any' to avoid TypeScript blocking access to properties
     const response: any = await initiateStkPush(phone, amount, businessName);
 
     // 3. Save to DB
     const newTransaction = new Transaction({
-      userId,
-      checkoutRequestID: response.CheckoutRequestID,
-      amount,
-      phone,
-      status: 'pending', // This is safe
+      subscriptionId,
+      ownerId,
+      darajaRequestId: response.CheckoutRequestID,
+      amountKes: amount,
+      status: 'PENDING', // New PENDING status
+      retryCount: 0,
     });
 
     await newTransaction.save();
@@ -46,28 +57,34 @@ export const handleCallback = async (req: AuthenticatedRequest, res: Response, n
     const body = req.body.Body || req.body; 
     const callbackData = body.stkCallback;
     
-    if (!callbackData) return res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });
+    if (!callbackData) {
+      logger.warn('M-Pesa Callback received with no stkCallback data.', req.body);
+      return res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' }); // Acknowledge receipt
+    }
 
-    const transaction = await Transaction.findOne({ checkoutRequestID: callbackData.CheckoutRequestID });
+    const transaction = await Transaction.findOne({ darajaRequestId: callbackData.CheckoutRequestID });
     
     if (!transaction) {
-        // Transaction might not exist if the initial save failed (like in your recent error)
-        return res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });
+      logger.error('Transaction not found for darajaRequestId:', callbackData.CheckoutRequestID);
+      return res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' }); // Acknowledge receipt
     }
     
     if (callbackData.ResultCode === 0) {
       // Payment Successful
       const meta = callbackData.CallbackMetadata?.Item || [];
-      const mpesaReceiptNumber = meta.find((i: any) => i.Name === 'MpesaReceiptNumber')?.Value;
+      const mpesaReceiptNo = meta.find((i: any) => i.Name === 'MpesaReceiptNumber')?.Value;
       
-      // CRITICAL FIX: Must be 'completed' to match Mongoose Enum. 'successful' will crash it.
-      transaction.status = 'completed'; 
-      transaction.mpesaReceiptNumber = mpesaReceiptNumber;
+      transaction.status = 'SUCCESS'; // New SUCCESS status
+      transaction.mpesaReceiptNo = mpesaReceiptNo;
       await transaction.save();
+
+      // TODO: Trigger success notifications to Alex and John
     } else {
       // Payment Failed
-      transaction.status = 'failed';
+      transaction.status = 'FAILED'; // New FAILED status
       await transaction.save();
+
+      // TODO: Trigger failure notifications to Alex and John
     }
 
     res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });

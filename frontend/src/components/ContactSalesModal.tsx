@@ -13,7 +13,7 @@ const ContactSalesModal: React.FC<ContactSalesModalProps> = ({ isOpen, onClose }
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Contact Sales</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 rounded-md">&times;</button>
+          <button onClick={onClose} className="btn btn-secondary">&times;</button>
         </div>
         <form>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

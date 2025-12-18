@@ -16,8 +16,9 @@ import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import Pricing from './pages/Pricing';
 import Documentation from './pages/Documentation';
-import SubscriptionCheckout from './pages/SubscriptionCheckout'; // Import the new component
+import SubscriptionCheckout from './pages/SubscriptionCheckout';
 import MainLayout from './layouts/MainLayout';
+import Plans from './pages/Plans'; // NEW IMPORT
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -29,7 +30,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/signup" element={<Signup />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/documentation" element={<Documentation />} />
-          <Route path="/subscribe" element={<SubscriptionCheckout />} /> {/* New route */}
+          <Route path="/subscribe" element={<SubscriptionCheckout />} />
           
           <Route element={<PrivateRoute />}>
             <Route element={<MainLayout />}>
@@ -39,8 +40,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Route path="/subscriptions" element={<Subscriptions />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/plans" element={<Plans />} />
             </Route>
           </Route>
+
         </Routes>
       </BrowserRouter>
     </AuthProvider>

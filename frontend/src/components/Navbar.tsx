@@ -29,7 +29,7 @@ const Navbar: React.FC = () => {
 
         {/* Mobile menu button */}
         <div className="md:hidden flex items-center">
-          <button onClick={toggleMobileMenu} className="text-gray-600 hover:text-indigo-600 focus:outline-none">
+          <button onClick={toggleMobileMenu} className="btn btn-secondary">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               {isMobileMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>

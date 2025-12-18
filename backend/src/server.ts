@@ -12,7 +12,11 @@ import settingsRoutes from './api/settings/settings.routes';
 import docsRoutes from './api/docs.routes';
 import userRoutes from './api/users/users.routes';
 import transactionRoutes from './api/transactions/transactions.routes';
+import plansRoutes from './api/plans/plans.routes'; // NEW IMPORT
+import clientsRoutes from './api/clients/clients.routes'; // NEW IMPORT
 import connectDB from './config/db';
+import cron from 'node-cron'; // NEW IMPORT
+import { processDuePayments, processFailedTransactions } from './services/billing.service'; // NEW IMPORT
 
 const app: Express = express();
 const port = config.port;
@@ -60,6 +64,15 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/docs', docsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/plans', plansRoutes);
+app.use('/api/clients', clientsRoutes); // NEW USAGE // NEW USAGE
+
+// Schedule daily tasks
+cron.schedule('0 0 * * *', () => { // Runs daily at midnight
+  logger.info('Running daily billing tasks...');
+  processDuePayments();
+  processFailedTransactions();
+});
 
 // Error handling middleware
 app.use(errorHandler);
