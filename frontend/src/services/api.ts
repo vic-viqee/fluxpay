@@ -26,7 +26,8 @@ export const initiateStkPushPayment = async (data: {
   transactionDescription?: string;
 }) => {
   try {
-    const response = await api.post('/payments/stk-push', data);
+    // Correctly point to the new simulation endpoint
+    const response = await api.post('/payments/simulate-stk-push', data);
     return response.data;
   } catch (error) {
     throw error;

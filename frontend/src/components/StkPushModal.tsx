@@ -23,8 +23,8 @@ export const StkPushModal: React.FC<StkPushModalProps> = ({ isOpen, onClose, onS
       setMessage({ text: 'Phone Number and Amount are required.', type: 'error' });
       return;
     }
-    if (!/^2547\d{8}$/.test(phoneNumber)) {
-      setMessage({ text: 'Invalid Kenyan M-Pesa phone number format (e.g., 2547XXXXXXXX).', type: 'error' });
+    if (!/^254(7|1)\d{8}$/.test(phoneNumber)) {
+      setMessage({ text: 'Invalid Kenyan M-Pesa phone number format (e.g., 2547... or 2541...).', type: 'error' });
       return;
     }
     if (Number(amount) <= 0) {

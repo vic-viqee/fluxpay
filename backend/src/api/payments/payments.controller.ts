@@ -52,6 +52,28 @@ export const initiatePayment = async (req: AuthenticatedRequest, res: Response, 
   }
 };
 
+export const simulateStkPush = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { amount, phoneNumber } = req.body;
+
+    if (!amount || !phoneNumber) {
+      return res.status(400).json({ message: 'Amount and phone number are required.' });
+    }
+
+    const ownerId = req.user?._id;
+    const user = await User.findById(ownerId);
+    const businessName = user?.businessName || 'FluxPay'; 
+
+    // Initiate STK Push without creating a transaction
+    const response: any = await initiateStkPush(phoneNumber, amount, businessName);
+
+    res.status(200).json({ message: 'STK push simulation initiated successfully', data: response });
+  } catch (error) {
+    logger.error('STK Push Simulation Error:', error); 
+    next(error);
+  }
+};
+
 export const handleCallback = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const body = req.body.Body || req.body; 
