@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { createServicePlan } from '../services/api';
-import { useNavigate } from 'react-router-dom';
 
 const Plans: React.FC = () => {
-  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [amountKes, setAmountKes] = useState<number | string>('');
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly' | 'annually'>('monthly');

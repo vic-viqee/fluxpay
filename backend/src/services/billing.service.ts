@@ -13,22 +13,16 @@ const getNextBillingDate = (currentDate: Date, frequency: 'daily' | 'weekly' | '
   if (frequency === 'daily') {
     nextDate.add(1, 'days');
   } else if (frequency === 'weekly') {
-    // If billingDay is 1-7 (Mon-Sun), moment.isoWeekday() matches this.
-    // nextDate.isoWeekday(billingDay) sets the date to the next occurrence of that day.
-    // If today is the billingDay, it will set it for next week.
     nextDate.isoWeekday(billingDay);
     if (nextDate.isSameOrBefore(moment(currentDate))) {
       nextDate.add(1, 'weeks').isoWeekday(billingDay);
     }
   } else if (frequency === 'monthly') {
-    // Sets to the 'billingDay' of the current month. If that's past, it goes to next month.
     nextDate.date(billingDay);
     if (nextDate.isSameOrBefore(moment(currentDate))) {
       nextDate.add(1, 'months').date(billingDay);
     }
   } else if (frequency === 'annually') {
-    // Assuming billingDay is day of month, and month is set implicitly from start date
-    // For simplicity, it will try to set the date to the billingDay, then move to next year if needed.
     nextDate.add(1, 'years').date(billingDay);
     if (nextDate.isSameOrBefore(moment(currentDate))) {
         nextDate.add(1, 'years').date(billingDay);
@@ -49,38 +43,42 @@ export const processDuePayments = async () => {
       nextBillingDate: { $lte: today.toDate() },
     })
     .populate('clientId')
-    .populate('planId');
+    .populate('planId')
+    .populate('ownerId');
 
     for (const subscription of dueSubscriptions) {
-      if (!subscription.clientId || !subscription.planId) {
+      const client = subscription.clientId as any;
+      const plan = subscription.planId as any;
+      const owner = subscription.ownerId as any;
+
+      if (!client || !plan) {
         logger.error(`Skipping subscription ${subscription._id}: Missing client or plan details.`);
         continue;
       }
-
-      const client = subscription.clientId as any; // Cast to access populated fields
-      const plan = subscription.planId as any; // Cast to access populated fields
 
       if (!client.phoneNumber || !plan.amountKes) {
         logger.error(`Skipping subscription ${subscription._id}: Missing client phone or plan amount.`);
         continue;
       }
 
+      let newTransaction: any = null;
       try {
         // 1. Create a PENDING Transaction record
-        const newTransaction = new Transaction({
+        newTransaction = new Transaction({
           subscriptionId: subscription._id,
           ownerId: subscription.ownerId,
           amountKes: plan.amountKes,
           status: 'PENDING',
           retryCount: 0,
+          darajaRequestId: 'temp' // Temporary ID before getting the real one
         });
         await newTransaction.save();
         
         // 2. Call the M-Pesa STK Push service
-        const stkPushResponse = await initiateStkPush(
+        const stkPushResponse: any = await initiateStkPush(
           client.phoneNumber,
           plan.amountKes,
-          (subscription.ownerId as any).businessName || 'FluxPay' // Assuming ownerId is populated with User
+          owner?.businessName || 'FluxPay'
         );
 
         // 3. Save the darajaRequestId
@@ -95,13 +93,10 @@ export const processDuePayments = async () => {
 
       } catch (error: any) {
         logger.error(`Failed to initiate STK Push for subscription ${subscription._id}: ${error.message}`);
-        // Mark transaction as FAILED if STK push initiation fails
-        const failedTransaction = await Transaction.findOne({_id: newTransaction._id});
-        if(failedTransaction){
-            failedTransaction.status = 'FAILED';
-            await failedTransaction.save();
+        if (newTransaction) {
+          newTransaction.status = 'FAILED';
+          await newTransaction.save();
         }
-        // Increment retryCount for the subscription, or handle as needed
       }
     }
   } catch (error: any) {
@@ -118,22 +113,24 @@ export const processFailedTransactions = async () => {
     const failedTransactions = await Transaction.find({
       status: 'FAILED',
       retryCount: { $lt: 3 },
-      transactionDate: { $lte: twentyFourHoursAgo }, // Cool-down period
+      updatedAt: { $lte: twentyFourHoursAgo }, // Use updatedAt for cool-down
     })
     .populate({
         path: 'subscriptionId',
-        populate: [{ path: 'clientId' }, { path: 'planId' }, { path: 'ownerId' }] // Deep populate
+        populate: [{ path: 'clientId' }, { path: 'planId' }, { path: 'ownerId' }]
     });
 
     for (const transaction of failedTransactions) {
-        if (!transaction.subscriptionId || !transaction.subscriptionId.clientId || !transaction.subscriptionId.planId) {
+        const subscription = transaction.subscriptionId as any;
+
+        if (!subscription || !subscription.clientId || !subscription.planId) {
             logger.error(`Skipping failed transaction ${transaction._id}: Missing subscription, client or plan details.`);
             continue;
         }
 
-        const subscription = transaction.subscriptionId as any;
         const client = subscription.clientId as any;
         const plan = subscription.planId as any;
+        const owner = subscription.ownerId as any;
 
         if (!client.phoneNumber || !plan.amountKes) {
             logger.error(`Skipping failed transaction ${transaction._id}: Missing client phone or plan amount.`);
@@ -142,34 +139,28 @@ export const processFailedTransactions = async () => {
 
         try {
             // Initiate a new STK Push
-            const stkPushResponse = await initiateStkPush(
+            const stkPushResponse: any = await initiateStkPush(
                 client.phoneNumber,
                 plan.amountKes,
-                (subscription.ownerId as any).businessName || 'FluxPay'
+                owner?.businessName || 'FluxPay'
             );
 
-            // Create a new transaction record for the retry, linking it to the subscription
+            // Create a new transaction record for the retry
             const retriedTransaction = new Transaction({
                 subscriptionId: subscription._id,
                 ownerId: subscription.ownerId,
                 amountKes: plan.amountKes,
                 status: 'PENDING',
                 darajaRequestId: stkPushResponse.CheckoutRequestID,
-                retryCount: transaction.retryCount + 1, // Increment retry count
+                retryCount: transaction.retryCount + 1,
             });
             await retriedTransaction.save();
-
-            // Mark the original failed transaction as superceded or just leave it
-            // For now, we leave the old FAILED transaction and create a new PENDING one for the retry attempt.
-
+            
             logger.info(`Retry STK Push initiated for transaction ${transaction._id}. New CheckoutRequestID: ${stkPushResponse.CheckoutRequestID}`);
-            // TODO: Alert the owner (Alex) about the retry
         } catch (error: any) {
             logger.error(`Failed to retry STK Push for transaction ${transaction._id}: ${error.message}`);
-            // If retry fails, just increment the retry count of the original transaction
             transaction.retryCount += 1;
             await transaction.save();
-            // TODO: Alert the owner (Alex) about the persistent failure
         }
     }
   } catch (error: any) {
