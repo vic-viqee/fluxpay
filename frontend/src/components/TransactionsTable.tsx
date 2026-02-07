@@ -54,7 +54,12 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({ transactio
           </table>
         </div>
       ) : (
-        <p>No recent transactions found.</p>
+        <div className="text-center py-8">
+          <p className="mb-4 text-gray-600">No payments yet. <br/> Your transactions will appear here once a client pays.</p>
+          <a href="/documentation#payments" className="text-blue-600 hover:underline">
+            Learn how payments work
+          </a>
+        </div>
       )}
     </div>
   );

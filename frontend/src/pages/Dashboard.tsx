@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import api from '../services/api';
 import { AddSubscriptionModal } from '../components/AddSubscriptionModal';
-import { StkPushModal } from '../components/StkPushModal'; // Import the new modal
+import { StkPushModal } from '../components/StkPushModal';
 import { SubscriptionsTable } from '../components/SubscriptionsTable';
 import { TransactionsTable } from '../components/TransactionsTable';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +13,7 @@ interface UserProfile {
   username: string;
   email: string;
   createdAt: string;
+  has_received_payment: boolean;
 }
 
 interface ISubscription {
@@ -44,17 +46,18 @@ interface ITransaction {
 
 // --- Main Component ---
 const Dashboard: React.FC = () => {
+  const { user } = useOutletContext<{ user: UserProfile | null }>();
   const { } = useAuth();
 
   // --- State ---
-  const [user, setUser] = useState<UserProfile | null>(null);
   const [subscriptions, setSubscriptions] = useState<ISubscription[]>([]);
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
   const [loading, setLoading] = useState(true);
   
   // UI State
   const [isAddSubModalOpen, setIsAddSubModalOpen] = useState(false);
-  const [isStkModalOpen, setIsStkModalOpen] = useState(false); // State for the new modal
+  const [isStkModalOpen, setIsStkModalOpen] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // Stats State
   const [stats, setStats] = useState({
@@ -66,16 +69,15 @@ const Dashboard: React.FC = () => {
 
   // --- Fetch Data ---
   const fetchData = async () => {
+    if (!user) return; // Don't fetch if user is not loaded yet
     try {
       setLoading(true);
 
-      const [userRes, subsRes, transRes] = await Promise.all([
-        api.get('/users/me'),
+      const [subsRes, transRes] = await Promise.all([
         api.get('/subscriptions'),
         api.get('/transactions')
       ]);
 
-      setUser(userRes.data);
       const subsData = subsRes.data || [];
       setSubscriptions(subsData);
       const transData = transRes.data || [];
@@ -101,6 +103,13 @@ const Dashboard: React.FC = () => {
         pendingPayments: pendingPay
       });
 
+      // --- First Payment Celebration ---
+      if (user.has_received_payment && localStorage.getItem('hasCelebrated') !== 'true') {
+        setShowCelebration(true);
+        localStorage.setItem('hasCelebrated', 'true');
+        setTimeout(() => setShowCelebration(false), 5000); // Hide after 5 seconds
+      }
+
     } catch (error) {
       console.error("Failed to fetch dashboard data", error);
     } finally {
@@ -110,7 +119,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user]);
 
   // --- Handlers ---
   const handleSubscriptionAdded = (newSub: any) => {
@@ -123,7 +132,7 @@ const Dashboard: React.FC = () => {
     fetchData(); // Refetch all data
   };
 
-  if (loading) {
+  if (loading || !user) {
     return <div className="p-8 text-center text-gray-500">Loading Dashboard Data...</div>;
   }
 
@@ -133,49 +142,66 @@ const Dashboard: React.FC = () => {
       {/* Top Action Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard - Live View</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1">Welcome back, {user?.username}</p>
         </div>
 
-        <div className="flex space-x-3 mt-4 md:mt-0">
+        <div className="flex items-center space-x-3 mt-4 md:mt-0">
           <button
             onClick={() => setIsStkModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow transition font-medium text-sm"
+            className="text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md shadow-sm transition border border-gray-300"
           >
-            Simulate STK Push
+            Simulate STK Push (TEST)
           </button>
           <button
             onClick={() => setIsAddSubModalOpen(true)}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow transition font-medium text-sm"
+            className="text-sm font-medium text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md shadow transition"
           >
-            Add Subscription
+            Create Subscription
           </button>
         </div>
       </div>
 
-      {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-green-500">
-          <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
-          <dd className="mt-1 text-3xl font-bold text-gray-900">KES {stats.totalRevenue.toLocaleString()}</dd>
-          <dd className="text-xs text-green-600 mt-1 font-medium">Verified Payments</dd>
+      {/* --- Conditional Hero / Stats --- */}
+      {showCelebration ? (
+        <div className="bg-white shadow-sm rounded-lg p-8 text-center mb-8 border-l-4 border-green-500">
+          <h2 className="text-4xl font-bold text-green-600">🎉 You just received your first payment!</h2>
         </div>
-        <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-blue-500">
-          <dt className="text-sm font-medium text-gray-500 truncate">Active Subscriptions</dt>      
-          <dd className="mt-1 text-3xl font-bold text-gray-900">{stats.activeSubscriptions}</dd>    
-          <dd className="text-xs text-gray-500 mt-1">Total active plans</dd>
+      ) : !user?.has_received_payment ? (
+        <div className="bg-white shadow-sm rounded-lg p-12 text-center mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Your account is ready. Let’s collect your first payment.</h2>
+          <button
+            onClick={() => setIsStkModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition text-lg"
+          >
+            ➕ Request Payment
+          </button>
+          <p className="text-gray-500 mt-4">Create a payment request and send it to your client.</p>
         </div>
-        <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-purple-500">
-          <dt className="text-sm font-medium text-gray-500 truncate">Success Rate</dt>
-          <dd className="mt-1 text-3xl font-bold text-gray-900">{stats.successRate.toFixed(1)}%</dd>
-          <dd className="text-xs text-gray-500 mt-1">Based on transactions</dd>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-green-500">
+            <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
+            <dd className="mt-1 text-3xl font-bold text-gray-900">KES {stats.totalRevenue.toLocaleString()}</dd>
+            <dd className="text-xs text-green-600 mt-1 font-medium">Verified Payments</dd>
+          </div>
+          <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-blue-500">
+            <dt className="text-sm font-medium text-gray-500 truncate">Active Subscriptions</dt>      
+            <dd className="mt-1 text-3xl font-bold text-gray-900">{stats.activeSubscriptions}</dd>    
+            <dd className="text-xs text-gray-500 mt-1">Total active plans</dd>
+          </div>
+          <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-purple-500">
+            <dt className="text-sm font-medium text-gray-500 truncate">Success Rate</dt>
+            <dd className="mt-1 text-3xl font-bold text-gray-900">{stats.successRate.toFixed(1)}%</dd>
+            <dd className="text-xs text-gray-500 mt-1">Based on transactions</dd>
+          </div>
+            <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-yellow-500">
+            <dt className="text-sm font-medium text-gray-500 truncate">Pending Payments</dt>
+            <dd className="mt-1 text-3xl font-bold text-gray-900">{stats.pendingPayments}</dd>        
+            <dd className="text-xs text-yellow-600 mt-1 font-medium">Action required</dd>
+          </div>
         </div>
-          <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-yellow-500">
-          <dt className="text-sm font-medium text-gray-500 truncate">Pending Payments</dt>
-          <dd className="mt-1 text-3xl font-bold text-gray-900">{stats.pendingPayments}</dd>        
-          <dd className="text-xs text-yellow-600 mt-1 font-medium">Action required</dd>
-        </div>
-      </div>
+      )}
       
       {/* Use the new table components */}
       <div className="space-y-8">

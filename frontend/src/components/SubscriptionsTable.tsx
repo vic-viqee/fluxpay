@@ -62,7 +62,15 @@ export const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({ subscrip
           </table>
         </div>
       ) : (
-        <p>No subscriptions found.</p>
+        <div className="text-center py-8">
+          <p className="mb-4 text-gray-600">You don’t have any subscriptions yet. <br/> Create one if you charge clients monthly.</p>
+          <button
+            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+            // onClick handler will be added later
+          >
+            Create Subscription
+          </button>
+        </div>
       )}
     </div>
   );

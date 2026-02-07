@@ -1,12 +1,49 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import moment from 'moment';
+
+interface UserProfile {
+  _id: string;
+  businessName?: string;
+  username: string;
+  email: string;
+  createdAt: string;
+  has_received_payment: boolean;
+}
 
 interface SidebarProps {
   isOpen: boolean;
   toggleSidebar: () => void;
+  user: UserProfile | null;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
+const NavLink: React.FC<{ to: string; label: string; disabled: boolean; onClick: () => void; }> = ({ to, label, disabled, onClick }) => {
+  const location = useLocation();
+  const isActive = location.pathname === to;
+
+  const linkClasses = `flex items-center p-2 rounded-md transition-colors ${
+    isActive ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'
+  } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`;
+
+  return (
+    <li title={disabled ? "Unlock this feature by receiving your first payment." : ""}>
+      <Link
+        to={disabled ? '#' : to}
+        className={linkClasses}
+        onClick={onClick}
+        aria-disabled={disabled}
+        tabIndex={disabled ? -1 : undefined}
+      >
+        <span className="ml-3">{label}</span>
+      </Link>
+    </li>
+  );
+};
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, user }) => {
+  const accountAgeInHours = user ? moment().diff(moment(user.createdAt), 'hours') : 0;
+  const canSeeAdvancedFeatures = user?.has_received_payment || accountAgeInHours < 48;
+
   return (
     <aside
       className={"transform top-0 left-0 w-64 bg-gray-800 text-white fixed h-full overflow-auto ease-in-out transition-all duration-300 z-50 " +
@@ -20,42 +57,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
         
         <nav className="flex-1">
           <ul className="space-y-2">
-            <li>
-              <Link to="/dashboard" className="flex items-center p-2 text-gray-300 hover:bg-gray-700 rounded-md" onClick={toggleSidebar}>
-                {/* Icon for Dashboard */}
-                <span className="ml-3">Dashboard</span>
-              </Link>
-            </li>
-            <li>
-              <Link to="/customers" className="flex items-center p-2 text-gray-300 hover:bg-gray-700 rounded-md" onClick={toggleSidebar}>
-                {/* Icon for Customers */}
-                <span className="ml-3">Customers</span>
-              </Link>
-            </li>
-            <li>
-              <Link to="/subscriptions" className="flex items-center p-2 text-gray-300 hover:bg-gray-700 rounded-md" onClick={toggleSidebar}>
-                {/* Icon for Subscriptions */}
-                <span className="ml-3">Subscriptions</span>
-              </Link>
-            </li>
-            <li>
-              <Link to="/payments" className="flex items-center p-2 text-gray-300 hover:bg-gray-700 rounded-md" onClick={toggleSidebar}>
-                {/* Icon for Payments */}
-                <span className="ml-3">Payments</span>
-              </Link>
-            </li>
-            <li>
-              <Link to="/analytics" className="flex items-center p-2 text-gray-300 hover:bg-gray-700 rounded-md" onClick={toggleSidebar}>
-                {/* Icon for Analytics */}
-                <span className="ml-3">Analytics</span>
-              </Link>
-            </li>
-            <li>
-              <Link to="/settings" className="flex items-center p-2 text-gray-300 hover:bg-gray-700 rounded-md" onClick={toggleSidebar}>
-                {/* Icon for Settings */}
-                <span className="ml-3">Settings</span>
-              </Link>
-            </li>
+            <NavLink to="/dashboard" label="Dashboard" disabled={false} onClick={toggleSidebar} />
+            <NavLink to="/customers" label="Customers" disabled={false} onClick={toggleSidebar} />
+            <NavLink to="/subscriptions" label="Subscriptions" disabled={false} onClick={toggleSidebar} />
+            <NavLink to="/payments" label="Payments" disabled={false} onClick={toggleSidebar} />
+            <NavLink to="/analytics" label="Analytics" disabled={!canSeeAdvancedFeatures} onClick={toggleSidebar} />
+            <NavLink to="/settings" label="Settings" disabled={!canSeeAdvancedFeatures} onClick={toggleSidebar} />
           </ul>
         </nav>
       </div>
