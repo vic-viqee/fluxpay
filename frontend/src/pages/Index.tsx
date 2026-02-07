@@ -37,11 +37,11 @@ const Index: React.FC = () => {
           
           <div className="flex justify-center space-x-8 md:space-x-16 text-left">
             <div>
-              <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">10K+</div>
+              <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">0</div>
               <div className="text-gray-400 text-sm">Active Businesses</div>
             </div>
             <div>
-              <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">KES 500M+</div>
+              <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">KES 0</div>
               <div className="text-gray-400 text-sm">Processed Monthly</div>
             </div>
             <div>
