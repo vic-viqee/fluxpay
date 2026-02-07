@@ -34,7 +34,7 @@ const MainLayout: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-primary-bg">
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} user={user} />
       
       {/* Backdrop for mobile sidebar */}
@@ -47,7 +47,7 @@ const MainLayout: React.FC = () => {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardNavbar toggleSidebar={toggleSidebar} /> {/* Pass toggleSidebar to Navbar */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200 p-6">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-primary-bg p-6">
           <Outlet context={{ user }} />
         </main>
       </div>

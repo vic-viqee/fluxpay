@@ -121,30 +121,30 @@ function CheckoutPage() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-grow py-20 bg-gray-50">
+      <main className="flex-grow py-20 bg-primary-bg">
         <div className="container mx-auto px-4">
           {/* Header */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
-              Developer <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Documentation</span>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
+              Developer <span className="text-transparent bg-clip-text bg-gradient-to-r from-main to-secondary">Documentation</span>
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
               Everything you need to integrate FluxPay into your application
             </p>
           </div>
 
           {/* Quick Start */}
           <div className="max-w-4xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">Quick Start</h2>
+            <h2 className="text-3xl font-bold text-white mb-8">Quick Start</h2>
             
-            <div className="flex border-b border-gray-200 mb-8">
+            <div className="flex border-b border-surface-bg mb-8">
               {['nodejs', 'python', 'php', 'react'].map((tab) => (
                 <button
                   key={tab}
                   className={`py-2 px-4 -mb-px border-b-2 text-lg font-medium focus:outline-none ${
                     activeTab === tab
-                      ? 'border-indigo-500 text-indigo-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-main text-main'
+                      : 'border-transparent text-gray-400 hover:text-secondary hover:border-secondary'
                   }`}
                   onClick={() => setActiveTab(tab)}
                 >
@@ -153,8 +153,8 @@ function CheckoutPage() {
               ))}
             </div>
 
-            <div className="bg-gray-800 rounded-lg overflow-hidden">
-              <pre className="p-4 text-white text-sm overflow-x-auto">
+            <div className="bg-surface-bg rounded-lg overflow-hidden border border-surface-bg">
+              <pre className="p-4 text-gray-300 text-sm overflow-x-auto">
                 <code>{codeBlocks[activeTab]}</code>
               </pre>
             </div>
@@ -162,26 +162,26 @@ function CheckoutPage() {
 
           {/* API Reference */}
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">API Reference</h2>
+            <h2 className="text-3xl font-bold text-white mb-8">API Reference</h2>
             
             <div className="space-y-8">
-              <div className="bg-white p-8 rounded-lg shadow-md">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Authentication</h3>
-                <p className="text-gray-600 mb-4">
+              <div className="bg-surface-bg p-8 rounded-lg shadow-md border border-surface-bg">
+                <h3 className="text-xl font-semibold text-white mb-4">Authentication</h3>
+                <p className="text-gray-400 mb-4">
                   All API requests require authentication using your secret API key in the Authorization header:
                 </p>
-                <div className="bg-gray-100 p-4 rounded-md overflow-x-auto">
+                <div className="bg-primary-bg p-4 rounded-md overflow-x-auto text-gray-300">
                   <code>Authorization: Bearer YOUR_SECRET_KEY</code>
                 </div>
               </div>
 
-              <div className="bg-white p-8 rounded-lg shadow-md">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Webhooks</h3>
-                <p className="text-gray-600 mb-4">
+              <div className="bg-surface-bg p-8 rounded-lg shadow-md border border-surface-bg">
+                <h3 className="text-xl font-semibold text-white mb-4">Webhooks</h3>
+                <p className="text-gray-400 mb-4">
                   FluxPay sends webhook notifications for payment events. Configure your webhook URL in the dashboard.
                 </p>
-                <div className="bg-gray-100 p-4 rounded-md overflow-x-auto">
-                  <pre><code>{`{
+                <div className="bg-primary-bg p-4 rounded-md overflow-x-auto">
+                  <pre><code className="text-gray-300">{`{
   "event": "payment.success",
   "transactionId": "TXN123456789",
   "amount": 1000,
@@ -192,10 +192,10 @@ function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="bg-white p-8 rounded-lg shadow-md">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Sandbox Testing</h3>
-                <p className="text-gray-600">
-                  Use our sandbox environment for testing. Test phone number: <code className="bg-gray-100 p-1 rounded-md text-sm">+254700000000</code>
+              <div className="bg-surface-bg p-8 rounded-lg shadow-md border border-surface-bg">
+                <h3 className="text-xl font-semibold text-white mb-4">Sandbox Testing</h3>
+                <p className="text-gray-400">
+                  Use our sandbox environment for testing. Test phone number: <code className="bg-primary-bg p-1 rounded-md text-sm text-gray-300">+254700000000</code>
                 </p>
               </div>
             </div>

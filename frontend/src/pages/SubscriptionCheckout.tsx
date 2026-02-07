@@ -16,10 +16,10 @@ const SubscriptionCheckout: React.FC = () => {
 
   if (!plan) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="flex items-center justify-center min-h-screen bg-primary-bg">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">No plan selected</h1>
-          <button onClick={() => navigate('/pricing')} className="mt-4 btn btn-primary">
+          <h1 className="text-2xl font-bold text-white">No plan selected</h1>
+          <button onClick={() => navigate('/pricing')} className="mt-4 px-4 py-2 text-sm font-medium text-white bg-main border border-transparent rounded-md shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-main">
             Go to Pricing
           </button>
         </div>
@@ -80,25 +80,25 @@ const SubscriptionCheckout: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+    <div className="flex items-center justify-center min-h-screen bg-primary-bg">
+      <div className="w-full max-w-md p-8 space-y-6 bg-surface-bg rounded-lg shadow-md border border-surface-bg">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Checkout</h1>
-          <p className="text-gray-600">You are subscribing to the <strong>{plan}</strong> plan.</p>
+          <h1 className="text-2xl font-bold text-white">Checkout</h1>
+          <p className="text-gray-400">You are subscribing to the <strong>{plan}</strong> plan.</p>
         </div>
 
-        <div className="p-6 border rounded-lg">
-            <p className="text-lg font-semibold">Summary:</p>
-            <div className="flex justify-between mt-4">
+        <div className="p-6 border border-surface-bg rounded-lg">
+            <p className="text-lg font-semibold text-white">Summary:</p>
+            <div className="flex justify-between mt-4 text-gray-300">
                 <span>{plan} Plan (Monthly)</span>
                 <span>{plan === 'Starter' ? 'KES 999' : 'KES 2,499'}</span>
             </div>
-            <div className="flex justify-between mt-2 text-sm text-gray-500">
+            <div className="flex justify-between mt-2 text-sm text-gray-400">
                 <span>Transaction Fee</span>
                 <span>1.5%</span>
             </div>
-            <div className="border-t my-4"></div>
-            <div className="flex justify-between font-bold text-lg">
+            <div className="border-t border-surface-bg my-4"></div>
+            <div className="flex justify-between font-bold text-lg text-white">
                 <span>Total Due Today</span>
                 <span>{plan === 'Starter' ? 'KES 999' : 'KES 2,499'}</span>
             </div>
@@ -106,11 +106,11 @@ const SubscriptionCheckout: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number (e.g., 2547XXXXXXXX)</label>
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-300">Phone Number (e.g., 2547XXXXXXXX)</label>
             <input
               type="text"
               id="phoneNumber"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-main focus:border-main sm:text-sm bg-primary-bg text-white"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               required
@@ -118,11 +118,11 @@ const SubscriptionCheckout: React.FC = () => {
             />
           </div>
           <div>
-            <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount (KES)</label>
+            <label htmlFor="amount" className="block text-sm font-medium text-gray-300">Amount (KES)</label>
             <input
               type="number"
               id="amount"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-main focus:border-main sm:text-sm bg-primary-bg text-white"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               min="1"
@@ -131,22 +131,22 @@ const SubscriptionCheckout: React.FC = () => {
             />
           </div>
           <div>
-            <label htmlFor="accountReference" className="block text-sm font-medium text-gray-700">Account Reference (Optional)</label>
+            <label htmlFor="accountReference" className="block text-sm font-medium text-gray-300">Account Reference (Optional)</label>
             <input
               type="text"
               id="accountReference"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-main focus:border-main sm:text-sm bg-primary-bg text-white"
               value={accountReference}
               onChange={(e) => setAccountReference(e.target.value)}
               disabled={isLoading}
             />
           </div>
           <div>
-            <label htmlFor="transactionDescription" className="block text-sm font-medium text-gray-700">Transaction Description (Optional)</label>
+            <label htmlFor="transactionDescription" className="block text-sm font-medium text-gray-300">Transaction Description (Optional)</label>
             <input
               type="text"
               id="transactionDescription"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-main focus:border-main sm:text-sm bg-primary-bg text-white"
               value={transactionDescription}
               onChange={(e) => setTransactionDescription(e.target.value)}
               disabled={isLoading}
@@ -154,14 +154,14 @@ const SubscriptionCheckout: React.FC = () => {
           </div>
 
           {message.text && (
-            <div className={`p-3 rounded-md ${message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+            <div className={`p-3 rounded-md ${message.type === 'error' ? 'bg-red-900 text-red-400 border border-red-400' : 'bg-secondary bg-opacity-20 text-secondary border border-secondary'}`}>
               {message.text}
             </div>
           )}
 
           <button
             type="submit"
-            className="w-full btn btn-primary"
+            className="w-full px-4 py-2 text-sm font-medium text-white bg-main border border-transparent rounded-md shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-main"
             disabled={isLoading}
           >
             {isLoading ? 'Initiating Payment...' : 'Pay with M-Pesa'}

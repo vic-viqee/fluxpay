@@ -133,29 +133,29 @@ const Dashboard: React.FC = () => {
   };
 
   if (loading || !user) {
-    return <div className="p-8 text-center text-gray-500">Loading Dashboard Data...</div>;
+    return <div className="p-8 text-center text-primary-bg">Loading Dashboard Data...</div>;
   }
 
   return (
-    <div className="w-full p-6">
+    <div className="w-full p-6 bg-primary-bg">
 
       {/* Top Action Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">Welcome back, {user?.username}</p>
+          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+          <p className="text-sm text-gray-400 mt-1">Welcome back, {user?.username}</p>
         </div>
 
         <div className="flex items-center space-x-3 mt-4 md:mt-0">
           <button
             onClick={() => setIsStkModalOpen(true)}
-            className="text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md shadow-sm transition border border-gray-300"
+            className="text-sm font-medium text-secondary bg-transparent hover:bg-secondary hover:text-white px-4 py-2 rounded-md shadow-sm transition border border-secondary"
           >
             Simulate STK Push (TEST)
           </button>
           <button
             onClick={() => setIsAddSubModalOpen(true)}
-            className="text-sm font-medium text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md shadow transition"
+            className="text-sm font-medium text-white bg-secondary hover:bg-teal-500 px-4 py-2 rounded-md shadow transition"
           >
             Create Subscription
           </button>
@@ -164,41 +164,42 @@ const Dashboard: React.FC = () => {
 
       {/* --- Conditional Hero / Stats --- */}
       {showCelebration ? (
-        <div className="bg-white shadow-sm rounded-lg p-8 text-center mb-8 border-l-4 border-green-500">
-          <h2 className="text-4xl font-bold text-green-600">🎉 You just received your first payment!</h2>
+        <div className="bg-surface-bg shadow-sm rounded-lg p-8 text-center mb-8 border-l-4 border-accent">
+          <h2 className="text-4xl font-bold text-accent">🎉 You just received your first payment!</h2>
         </div>
       ) : !user?.has_received_payment ? (
-        <div className="bg-white shadow-sm rounded-lg p-12 text-center mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Your account is ready. Let’s collect your first payment.</h2>
+        <div className="bg-surface-bg shadow-sm rounded-lg p-12 text-center mb-8 border border-surface-bg">
+          <h2 className="text-2xl font-semibold text-white mb-4">Your account is ready. Let’s collect your first payment.</h2>
           <button
             onClick={() => setIsStkModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition text-lg"
+            className="bg-main hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition text-lg"
           >
             ➕ Request Payment
           </button>
-          <p className="text-gray-500 mt-4">Create a payment request and send it to your client.</p>
+          <p className="text-gray-400 mt-4">Create a payment request and send it to your client.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-green-500">
-            <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
-            <dd className="mt-1 text-3xl font-bold text-gray-900">KES {stats.totalRevenue.toLocaleString()}</dd>
-            <dd className="text-xs text-green-600 mt-1 font-medium">Verified Payments</dd>
+          <div className="bg-surface-bg overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-main">
+            <dt className="text-sm font-medium text-gray-400 truncate">Total Revenue</dt>
+            <dd className="mt-1 text-3xl font-bold text-white">KES {stats.totalRevenue.toLocaleString()}</dd>
+            <dd className="text-xs text-main mt-1 font-medium">Verified Payments</dd>
           </div>
-          <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-blue-500">
-            <dt className="text-sm font-medium text-gray-500 truncate">Active Subscriptions</dt>      
-            <dd className="mt-1 text-3xl font-bold text-gray-900">{stats.activeSubscriptions}</dd>    
-            <dd className="text-xs text-gray-500 mt-1">Total active plans</dd>
+          <div className="bg-surface-bg overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-secondary">
+            <dt className="text-sm font-medium text-gray-400 truncate">Active Subscriptions</dt>      
+            <dd className="mt-1 text-3xl font-bold text-white">{stats.activeSubscriptions}</dd>    
+            <dd className="text-xs text-gray-400 mt-1">Total active plans</dd>
           </div>
-          <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-purple-500">
-            <dt className="text-sm font-medium text-gray-500 truncate">Success Rate</dt>
-            <dd className="mt-1 text-3xl font-bold text-gray-900">{stats.successRate.toFixed(1)}%</dd>
-            <dd className="text-xs text-gray-500 mt-1">Based on transactions</dd>
+          <div className="bg-surface-bg overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-accent">
+            <dt className="text-sm font-medium text-gray-400 truncate">Success Rate</dt>
+            <dd className="mt-1 text-3xl font-bold text-white">{stats.successRate.toFixed(1)}%</dd>
+
+            <dd className="text-xs text-gray-400 mt-1">Based on transactions</dd>
           </div>
-            <div className="bg-white overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-yellow-500">
-            <dt className="text-sm font-medium text-gray-500 truncate">Pending Payments</dt>
-            <dd className="mt-1 text-3xl font-bold text-gray-900">{stats.pendingPayments}</dd>        
-            <dd className="text-xs text-yellow-600 mt-1 font-medium">Action required</dd>
+            <div className="bg-surface-bg overflow-hidden shadow-sm rounded-lg p-5 border-l-4 border-yellow-500">
+            <dt className="text-sm font-medium text-gray-400 truncate">Pending Payments</dt>
+            <dd className="mt-1 text-3xl font-bold text-white">{stats.pendingPayments}</dd>        
+            <dd className="text-xs text-yellow-400 mt-1 font-medium">Action required</dd>
           </div>
         </div>
       )}

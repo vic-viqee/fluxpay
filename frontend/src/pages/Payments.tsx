@@ -27,11 +27,11 @@ const Payments: React.FC = () => {
   }
 
   if (error) {
-    return <div className="p-4 text-sm text-red-700 bg-red-100 rounded-lg">{error}</div>;
+    return <div className="p-4 text-sm text-red-400 bg-red-900 bg-opacity-50 rounded-lg border border-red-400">{error}</div>;
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 bg-primary-bg text-white">
       <h1 className="text-3xl font-bold mb-6">All Payments / Transactions</h1>
       <TransactionsTable transactions={transactions} />
     </div>

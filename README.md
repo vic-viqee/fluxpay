@@ -24,6 +24,23 @@ It provides a complete solution for businesses to handle user authentication, su
 -   **Logging:** Integrated Winston for structured logging.
 -   **Modular Architecture:** Clean separation of routes, controllers, services, and models.
 
+## Brand Color Palette
+
+FluxPay uses a carefully selected brand color palette to ensure a consistent, modern, and accessible user experience. These colors are defined in `frontend/tailwind.config.cjs` and should be used according to their roles:
+
+| Role        | Color Name    | Hex Value   | Intent                                             |
+| :---------- | :------------ | :---------- | :------------------------------------------------- |
+| `main`      | Digital Blue  | `#0066FF`   | Primary brand identity, trust, automation, fintech reliability. Used for primary CTAs, active states, and key highlights. |
+| `secondary` | Teal Green    | `#00C2A8`   | Flow, motion, supporting actions. Used for secondary CTAs, hover states, and supporting visual elements. |
+| `accent`    | Sunset Orange | `#FF6B35`   | CTAs, emphasis, urgency, visual energy. Used sparingly for activation moments, empty-state emphasis, and success/celebration indicators. |
+| `primary-bg`| Gunmetal      | `#1C1F26`   | Primary backgrounds, typography, neutral structure. Used for the darkest backgrounds. |
+| `surface-bg`| Lighter Gunmetal| `#2D323E`   | Surfaces, cards, secondary backgrounds, and deeper UI elements to provide contrast against the `primary-bg`. |
+
+### Usage Guidelines:
+-   Always use the defined Tailwind color names (e.g., `bg-main`, `text-secondary`, `border-accent`).
+-   Ensure sufficient contrast for all text elements. Avoid placing `accent` text on `secondary` backgrounds.
+-   Combine color indicators with icons or text for accessibility where relevant.
+
 ## Tech Stack
 
 -   **Frontend:** React, Vite, TypeScript, Tailwind CSS, React Router DOM, Axios

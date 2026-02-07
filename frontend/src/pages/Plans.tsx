@@ -51,23 +51,23 @@ const Plans: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Create New Service Plan</h1>
+    <div className="min-h-screen bg-primary-bg p-6">
+      <div className="max-w-md mx-auto bg-surface-bg rounded-lg shadow-md p-8 border border-surface-bg">
+        <h1 className="text-2xl font-bold text-white mb-6 text-center">Create New Service Plan</h1>
 
         {message.text && (
-          <div className={`p-3 mb-4 text-sm rounded-md ${message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+          <div className={`p-3 mb-4 text-sm rounded-md ${message.type === 'error' ? 'bg-red-900 text-red-400 border border-red-400' : 'bg-secondary bg-opacity-20 text-secondary border border-secondary'}`}>
             {message.text}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Service Name</label>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-300">Service Name</label>
             <input
               type="text"
               id="name"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-main focus:border-main sm:text-sm bg-primary-bg text-white"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -75,11 +75,11 @@ const Plans: React.FC = () => {
             />
           </div>
           <div>
-            <label htmlFor="amountKes" className="block text-sm font-medium text-gray-700">Amount (KES)</label>
+            <label htmlFor="amountKes" className="block text-sm font-medium text-gray-300">Amount (KES)</label>
             <input
               type="number"
               id="amountKes"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-main focus:border-main sm:text-sm bg-primary-bg text-white"
               value={amountKes}
               onChange={(e) => setAmountKes(e.target.value)}
               min="1"
@@ -88,10 +88,10 @@ const Plans: React.FC = () => {
             />
           </div>
           <div>
-            <label htmlFor="frequency" className="block text-sm font-medium text-gray-700">Frequency</label>
+            <label htmlFor="frequency" className="block text-sm font-medium text-gray-300">Frequency</label>
             <select
               id="frequency"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-main focus:border-main sm:text-sm bg-primary-bg text-white"
               value={frequency}
               onChange={(e) => setFrequency(e.target.value as 'daily' | 'weekly' | 'monthly' | 'annually')}
               required
@@ -104,11 +104,11 @@ const Plans: React.FC = () => {
             </select>
           </div>
           <div>
-            <label htmlFor="billingDay" className="block text-sm font-medium text-gray-700">Billing Day (1-31)</label>
+            <label htmlFor="billingDay" className="block text-sm font-medium text-gray-300">Billing Day (1-31)</label>
             <input
               type="number"
               id="billingDay"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-main focus:border-main sm:text-sm bg-primary-bg text-white"
               value={billingDay}
               onChange={(e) => setBillingDay(e.target.value)}
               min="1"
@@ -120,7 +120,7 @@ const Plans: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full btn btn-primary"
+            className="w-full px-4 py-2 text-sm font-medium text-white bg-main border border-transparent rounded-md shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-main"
             disabled={loading}
           >
             {loading ? 'Creating Plan...' : 'Create Plan'}

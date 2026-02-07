@@ -22,8 +22,8 @@ const NavLink: React.FC<{ to: string; label: string; disabled: boolean; onClick:
   const isActive = location.pathname === to;
 
   const linkClasses = `flex items-center p-2 rounded-md transition-colors ${
-    isActive ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'
-  } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`;
+    isActive ? 'bg-main text-white' : 'text-gray-300 hover:bg-secondary hover:text-white'
+  } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`;
 
   return (
     <li title={disabled ? "Unlock this feature by receiving your first payment." : ""}>
@@ -46,7 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, user }) => {
 
   return (
     <aside
-      className={"transform top-0 left-0 w-64 bg-gray-800 text-white fixed h-full overflow-auto ease-in-out transition-all duration-300 z-50 " +
+      className={"transform top-0 left-0 w-64 bg-primary-bg text-white fixed h-full overflow-auto ease-in-out transition-all duration-300 z-50 " +
                  (isOpen ? 'translate-x-0' : '-translate-x-full') +
                  " md:relative md:translate-x-0 "}
     >

@@ -26,22 +26,22 @@ const Customers: React.FC = () => {
   }
 
   if (error) {
-    return <div className="p-4 text-sm text-red-700 bg-red-100 rounded-lg">{error}</div>;
+    return <div className="p-4 text-sm text-red-400 bg-red-900 bg-opacity-50 rounded-lg border border-red-400">{error}</div>;
   }
 
   return (
-    <div className="container mx-auto p-6 text-center">
+    <div className="container mx-auto p-6 text-white text-center bg-primary-bg">
       <h1 className="text-3xl font-bold mb-4">Customers Page</h1>
-      <p className="text-lg text-gray-700 mb-6">This feature is coming soon.</p>
+      <p className="text-lg text-accent mb-6">This feature is coming soon.</p>
       {customerData && (
-        <div className="bg-white rounded-lg shadow-md p-6 mt-4">
+        <div className="bg-surface-bg rounded-lg shadow-md p-6 mt-4 border border-surface-bg">
           <h2 className="text-xl font-semibold mb-2">Backend Response:</h2>
-          <pre className="text-left bg-gray-100 p-4 rounded-md overflow-x-auto">
+          <pre className="text-left bg-primary-bg p-4 rounded-md overflow-x-auto text-gray-300">
             {JSON.stringify(customerData, null, 2)}
           </pre>
         </div>
       )}
-      <a href="/dashboard" className="mt-6 inline-block px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Back to Dashboard</a>
+      <a href="/dashboard" className="mt-6 inline-block px-6 py-3 text-sm font-medium text-white bg-main border border-transparent rounded-md shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-main">Back to Dashboard</a>
     </div>
   );
 };

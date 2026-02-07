@@ -25,37 +25,37 @@ interface SubscriptionsTableProps {
 
 export const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({ subscriptions }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold mb-4">Your Subscriptions</h2>
+    <div className="bg-surface-bg rounded-lg shadow-md p-6 border border-surface-bg">
+      <h2 className="text-xl font-bold mb-4 text-white">Your Subscriptions</h2>
       {subscriptions.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-surface-bg">
+            <thead className="bg-primary-bg">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Billing</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Plan Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Next Billing</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Start Date</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-surface-bg divide-y divide-surface-bg">
               {subscriptions.map((sub) => (
                 <tr key={sub._id}>
-                  <td className="px-6 py-4 whitespace-nowrap">{sub.planId.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">KES {sub.planId.amountKes.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-white">{sub.planId.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-white">KES {sub.planId.amountKes.toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      sub.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                      sub.status === 'PENDING_ACTIVATION' ? 'bg-yellow-100 text-yellow-800' :
-                      sub.status === 'CANCELLED' || sub.status === 'EXPIRED' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
+                      sub.status === 'ACTIVE' ? 'bg-secondary text-white' :
+                      sub.status === 'PENDING_ACTIVATION' ? 'bg-accent text-white' :
+                      sub.status === 'CANCELLED' || sub.status === 'EXPIRED' ? 'bg-accent text-white' :
+                      'bg-gray-600 text-gray-200'
                     }`}>
                       {sub.status.replace('_', ' ')}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{moment(sub.nextBillingDate).format('YYYY-MM-DD')}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{moment(sub.startDate).format('YYYY-MM-DD')}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-300">{moment(sub.nextBillingDate).format('YYYY-MM-DD')}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-300">{moment(sub.startDate).format('YYYY-MM-DD')}</td>
                 </tr>
               ))}
             </tbody>
@@ -63,9 +63,9 @@ export const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({ subscrip
         </div>
       ) : (
         <div className="text-center py-8">
-          <p className="mb-4 text-gray-600">You don’t have any subscriptions yet. <br/> Create one if you charge clients monthly.</p>
+          <p className="mb-4 text-gray-400">You don’t have any subscriptions yet. <br/> Create one if you charge clients monthly.</p>
           <button
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+            className="bg-secondary hover:bg-teal-500 text-white font-bold py-2 px-4 rounded"
             // onClick handler will be added later
           >
             Create Subscription

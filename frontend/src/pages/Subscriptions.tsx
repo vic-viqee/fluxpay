@@ -46,14 +46,14 @@ const Subscriptions: React.FC = () => {
   }
 
   if (error) {
-    return <div className="p-4 text-sm text-red-700 bg-red-100 rounded-lg">{error}</div>;
+    return <div className="p-4 text-sm text-red-400 bg-red-900 bg-opacity-50 rounded-lg border border-red-400">{error}</div>;
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 bg-primary-bg text-white">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">All Subscriptions</h1>
-        <button onClick={handleCreateSubscription} className="btn btn-primary">New Subscription</button>
+        <button onClick={handleCreateSubscription} className="px-4 py-2 text-sm font-medium text-white bg-main border border-transparent rounded-md shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-main">New Subscription</button>
       </div>
       <SubscriptionsTable subscriptions={subscriptions} />
     </div>
