@@ -82,9 +82,12 @@ export const createSubscription = async (req: AuthenticatedRequest, res: Respons
 
 export const getSubscriptions = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const subscriptions = await Subscription.find({ ownerId: req.user?._id })
-      .populate('clientId')
-      .populate('planId');
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: 'User not authenticated.' });
+    }
+    const subscriptions = await Subscription.find({ ownerId: req.user._id })
+      .populate('clientId', 'name phoneNumber email') // Select specific fields
+      .populate('planId', 'name amountKes frequency'); // Select specific fields
     res.status(200).json(subscriptions);
   } catch (error) {
     next(error);
@@ -93,9 +96,12 @@ export const getSubscriptions = async (req: AuthenticatedRequest, res: Response,
 
 export const getSubscriptionById = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const subscription = await Subscription.findOne({ _id: req.params.id, ownerId: req.user?._id })
-      .populate('clientId')
-      .populate('planId');
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: 'User not authenticated.' });
+    }
+    const subscription = await Subscription.findOne({ _id: req.params.id, ownerId: req.user._id })
+      .populate('clientId', 'name phoneNumber email')
+      .populate('planId', 'name amountKes frequency');
     if (!subscription) {
       return res.status(404).json({ message: 'Subscription not found' });
     }

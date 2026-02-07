@@ -44,7 +44,7 @@ const Footer: React.FC = () => {
           <Link to="/" className="flex items-center mb-4 md:mb-0">
             <img src="/img/fluxpay logo.png" alt="FluxPay Logo" className="h-8" />
           </Link>
-          <p className="text-gray-500">© 2025 FluxPay. All rights reserved.</p>
+          <p className="text-gray-500">© 2026 FluxPay. All rights reserved.</p>
         </div>
       </div>
     </footer>

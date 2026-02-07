@@ -207,11 +207,11 @@ const Index: React.FC = () => {
               <div className="text-center text-sm text-gray-500 mb-4">Your Business Metrics</div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">KES 847K</div>
+                  <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">KES 0</div>
                   <div className="text-gray-600">This Month</div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-indigo-600">234</div>
+                  <div className="text-2xl font-bold text-indigo-600">0</div>
                   <div className="text-gray-600">Active Subscriptions</div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
@@ -219,7 +219,7 @@ const Index: React.FC = () => {
                   <div className="text-gray-600">Success Rate</div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-500">12</div>
+                  <div className="text-2xl font-bold text-orange-500">0</div>
                   <div className="text-gray-600">Pending Payments</div>
                 </div>
               </div>
