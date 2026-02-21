@@ -1,8 +1,9 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import Subscription from '../../models/Subscription';
 import Client from '../../models/Client'; // Import Client model
 import ServicePlan from '../../models/ServicePlan'; // Import ServicePlan model
-import { AuthenticatedRequest } from '../../middleware/auth.middleware';
+// Removed `import { AuthenticatedRequest } from '../../middleware/auth.middleware';`
+import { IUser } from '../../models/User';
 
 // Helper function to calculate next billing date
 const calculateNextBillingDate = (frequency: string, billingDay: number): Date => {
@@ -39,10 +40,11 @@ const calculateNextBillingDate = (frequency: string, billingDay: number): Date =
 };
 
 
-export const createSubscription = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const createSubscription = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { clientId, planId, notes } = req.body;
-    const ownerId = req.user?._id;
+    const user = req.user as IUser; // Cast req.user to IUser
+    const ownerId = user?._id;
 
     if (!clientId || !planId || !ownerId) {
       return res.status(400).json({ message: 'Client ID and Plan ID are required.' });
@@ -80,12 +82,13 @@ export const createSubscription = async (req: AuthenticatedRequest, res: Respons
   }
 };
 
-export const getSubscriptions = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const getSubscriptions = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.user || !req.user._id) {
+    const user = req.user as IUser; // Cast req.user to IUser
+    if (!user || !user._id) {
       return res.status(401).json({ message: 'User not authenticated.' });
     }
-    const subscriptions = await Subscription.find({ ownerId: req.user._id })
+    const subscriptions = await Subscription.find({ ownerId: user._id })
       .populate('clientId', 'name phoneNumber email') // Select specific fields
       .populate('planId', 'name amountKes frequency'); // Select specific fields
     res.status(200).json(subscriptions);
@@ -94,12 +97,13 @@ export const getSubscriptions = async (req: AuthenticatedRequest, res: Response,
   }
 };
 
-export const getSubscriptionById = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const getSubscriptionById = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.user || !req.user._id) {
+    const user = req.user as IUser; // Cast req.user to IUser
+    if (!user || !user._id) {
       return res.status(401).json({ message: 'User not authenticated.' });
     }
-    const subscription = await Subscription.findOne({ _id: req.params.id, ownerId: req.user._id })
+    const subscription = await Subscription.findOne({ _id: req.params.id, ownerId: user._id })
       .populate('clientId', 'name phoneNumber email')
       .populate('planId', 'name amountKes frequency');
     if (!subscription) {
@@ -111,13 +115,14 @@ export const getSubscriptionById = async (req: AuthenticatedRequest, res: Respon
   }
 };
 
-export const updateSubscription = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const updateSubscription = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // For updates, ensure ownerId is not changed and only allowed fields are updated
     const { clientId, planId, status, nextBillingDate, notes } = req.body;
+    const user = req.user as IUser; // Cast req.user to IUser
     
     const updatedSubscription = await Subscription.findOneAndUpdate(
-      { _id: req.params.id, ownerId: req.user?._id },
+      { _id: req.params.id, ownerId: user?._id },
       { clientId, planId, status, nextBillingDate, notes }, // Only allow these fields to be updated
       { new: true, runValidators: true }
     );
@@ -130,9 +135,10 @@ export const updateSubscription = async (req: AuthenticatedRequest, res: Respons
   }
 };
 
-export const deleteSubscription = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const deleteSubscription = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const deletedSubscription = await Subscription.findOneAndDelete({ _id: req.params.id, ownerId: req.user?._id });
+    const user = req.user as IUser; // Cast req.user to IUser
+    const deletedSubscription = await Subscription.findOneAndDelete({ _id: req.params.id, ownerId: user?._id });
     if (!deletedSubscription) {
       return res.status(404).json({ message: 'Subscription not found or does not belong to this user.' });
     }

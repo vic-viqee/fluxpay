@@ -1,11 +1,12 @@
-import { Response, NextFunction } from 'express';
-import { AuthenticatedRequest } from '../../middleware/auth.middleware';
+import { Request, Response, NextFunction } from 'express';
+// Removed `import { AuthenticatedRequest } from '../../middleware/auth.middleware';`
 import logger from '../../utils/logger';
 import Transaction from '../../models/Transaction'; // Import Transaction model
+import { IUser } from '../../models/User';
 
-export const getMe = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const getMe = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = req.user;
+    const user = req.user as IUser; // Cast req.user to IUser
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }

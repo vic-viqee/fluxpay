@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import ServicePlan from '../../models/ServicePlan';
-import { AuthenticatedRequest } from '../../middleware/auth.middleware';
+// Removed `import { AuthenticatedRequest } from '../../middleware/auth.middleware';`
+import { IUser } from '../../models/User';
 
-export const createServicePlan = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const createServicePlan = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, amountKes, frequency, billingDay } = req.body;
 
@@ -10,7 +11,8 @@ export const createServicePlan = async (req: AuthenticatedRequest, res: Response
       return res.status(400).json({ message: 'All service plan fields are required.' });
     }
 
-    if (!req.user || !req.user._id) {
+    const user = req.user as IUser; // Cast req.user to IUser
+    if (!user || !user._id) {
       return res.status(401).json({ message: 'User not authenticated.' });
     }
 
@@ -19,7 +21,7 @@ export const createServicePlan = async (req: AuthenticatedRequest, res: Response
       amountKes,
       frequency,
       billingDay,
-      ownerId: req.user._id,
+      ownerId: user._id,
     });
 
     await newPlan.save();

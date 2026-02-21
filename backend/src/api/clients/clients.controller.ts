@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import Client from '../../models/Client';
-import { AuthenticatedRequest } from '../../middleware/auth.middleware';
+// Removed `import { AuthenticatedRequest } from '../../middleware/auth.middleware';`
+import { IUser } from '../../models/User';
 
-export const createClient = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const createClient = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, phoneNumber, email } = req.body;
-    const ownerId = req.user?._id;
+    const user = req.user as IUser; // Cast req.user to IUser
+    const ownerId = user?._id;
 
     if (!name || !phoneNumber || !ownerId) {
       return res.status(400).json({ message: 'Client name and phone number are required.' });
@@ -31,9 +33,10 @@ export const createClient = async (req: AuthenticatedRequest, res: Response, nex
   }
 };
 
-export const getClients = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const getClients = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const ownerId = req.user?._id;
+    const user = req.user as IUser; // Cast req.user to IUser
+    const ownerId = user?._id;
     if (!ownerId) {
       return res.status(401).json({ message: 'User not authenticated.' });
     }

@@ -1,12 +1,14 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { initiateStkPush } from '../../services/mpesa.service';
 import logger from '../../utils/logger';
-import { AuthenticatedRequest } from '../../middleware/auth.middleware';
+// Removed `import { AuthenticatedRequest } from '../../middleware/auth.middleware';`
 import User from '../../models/User';
 import Transaction from '../../models/Transaction';
 import Subscription from '../../models/Subscription'; // Import Subscription model
+import { IUser } from '../../models/User';
 
-export const initiatePayment = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+
+export const initiatePayment = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // 1. Handle variable name mismatch and get required data
     let { amount, phone, phoneNumber, subscriptionId } = req.body;
@@ -16,7 +18,8 @@ export const initiatePayment = async (req: AuthenticatedRequest, res: Response, 
       return res.status(400).json({ message: 'Amount, phone number, and subscription ID are required.' });
     }
 
-    const ownerId = req.user?._id;
+    const user = req.user as IUser; // Cast req.user to IUser
+    const ownerId = user?._id;
     if (!ownerId) {
       return res.status(401).json({ message: 'User not authenticated.' });
     }
@@ -27,8 +30,8 @@ export const initiatePayment = async (req: AuthenticatedRequest, res: Response, 
       return res.status(404).json({ message: 'Subscription not found or does not belong to this user.' });
     }
 
-    const user = await User.findById(ownerId);
-    const businessName = user?.businessName || 'FluxPay'; 
+    const fetchedUser = await User.findById(ownerId);
+    const businessName = fetchedUser?.businessName || 'FluxPay'; 
 
     // 2. Initiate STK Push
     const response: any = await initiateStkPush(phone, amount, businessName);
@@ -52,7 +55,7 @@ export const initiatePayment = async (req: AuthenticatedRequest, res: Response, 
   }
 };
 
-export const simulateStkPush = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const simulateStkPush = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { amount, phoneNumber } = req.body;
 
@@ -60,9 +63,10 @@ export const simulateStkPush = async (req: AuthenticatedRequest, res: Response, 
       return res.status(400).json({ message: 'Amount and phone number are required.' });
     }
 
-    const ownerId = req.user?._id;
-    const user = await User.findById(ownerId);
-    const businessName = user?.businessName || 'FluxPay'; 
+    const user = req.user as IUser; // Cast req.user to IUser
+    const ownerId = user?._id;
+    const fetchedUser = await User.findById(ownerId);
+    const businessName = fetchedUser?.businessName || 'FluxPay'; 
 
     // Initiate STK Push without creating a transaction
     const response: any = await initiateStkPush(phoneNumber, amount, businessName);
@@ -74,7 +78,7 @@ export const simulateStkPush = async (req: AuthenticatedRequest, res: Response, 
   }
 };
 
-export const handleCallback = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const handleCallback = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = req.body.Body || req.body; 
     const callbackData = body.stkCallback;

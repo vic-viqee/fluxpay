@@ -3,11 +3,7 @@ import jwt from 'jsonwebtoken';
 import config from '../config';
 import User, { IUser } from '../models/User';
 
-export interface AuthenticatedRequest extends Request {
-  user?: IUser;
-}
-
-export const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
@@ -22,7 +18,8 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
       return res.status(401).json({ message: 'User not found' });
     }
 
-    req.user = user;
+    // Cast req to any to bypass stubborn TypeScript type conflicts in Render's environment
+    (req as any).user = user;
     next();
   } catch (error) {
     res.status(401).json({ message: 'Token is not valid' });

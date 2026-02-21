@@ -7,10 +7,6 @@ import logger from '../../utils/logger';
 import User, {IUser} from '../../models/User';
 import { sendResetPasswordEmail } from '../../services/email.service';
 
-interface RequestWithUser extends Request {
-  user?: IUser;
-}
-
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { 
@@ -89,11 +85,12 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
-export const googleCallback = (req: RequestWithUser, res: Response) => {
-  if (!req.user) {
+export const googleCallback = (req: Request, res: Response) => {
+  const user = req.user as IUser; // Cast req.user to IUser
+  if (!user) {
     return res.redirect(`${config.frontendUrl}/login`);
   }
-  const token = jwt.sign({ id: req.user._id, email: req.user.email }, config.jwtSecret, { expiresIn: '1h' });
+  const token = jwt.sign({ id: user._id, email: user.email }, config.jwtSecret, { expiresIn: '1h' });
   res.redirect(`${config.frontendUrl}/auth/google/callback?token=${token}`);
 };
 
