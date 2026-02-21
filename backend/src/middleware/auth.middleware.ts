@@ -4,7 +4,7 @@ import config from '../config';
 import User, { IUser } from '../models/User';
 
 export interface AuthenticatedRequest extends Request {
-  user?: IUser & Document;
+  user?: InstanceType<typeof User>;
 }
 
 export const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
