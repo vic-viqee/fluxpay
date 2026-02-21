@@ -5,6 +5,8 @@ export interface IUser extends Document {
   email: string;
   password?: string; // Optional because we don't want to return it in every query
   googleId?: string;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
   businessName?: string;
   businessType?: string;
   kraPin?: string;
@@ -23,6 +25,8 @@ const UserSchema: Schema = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: false, select: false }, // `select: false` prevents it from being returned by default
   googleId: { type: String, unique: true, sparse: true },
+  passwordResetToken: { type: String },
+  passwordResetExpires: { type: Date },
   businessName: { type: String, required: true }, // Making businessName required as per task
   businessType: { type: String, required: true },
   kraPin: { type: String, required: false },

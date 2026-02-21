@@ -7,12 +7,21 @@ const config = {
   port: process.env.PORT || 3000,
   jwtSecret: process.env.JWT_SECRET || 'supersecretjwtkey', // Fallback for dev, but should be strong
   mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/fluxpay',
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+  frontendUrl: process.env.FRONTEND_URL || 'https://fluxpay-frontend.onrender.com',
+
+  email: {
+    host: process.env.EMAIL_HOST || 'smtp.example.com',
+    port: parseInt(process.env.EMAIL_PORT || '587', 10),
+    secure: process.env.EMAIL_SECURE === 'true', // Use 'true' or 'false' in .env
+    user: process.env.EMAIL_USER || 'user@example.com',
+    pass: process.env.EMAIL_PASS || 'password',
+    from: process.env.EMAIL_FROM || 'no-reply@example.com',
+  },
 
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID || '',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    callbackURL: process.env.GOOGLE_CALLBACK_URL || '',
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || 'https://fluxpay-backend.onrender.com/api/auth/google/callback',
   },
 
   mpesa: {

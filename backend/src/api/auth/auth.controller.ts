@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import config from '../../config';
 import logger from '../../utils/logger';
 import User, {IUser} from '../../models/User';
+import { sendResetPasswordEmail } from '../../services/email.service';
 
 interface RequestWithUser extends Request {
   user?: IUser;
@@ -93,4 +95,59 @@ export const googleCallback = (req: RequestWithUser, res: Response) => {
   }
   const token = jwt.sign({ id: req.user._id, email: req.user.email }, config.jwtSecret, { expiresIn: '1h' });
   res.redirect(`${config.frontendUrl}/auth/google/callback?token=${token}`);
+};
+
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      // Send a success message even if user not found to prevent email enumeration
+      return res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+    }
+
+    // Generate a reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    user.passwordResetToken = resetToken;
+    user.passwordResetExpires = new Date(Date.now() + 3600000); // 1 hour from now
+
+    await user.save();
+
+    // Send the email
+    await sendResetPasswordEmail(user.email, resetToken);
+
+    res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+  } catch (error) {
+    user!.passwordResetToken = undefined;
+    user!.passwordResetExpires = undefined;
+    await user!.save();
+    next(error);
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const user = await User.findOne({
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+
+    await user.save();
+
+    res.status(200).json({ message: 'Password has been reset successfully.' });
+  } catch (error) {
+    next(error);
+  }
 };

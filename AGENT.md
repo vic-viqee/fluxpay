@@ -1,23 +1,23 @@
-# Google Authentication Integration Checklist
-
-## Backend
-
-- [x] Install `passport`, `passport-google-oauth20`, and `@types/passport-google-oauth20`.
-- [x] Configure Passport.js with Google OAuth 2.0 strategy.
-- [x] Add environment variables for Google Client ID and Client Secret to `.env.example`.
-- [x] Create a new file `backend/src/config/passport.ts` to configure the passport strategy.
-- [x] Update `backend/src/models/User.ts` to include `googleId`.
-- [x] Add new routes for Google authentication in `backend/src/api/auth/auth.routes.ts`.
-- [x] Update `backend/src/api/auth/auth.controller.ts` to handle Google login/signup logic.
-- [x] Integrate passport into the main server file `backend/src/server.ts`.
+# Forgot Password Feature Checklist
 
 ## Frontend
 
-- [x] Add a "Sign in with Google" button to `frontend/src/pages/Login.tsx`.
-- [x] Add a "Sign up with Google" button to `frontend/src/pages/Signup.tsx`.
-- [x] Update `frontend/src/services/api.ts` to handle the Google authentication flow.
-- [x] Create a new page/component to handle the redirect from the google callback.
-- [x] Update `frontend/src/context/AuthContext.tsx` to handle user state after Google login.
+- [x] Add "Forgot password?" link to `frontend/src/pages/Login.tsx`.
+- [x] Create `frontend/src/pages/ForgotPassword.tsx` for requesting a password reset.
+- [x] Create `frontend/src/pages/ResetPassword.tsx` for setting a new password.
+- [x] Add routes for `ForgotPassword.tsx` and `ResetPassword.tsx` to `frontend/src/main.tsx`.
+- [x] Implement logic in `ForgotPassword.tsx` to send a password reset request to the backend.
+- [x] Implement logic in `ResetPassword.tsx` to send a new password and token to the backend.
+
+## Backend
+
+- [x] Add a new route `api/auth/forgot-password` to `backend/src/api/auth/auth.routes.ts`.
+- [x] Add a new controller function `forgotPassword` to `backend/src/api/auth/auth.controller.ts` to handle sending reset emails.
+- [x] Add a new route `api/auth/reset-password` to `backend/src/api/auth/auth.routes.ts`.
+- [x] Add a new controller function `resetPassword` to `backend/src/api/auth/auth.controller.ts` to handle password resets.
+- [x] Implement token generation and verification for password reset.
+- [x] Integrate an email service (or simulate if none exists) to send password reset links.
+- [x] Update `User` model to include `passwordResetToken` and `passwordResetExpires` fields.
 
 ## Documentation
 
