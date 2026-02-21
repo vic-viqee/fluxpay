@@ -1,11 +1,11 @@
 import { Request } from 'express';
-import { IUser } from '../../models/User';
+import User from '../../models/User'; // Import the Mongoose model directly
 
 // Augment the Request type to include the user property
 declare global {
   namespace Express {
     interface Request {
-      user?: IUser;
+      user?: InstanceType<typeof User>; // Type as a Mongoose User instance
     }
   }
 }
