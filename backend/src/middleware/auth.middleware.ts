@@ -2,9 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import config from '../config';
 import User, { IUser } from '../models/User';
+import mongoose from 'mongoose'; // Import mongoose here
 
 export interface AuthenticatedRequest extends Request {
-  user?: InstanceType<typeof User>;
+  user?: IUser & mongoose.Document; // Explicitly combine IUser with mongoose.Document
 }
 
 export const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
