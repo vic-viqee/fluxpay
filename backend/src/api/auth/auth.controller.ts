@@ -95,9 +95,10 @@ export const googleCallback = (req: Request, res: Response) => {
 };
 
 export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+  let user; // Declare user outside try-catch for catch block access
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email });
+    user = await User.findOne({ email });
 
     if (!user) {
       // Send a success message even if user not found to prevent email enumeration
@@ -116,9 +117,12 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
 
     res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
   } catch (error) {
-    user!.passwordResetToken = undefined;
-    user!.passwordResetExpires = undefined;
-    await user!.save();
+    // Check if user was found before trying to clear fields
+    if (user) { 
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save();
+    }
     next(error);
   }
 };
