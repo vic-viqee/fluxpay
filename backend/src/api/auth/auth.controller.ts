@@ -3,7 +3,11 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import config from '../../config';
 import logger from '../../utils/logger';
-import User from '../../models/User';
+import User, {IUser} from '../../models/User';
+
+interface RequestWithUser extends Request {
+  user?: IUser;
+}
 
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -65,11 +69,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     }
 
     const user = await User.findOne({ email }).select('+password');
-    if (!user) {
+    if (!user || !user.password) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password!);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -77,8 +81,16 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const token = jwt.sign({ id: user._id, email: user.email }, config.jwtSecret, { expiresIn: '1h' });
 
     logger.info(`User logged in: ${email}`);
-    res.status(200).json({ message: 'Logged in successfully', token });
+    res.status(200).json({ message: 'Logged in successfully', token, user });
   } catch (error) {
     next(error);
   }
+};
+
+export const googleCallback = (req: RequestWithUser, res: Response) => {
+  if (!req.user) {
+    return res.redirect(`${config.frontendUrl}/login`);
+  }
+  const token = jwt.sign({ id: req.user._id, email: req.user.email }, config.jwtSecret, { expiresIn: '1h' });
+  res.redirect(`${config.frontendUrl}/auth/google/callback?token=${token}`);
 };

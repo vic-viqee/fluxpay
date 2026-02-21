@@ -19,6 +19,7 @@ import Documentation from './pages/Documentation';
 import SubscriptionCheckout from './pages/SubscriptionCheckout';
 import MainLayout from './layouts/MainLayout';
 import Plans from './pages/Plans'; // NEW IMPORT
+import GoogleCallback from './pages/GoogleCallback';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -31,6 +32,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/documentation" element={<Documentation />} />
           <Route path="/subscribe" element={<SubscriptionCheckout />} />
+          <Route path="/auth/google/callback" element={<GoogleCallback />} />
           
           <Route element={<PrivateRoute />}>
             <Route element={<MainLayout />}>

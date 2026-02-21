@@ -17,6 +17,7 @@ import clientsRoutes from './api/clients/clients.routes'; // NEW IMPORT
 import connectDB from './config/db';
 import cron from 'node-cron'; // NEW IMPORT
 import { processDuePayments, processFailedTransactions } from './services/billing.service'; // NEW IMPORT
+import passport from './config/passport';
 
 const app: Express = express();
 const port = config.port;
@@ -49,6 +50,8 @@ app.use(cors({
 // --------------------------------
 
 app.use(express.json());
+
+app.use(passport.initialize());
 
 app.get('/', (req: Request, res: Response) => {
   res.send('FluxPay API is running...');
