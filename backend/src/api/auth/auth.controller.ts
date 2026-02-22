@@ -7,11 +7,14 @@ import logger from '../../utils/logger';
 import User, {IUser} from '../../models/User';
 import { sendResetPasswordEmail } from '../../services/email.service';
 import { Profile } from 'passport-google-oauth20'; // Import Profile type
+import fs from 'fs'; // NEW IMPORT
+import path from 'path'; // NEW IMPORT
 
 // Augment Request type to include authInfo from Passport.js
 declare module 'express-serve-static-core' {
   interface Request {
     authInfo?: { message: string; profile: Profile };
+    file?: Express.Multer.File; // Add Multer's file property to Request
   }
 }
 
@@ -28,17 +31,24 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       businessPhoneNumber,
       preferredPaymentMethod,
       businessDescription,
-      logoUrl, // Assuming logo upload handled separately or logoUrl passed directly
+      // logoUrl is now handled by req.file
       plan
     } = req.body;
 
+    let logoUrl = '';
+    if (req.file) {
+      logoUrl = `${config.backendUrl}/uploads/${req.file.filename}`; // Corrected to use backendUrl
+    }
+
     // Email, password, businessName, and businessPhoneNumber are now required.
     if (!email || !password || !businessName || !businessPhoneNumber) {
+      if (req.file) { fs.unlinkSync(req.file.path); } // Clean up uploaded file
       return res.status(400).json({ message: 'Email, password, business name, and business phone number are required' });
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      if (req.file) { fs.unlinkSync(req.file.path); } // Clean up uploaded file
       return res.status(409).json({ message: 'User with that email already exists' });
     }
 
@@ -54,7 +64,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       businessPhoneNumber,
       preferredPaymentMethod,
       businessDescription,
-      logoUrl,
+      logoUrl, // Assign the constructed logoUrl
       plan
     });
     await newUser.save();
@@ -62,6 +72,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
     logger.info(`New user signed up: ${email}, Business: ${businessName}, Plan: ${plan || 'N/A'}`);
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
+    if (req.file) { fs.unlinkSync(req.file.path); } // Clean up uploaded file on any error
     next(error);
   }
 };
@@ -141,14 +152,21 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
       plan // Optional
     } = req.body;
 
+    let logoUrl = '';
+    if (req.file) {
+      logoUrl = `${config.backendUrl}/uploads/${req.file.filename}`; // Corrected to use backendUrl
+    }
+
     // Validate required fields
     if (!username || !email || !googleId || !businessName || !businessType || !businessPhoneNumber) {
+      if (req.file) { fs.unlinkSync(req.file.path); } // Clean up uploaded file
       return res.status(400).json({ message: 'Missing required registration details.' });
     }
 
     // Check if user already exists (e.g., by email or googleId)
     const existingUser = await User.findOne({ $or: [{ email }, { googleId }] });
     if (existingUser) {
+      if (req.file) { fs.unlinkSync(req.file.path); } // Clean up uploaded file
       // If a user with that email already exists but doesn't have a googleId, link the googleId
       if (existingUser.email === email && !existingUser.googleId) {
         existingUser.googleId = googleId;
@@ -172,6 +190,7 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
       businessTillOrPaybill,
       preferredPaymentMethod,
       businessDescription,
+      logoUrl, // Assign the constructed logoUrl
       plan
     });
     await newUser.save();
@@ -181,6 +200,7 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
     res.status(201).json({ message: 'User registered successfully', token, user: newUser });
 
   } catch (error) {
+    if (req.file) { fs.unlinkSync(req.file.path); } // Clean up uploaded file on any error
     logger.error('Google complete registration error:', error);
     next(error);
   }

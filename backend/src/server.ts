@@ -18,6 +18,8 @@ import connectDB from './config/db';
 import cron from 'node-cron'; // NEW IMPORT
 import { processDuePayments, processFailedTransactions } from './services/billing.service'; // NEW IMPORT
 import passport from './config/passport';
+import fs from 'fs'; // NEW IMPORT
+import path from 'path'; // NEW IMPORT
 
 const app: Express = express();
 const port = config.port;
@@ -52,6 +54,15 @@ app.use(cors({
 app.use(express.json());
 
 app.use(passport.initialize());
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+
+// Serve static files from the 'uploads' directory
+app.use('/uploads', express.static(uploadsDir));
 
 app.get('/', (req: Request, res: Response) => {
   res.send('FluxPay API is running...');

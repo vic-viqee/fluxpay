@@ -8,6 +8,7 @@ const config = {
   jwtSecret: process.env.JWT_SECRET || 'supersecretjwtkey', // Fallback for dev, but should be strong
   mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/fluxpay',
   frontendUrl: process.env.FRONTEND_URL || 'https://fluxpay-frontend.onrender.com',
+  backendUrl: process.env.BACKEND_URL || 'http://localhost:3000',
 
   email: {
     host: process.env.EMAIL_HOST || 'smtp.example.com',
