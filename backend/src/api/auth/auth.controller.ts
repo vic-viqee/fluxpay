@@ -123,6 +123,7 @@ export const googleCallback = (req: Request, res: Response) => {
   
   // Default to login page if something unexpected happened
   return res.redirect(`${config.frontendUrl}/login`);
+};
 }; // ADDED MISSING CURLY BRACE HERE
 
 export const googleCompleteRegistration = async (req: Request, res: Response, next: NextFunction) => {
