@@ -27,11 +27,11 @@ const UserSchema: Schema = new Schema({
   googleId: { type: String, unique: true, sparse: true },
   passwordResetToken: { type: String },
   passwordResetExpires: { type: Date },
-  businessName: { type: String, required: true }, // Making businessName required as per task
-  businessType: { type: String, required: true },
+  businessName: { type: String, required: true }, // Making businessName required again
+  businessType: { type: String, required: true }, // Making businessType required again
   kraPin: { type: String, required: false },
   businessTillOrPaybill: { type: String, required: false },
-  businessPhoneNumber: { type: String, required: true }, // Making businessPhoneNumber required as per task
+  businessPhoneNumber: { type: String, required: true }, // Making businessPhoneNumber required again
   preferredPaymentMethod: { type: String, required: true, default: 'M-Pesa STK Push' },
   businessDescription: { type: String, required: false },
   logoUrl: { type: String, required: false },

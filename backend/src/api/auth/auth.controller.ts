@@ -6,6 +6,14 @@ import config from '../../config';
 import logger from '../../utils/logger';
 import User, {IUser} from '../../models/User';
 import { sendResetPasswordEmail } from '../../services/email.service';
+import { Profile } from 'passport-google-oauth20'; // Import Profile type
+
+// Augment Request type to include authInfo from Passport.js
+declare module 'express-serve-static-core' {
+  interface Request {
+    authInfo?: { message: string; profile: Profile };
+  }
+}
 
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -87,11 +95,93 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
 export const googleCallback = (req: Request, res: Response) => {
   const user = req.user as IUser; // Cast req.user to IUser
-  if (!user) {
-    return res.redirect(`${config.frontendUrl}/login`);
+  // Passport.js places info object in req.authInfo on failure or special conditions
+  const authInfo = req.authInfo;
+
+  if (user) {
+    // Existing user or successfully created user, proceed with login
+    const token = jwt.sign({ id: user._id, email: user.email }, config.jwtSecret, { expiresIn: '1h' });
+    return res.redirect(`${config.frontendUrl}/auth/google/callback?token=${token}`);
   }
-  const token = jwt.sign({ id: user._id, email: user.email }, config.jwtSecret, { expiresIn: '1h' });
-  res.redirect(`${config.frontendUrl}/auth/google/callback?token=${token}`);
+
+  if (authInfo && authInfo.message === 'Registration required' && authInfo.profile) {
+    // New Google user, redirect to frontend to complete registration
+    const { displayName, emails, id } = authInfo.profile; // Added id for googleId
+    const email = emails?.[0]?.value;
+    const username = displayName;
+    const googleId = id; // Get googleId from profile
+
+    const queryParams = new URLSearchParams();
+    if (username) queryParams.append('username', username);
+    if (email) queryParams.append('email', email);
+    if (googleId) queryParams.append('googleId', googleId); // Add googleId
+
+    return res.redirect(`${config.frontendUrl}/google-register-complete?${queryParams.toString()}`);
+  }
+  
+  // Default to login page if something unexpected happened
+  return res.redirect(`${config.frontendUrl}/login`);
+};
+
+export const googleCompleteRegistration = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { 
+      username, 
+      email, 
+      googleId,
+      businessName, 
+      businessType, 
+      businessPhoneNumber,
+      kraPin, // Optional
+      businessTillOrPaybill, // Optional
+      preferredPaymentMethod, // Optional
+      businessDescription, // Optional
+      plan // Optional
+    } = req.body;
+
+    // Validate required fields
+    if (!username || !email || !googleId || !businessName || !businessType || !businessPhoneNumber) {
+      return res.status(400).json({ message: 'Missing required registration details.' });
+    }
+
+    // Check if user already exists (e.g., by email or googleId)
+    const existingUser = await User.findOne({ $or: [{ email }, { googleId }] });
+    if (existingUser) {
+      // If a user with that email already exists but doesn't have a googleId, link the googleId
+      if (existingUser.email === email && !existingUser.googleId) {
+        existingUser.googleId = googleId;
+        await existingUser.save();
+        const token = jwt.sign({ id: existingUser._id, email: existingUser.email }, config.jwtSecret, { expiresIn: '1h' });
+        logger.info(`Existing user linked with Google: ${email}`);
+        return res.status(200).json({ message: 'Account linked successfully', token, user: existingUser });
+      }
+      return res.status(409).json({ message: 'User with that email or Google ID already exists' });
+    }
+
+    // Create new user with Google details and provided business info
+    const newUser = new User({
+      googleId,
+      username,
+      email,
+      businessName,
+      businessType,
+      businessPhoneNumber,
+      kraPin,
+      businessTillOrPaybill,
+      preferredPaymentMethod,
+      businessDescription,
+      plan
+    });
+    await newUser.save();
+
+    const token = jwt.sign({ id: newUser._id, email: newUser.email }, config.jwtSecret, { expiresIn: '1h' });
+    logger.info(`New Google user registered: ${email}, Business: ${businessName}`);
+    res.status(201).json({ message: 'User registered successfully', token, user: newUser });
+
+  } catch (error) {
+    logger.error('Google complete registration error:', error);
+    next(error);
+  }
 };
 
 export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {

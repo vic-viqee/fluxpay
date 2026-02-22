@@ -30,13 +30,17 @@ passport.use(
           googleId: profile.id,
           username: profile.displayName,
           email: profile.emails?.[0].value,
-          businessName: '',
-          businessType: '',
-          businessPhoneNumber: ''
+          // businessName: '', // These fields are now required, so we can't set them to empty
+          // businessType: '',
+          // businessPhoneNumber: ''
         });
 
-        await newUser.save();
-        done(null, newUser);
+        // If the user doesn't exist and we couldn't find them by email either,
+        // we need to signal that registration is required.
+        // We pass the profile to the auth.controller.ts via the info argument of done.
+        return done(null, false, { message: 'Registration required', profile: profile });
+        
+        // Removed: await newUser.save(); and done(null, newUser);
       } catch (error) {
         done(error, false);
       }
