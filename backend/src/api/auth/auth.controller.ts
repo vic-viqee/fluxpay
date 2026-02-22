@@ -94,9 +94,36 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 export const googleCallback = (req: Request, res: Response) => {
-  logger.info("googleCallback function entered."); // ADD THIS LOG
-  logger.info(`googleCallback: Redirecting with config.frontendUrl: ${config.frontendUrl}`); // ADD THIS LOG
+  // logger.info("googleCallback function entered."); // Removed temporary log
+  // logger.info(`googleCallback: Redirecting with config.frontendUrl: ${config.frontendUrl}`); // Removed temporary log
   const user = req.user as IUser; // Cast req.user to IUser
+  // Passport.js places info object in req.authInfo on failure or special conditions
+  const authInfo = req.authInfo;
+
+  if (user) {
+    // Existing user or successfully created user, proceed with login
+    const token = jwt.sign({ id: user._id, email: user.email }, config.jwtSecret, { expiresIn: '1h' });
+    return res.redirect(`${config.frontendUrl}/auth/google/callback?token=${token}`);
+  }
+
+  if (authInfo && authInfo.message === 'Registration required' && authInfo.profile) {
+    // New Google user, redirect to frontend to complete registration
+    const { displayName, emails, id } = authInfo.profile; // Added id for googleId
+    const email = emails?.[0]?.value;
+    const username = displayName;
+    const googleId = id; // Get googleId from profile
+
+    const queryParams = new URLSearchParams();
+    if (username) queryParams.append('username', username);
+    if (email) queryParams.append('email', email);
+    if (googleId) queryParams.append('googleId', googleId); // Add googleId
+
+    return res.redirect(`${config.frontendUrl}/google-register-complete?${queryParams.toString()}`);
+  }
+  
+  // Default to login page if something unexpected happened
+  return res.redirect(`${config.frontendUrl}/login`);
+}; // ADDED MISSING CURLY BRACE HERE
 
 export const googleCompleteRegistration = async (req: Request, res: Response, next: NextFunction) => {
   try {
