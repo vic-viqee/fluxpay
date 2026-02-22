@@ -98,6 +98,8 @@ export const googleCallback = (req: Request, res: Response) => {
   // Passport.js places info object in req.authInfo on failure or special conditions
   const authInfo = req.authInfo;
 
+  logger.info(`googleCallback: Redirecting with config.frontendUrl: ${config.frontendUrl}`); // ADD THIS LOG
+
   if (user) {
     // Existing user or successfully created user, proceed with login
     const token = jwt.sign({ id: user._id, email: user.email }, config.jwtSecret, { expiresIn: '1h' });
