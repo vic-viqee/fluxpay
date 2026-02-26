@@ -25,7 +25,14 @@ const app: Express = express();
 const port = config.port;
 
 // Connect to database
-connectDB();
+(async () => {
+  try {
+    await connectDB();
+  } catch (error) {
+    logger.error('Failed to connect to the database. Exiting...', error);
+    process.exit(1);
+  }
+})();
 
 // --- FIXED CORS CONFIGURATION ---
 const allowedOrigins = [
