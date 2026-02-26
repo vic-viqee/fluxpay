@@ -21,6 +21,8 @@ import passport from './config/passport';
 import fs from 'fs'; // NEW IMPORT
 import path from 'path'; // NEW IMPORT
 import os from 'os';
+import securityHeaders from './middleware/securityHeaders';
+import { globalRateLimiter } from './middleware/rateLimit';
 
 const app: Express = express();
 const port = config.port;
@@ -60,6 +62,8 @@ app.use(cors({
 // --------------------------------
 
 app.use(express.json());
+app.use(securityHeaders);
+app.use(globalRateLimiter);
 
 app.use(passport.initialize());
 

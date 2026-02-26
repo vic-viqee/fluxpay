@@ -18,6 +18,8 @@ declare module 'express-serve-static-core' {
   }
 }
 
+const googleAuthCodeStore = new Map<string, { token: string; refreshToken: string; expiresAt: number }>();
+
 const generateAccessToken = (user: IUser) =>
   jwt.sign(
     { id: user._id, email: user.email },
@@ -31,6 +33,25 @@ const generateRefreshToken = (user: IUser) =>
   jwt.sign({ id: user._id, email: user.email }, config.jwtRefreshSecret, {
     expiresIn: config.jwtRefreshExpiresIn as jwt.SignOptions['expiresIn'],
   });
+
+const generateGoogleAuthCode = (token: string, refreshToken: string) => {
+  const code = crypto.randomBytes(24).toString('hex');
+  googleAuthCodeStore.set(code, {
+    token,
+    refreshToken,
+    expiresAt: Date.now() + 2 * 60 * 1000,
+  });
+  return code;
+};
+
+const safeUnlink = async (filePath?: string) => {
+  if (!filePath) return;
+  try {
+    await fs.promises.unlink(filePath);
+  } catch {
+    // Best-effort cleanup only.
+  }
+};
 
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -56,13 +77,13 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
 
     // Email, password, businessName, and businessPhoneNumber are now required.
     if (!email || !password || !businessName || !businessPhoneNumber) {
-      if (req.file) { fs.unlinkSync(req.file.path); } // Clean up uploaded file
+      await safeUnlink(req.file?.path);
       return res.status(400).json({ message: 'Email, password, business name, and business phone number are required' });
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      if (req.file) { fs.unlinkSync(req.file.path); } // Clean up uploaded file
+      await safeUnlink(req.file?.path);
       return res.status(409).json({ message: 'User with that email already exists' });
     }
 
@@ -86,7 +107,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
     logger.info(`New user signed up: ${email}, Business: ${businessName}, Plan: ${plan || 'N/A'}`);
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
-    if (req.file) { fs.unlinkSync(req.file.path); } // Clean up uploaded file on any error
+    await safeUnlink(req.file?.path);
     next(error);
   }
 };
@@ -155,7 +176,8 @@ export const googleCallback = (req: Request, res: Response) => {
     // Existing user or successfully created user, proceed with login
     const token = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
-    return res.redirect(`${config.frontendUrl}/auth/google/callback?token=${token}&refreshToken=${refreshToken}`);
+    const code = generateGoogleAuthCode(token, refreshToken);
+    return res.redirect(`${config.frontendUrl}/auth/google/callback?code=${code}`);
   }
 
   if (authInfo && authInfo.message === 'Registration required' && authInfo.profile) {
@@ -176,6 +198,27 @@ export const googleCallback = (req: Request, res: Response) => {
   // Default to login page if something unexpected happened
   return res.redirect(`${config.frontendUrl}/login`);
 }; // CLOSING BRACE HERE
+
+export const exchangeGoogleAuthCode = async (req: Request, res: Response) => {
+  const { code } = req.body || {};
+
+  if (!code || typeof code !== 'string') {
+    return res.status(400).json({ message: 'Authorization code is required.' });
+  }
+
+  const entry = googleAuthCodeStore.get(code);
+  if (!entry) {
+    return res.status(400).json({ message: 'Invalid authorization code.' });
+  }
+
+  if (entry.expiresAt < Date.now()) {
+    googleAuthCodeStore.delete(code);
+    return res.status(400).json({ message: 'Authorization code has expired.' });
+  }
+
+  googleAuthCodeStore.delete(code);
+  return res.status(200).json({ token: entry.token, refreshToken: entry.refreshToken });
+};
 
 export const googleCompleteRegistration = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -200,14 +243,14 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
 
     // Validate required fields
     if (!username || !email || !googleId || !businessName || !businessType || !businessPhoneNumber) {
-      if (req.file) { fs.unlinkSync(req.file.path); } // Clean up uploaded file
+      await safeUnlink(req.file?.path);
       return res.status(400).json({ message: 'Missing required registration details.' });
     }
 
     // Check if user already exists (e.g., by email or googleId)
     const existingUser = await User.findOne({ $or: [{ email }, { googleId }] });
     if (existingUser) {
-      if (req.file) { fs.unlinkSync(req.file.path); } // Clean up uploaded file
+      await safeUnlink(req.file?.path);
       // If a user with that email already exists but doesn't have a googleId, link the googleId
       if (existingUser.email === email && !existingUser.googleId) {
         existingUser.googleId = googleId;
@@ -243,7 +286,7 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
     res.status(201).json({ message: 'User registered successfully', token, refreshToken, user: newUser });
 
   } catch (error) {
-    if (req.file) { fs.unlinkSync(req.file.path); } // Clean up uploaded file on any error
+    await safeUnlink(req.file?.path);
     logger.error('Google complete registration error:', error);
     next(error);
   }

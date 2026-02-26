@@ -4,6 +4,7 @@ import logger from '../../utils/logger';
 import User from '../../models/User';
 import Transaction from '../../models/Transaction';
 import Subscription from '../../models/Subscription';
+import PublicCheckoutTransaction from '../../models/PublicCheckoutTransaction';
 import { IUser } from '../../models/User';
 import { isValidMpesaPhoneNumber } from '../../utils/phone'; // NEW IMPORT
 
@@ -114,6 +115,16 @@ export const initiatePricingStkPush = async (req: Request, res: Response, next: 
     }
 
     const response: any = await initiateStkPush(phoneNumber, amount, 'FluxPay');
+
+    const publicTransaction = new PublicCheckoutTransaction({
+      plan: planKey,
+      phoneNumber,
+      amountKes: amount,
+      darajaRequestId: response.CheckoutRequestID,
+      status: 'PENDING',
+    });
+    await publicTransaction.save();
+
     return res.status(200).json({
       message: 'STK push initiated successfully',
       data: response,
@@ -137,24 +148,36 @@ export const handleCallback = async (req: Request, res: Response, next: NextFunc
     }
 
     const transaction = await Transaction.findOne({ darajaRequestId: callbackData.CheckoutRequestID });
-    
-    if (!transaction) {
+    const publicTransaction = transaction
+      ? null
+      : await PublicCheckoutTransaction.findOne({ darajaRequestId: callbackData.CheckoutRequestID });
+
+    if (!transaction && !publicTransaction) {
       logger.error('Transaction not found for darajaRequestId:', callbackData.CheckoutRequestID);
       return res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });
     }
-    
+
     if (callbackData.ResultCode === 0) {
       const meta = callbackData.CallbackMetadata?.Item || [];
       const mpesaReceiptNo = meta.find((i: any) => i.Name === 'MpesaReceiptNumber')?.Value;
-      
-      transaction.status = 'SUCCESS';
-      transaction.mpesaReceiptNo = mpesaReceiptNo;
-      await transaction.save();
 
+      if (transaction) {
+        transaction.status = 'SUCCESS';
+        transaction.mpesaReceiptNo = mpesaReceiptNo;
+        await transaction.save();
+      } else if (publicTransaction) {
+        publicTransaction.status = 'SUCCESS';
+        publicTransaction.mpesaReceiptNo = mpesaReceiptNo;
+        await publicTransaction.save();
+      }
     } else {
-      transaction.status = 'FAILED';
-      await transaction.save();
-
+      if (transaction) {
+        transaction.status = 'FAILED';
+        await transaction.save();
+      } else if (publicTransaction) {
+        publicTransaction.status = 'FAILED';
+        await publicTransaction.save();
+      }
     }
 
     res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });

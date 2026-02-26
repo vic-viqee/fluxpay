@@ -3,15 +3,34 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+const readEnv = (key: string, fallback = '') => process.env[key] || fallback;
+
+const requireInProduction = (key: string, value: string) => {
+  if (isProduction && !value) {
+    throw new Error(`Missing required environment variable in production: ${key}`);
+  }
+};
+
+const jwtSecret = readEnv('JWT_SECRET', isProduction ? '' : 'supersecretjwtkey');
+const jwtRefreshSecret = readEnv(
+  'JWT_REFRESH_SECRET',
+  isProduction ? '' : `${jwtSecret || 'supersecretjwtkey'}_refresh`
+);
+
+requireInProduction('JWT_SECRET', jwtSecret);
+requireInProduction('JWT_REFRESH_SECRET', jwtRefreshSecret);
+
 const config = {
-  port: process.env.PORT || 3000,
-  jwtSecret: process.env.JWT_SECRET || 'supersecretjwtkey', // Fallback for dev, but should be strong
-  jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || `${process.env.JWT_SECRET || 'supersecretjwtkey'}_refresh`,
-  jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h',
-  jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-  mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/fluxpay',
-  frontendUrl: process.env.FRONTEND_URL || 'https://fluxpay-frontend.onrender.com',
-  backendUrl: process.env.BACKEND_URL || 'http://localhost:3000',
+  port: readEnv('PORT', '3000'),
+  jwtSecret,
+  jwtRefreshSecret,
+  jwtAccessExpiresIn: readEnv('JWT_ACCESS_EXPIRES_IN', '1h'),
+  jwtRefreshExpiresIn: readEnv('JWT_REFRESH_EXPIRES_IN', '7d'),
+  mongoUri: readEnv('MONGODB_URI', 'mongodb://localhost:27017/fluxpay'),
+  frontendUrl: readEnv('FRONTEND_URL', 'https://fluxpay-frontend.onrender.com'),
+  backendUrl: readEnv('BACKEND_URL', 'http://localhost:3000'),
 
   email: {
     host: process.env.EMAIL_HOST || 'smtp.example.com',

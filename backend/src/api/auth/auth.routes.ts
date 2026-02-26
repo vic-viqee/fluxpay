@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signup, login, refreshToken, googleCallback, forgotPassword, resetPassword, googleCompleteRegistration } from './auth.controller';
+import { signup, login, refreshToken, googleCallback, exchangeGoogleAuthCode, forgotPassword, resetPassword, googleCompleteRegistration } from './auth.controller';
 import passport from 'passport';
 import { uploadLogo } from '../../middleware/logoUpload'; // NEW IMPORT
 import config from '../../config';
@@ -14,6 +14,7 @@ router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
 
 router.post('/google-complete-registration', uploadLogo, googleCompleteRegistration); // Add uploadLogo middleware
+router.post('/google/exchange-code', exchangeGoogleAuthCode);
 
 router.get('/google', (req, res, next) => {
   if (!config.google.clientId || !config.google.clientSecret) {

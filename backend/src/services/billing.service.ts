@@ -61,31 +61,26 @@ export const processDuePayments = async () => {
         continue;
       }
 
-      let newTransaction: any = null;
       try {
-        // 1. Create a PENDING Transaction record
-        newTransaction = new Transaction({
-          subscriptionId: subscription._id,
-          ownerId: subscription.ownerId,
-          amountKes: plan.amountKes,
-          status: 'PENDING',
-          retryCount: 0,
-          darajaRequestId: 'temp' // Temporary ID before getting the real one
-        });
-        await newTransaction.save();
-        
-        // 2. Call the M-Pesa STK Push service
+        // 1. Call the M-Pesa STK Push service
         const stkPushResponse: any = await initiateStkPush(
           client.phoneNumber,
           plan.amountKes,
           owner?.businessName || 'FluxPay'
         );
 
-        // 3. Save the darajaRequestId
-        newTransaction.darajaRequestId = stkPushResponse.CheckoutRequestID;
+        // 2. Persist the PENDING transaction with the real CheckoutRequestID
+        const newTransaction = new Transaction({
+          subscriptionId: subscription._id,
+          ownerId: subscription.ownerId,
+          amountKes: plan.amountKes,
+          status: 'PENDING',
+          retryCount: 0,
+          darajaRequestId: stkPushResponse.CheckoutRequestID,
+        });
         await newTransaction.save();
 
-        // 4. Update the Subscription's nextBillingDate to the next cycle
+        // 3. Update the Subscription's nextBillingDate to the next cycle
         subscription.nextBillingDate = getNextBillingDate(subscription.nextBillingDate, plan.frequency, plan.billingDay);
         await subscription.save();
 
@@ -93,10 +88,6 @@ export const processDuePayments = async () => {
 
       } catch (error: any) {
         logger.error(`Failed to initiate STK Push for subscription ${subscription._id}: ${error.message}`);
-        if (newTransaction) {
-          newTransaction.status = 'FAILED';
-          await newTransaction.save();
-        }
       }
     }
   } catch (error: any) {

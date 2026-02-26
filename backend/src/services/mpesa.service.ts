@@ -13,10 +13,11 @@ const darajaApi = axios.create({
 let token: {
   access_token: string;
   expires_in: string;
+  expires_at?: number;
 } | null = null;
 
 const getAuthToken = async () => {
-  if (token && new Date().getTime() < new Date().getTime() + parseInt(token.expires_in) * 1000) {
+  if (token && token.expires_at && Date.now() < token.expires_at) {
     return token.access_token;
   }
 
@@ -30,7 +31,12 @@ const getAuthToken = async () => {
         Authorization: `Basic ${credentials}`,
       },
     });
-    token = response.data;
+    const ttlMs = parseInt(response.data.expires_in, 10) * 1000;
+    token = {
+      ...response.data,
+      // Refresh slightly early to avoid using an about-to-expire token.
+      expires_at: Date.now() + Math.max(ttlMs - 60_000, 0),
+    };
     logger.info('M-Pesa auth token generated successfully');
     return token?.access_token;
   } catch (error: any) {
