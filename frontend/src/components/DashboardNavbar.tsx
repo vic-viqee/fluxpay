@@ -7,7 +7,7 @@ interface DashboardNavbarProps {
 }
 
 const DashboardNavbar: React.FC<DashboardNavbarProps> = ({ toggleSidebar }) => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth(); // Destructure user from useAuth
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -24,7 +24,14 @@ const DashboardNavbar: React.FC<DashboardNavbarProps> = ({ toggleSidebar }) => {
           </svg>
         </button>
       </div>
-      <h1 className="text-xl font-bold text-white ml-4 md:ml-0">Dashboard</h1>
+      <div className="flex items-center">
+        {user?.logoUrl ? (
+          <img src={user.logoUrl} alt="User Logo" className="h-8 w-8 rounded-full object-cover mr-3" />
+        ) : (
+          <img src="/img/fluxpay logo.png" alt="Default Logo" className="h-8 w-8 rounded-full object-cover mr-3" /> // Fallback logo
+        )}
+        <h1 className="text-xl font-bold text-white">Dashboard</h1>
+      </div>
       <button onClick={handleLogout} className="px-4 py-2 text-sm font-medium text-main bg-transparent border border-main rounded-md shadow-sm hover:bg-main hover:text-white transition-colors">Logout</button>
     </nav>
   );

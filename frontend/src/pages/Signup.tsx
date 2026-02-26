@@ -30,7 +30,6 @@ const Signup: React.FC = () => {
     setError(''); // Clear previous errors
 
     try {
-      // For file upload, you would typically use FormData
       const formData = new FormData();
       formData.append('username', username);
       formData.append('email', email);
@@ -45,22 +44,10 @@ const Signup: React.FC = () => {
       if (businessDescription) formData.append('businessDescription', businessDescription);
       if (logoFile) formData.append('logo', logoFile); // 'logo' is the field name for the file
 
-      // Note: Backend /auth/signup needs to be updated to handle formData (multipart/form-data)
-      // or receive JSON if logo upload is handled separately. For now, sending as JSON without file.
-      // If actual file upload is desired, backend API needs to change to accept `multipart/form-data`.
-      await api.post('/auth/signup', { 
-        username, 
-        email, 
-        password, 
-        plan,
-        businessName,
-        businessType,
-        kraPin,
-        businessTillOrPaybill,
-        businessPhoneNumber,
-        preferredPaymentMethod,
-        businessDescription,
-        // logoFile // Cannot send File object directly in JSON
+      await api.post('/auth/signup', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
       navigate('/login');
     } catch (err: any) {

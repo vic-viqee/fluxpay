@@ -30,3 +30,18 @@ export const createServicePlan = async (req: Request, res: Response, next: NextF
     next(error);
   }
 };
+
+export const getServicePlans = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = req.user as IUser; // Cast req.user to IUser
+    if (!user || !user._id) {
+      return res.status(401).json({ message: 'User not authenticated.' });
+    }
+
+    const plans = await ServicePlan.find({ ownerId: user._id });
+    res.status(200).json({ plans });
+  } catch (error) {
+    next(error);
+  }
+};
+

@@ -18,7 +18,7 @@ It provides a complete solution for businesses to handle user authentication, su
 ### Backend
 -   **Robust API:** Developed with Node.js, Express.js, and TypeScript for a type-safe and scalable API.
 -   **User Authentication:** JWT-based (Access + Refresh tokens) for secure API access.
--   **M-Pesa Integration:** Full Daraja API integration for STK Push, including OAuth token generation, callback handling, and Kenyan phone number validation.
+-   **M-Pesa Integration:** Full Daraja API integration for STK Push, including OAuth token generation, callback handling, and **enhanced Kenyan phone number validation (ensuring numbers start with 254)**.
 -   **Database Integration:** Configured for MongoDB (using Mongoose) for persistent data storage.
 -   **Centralized Error Handling:** Consistent error responses across the API.
 -   **Logging:** Integrated Winston for structured logging.
@@ -87,6 +87,7 @@ fluxpay/
   │   └── .env.example           ← Example environment variables for backend
   ├── .env.example               ← Combined example environment variables for both (legacy, use backend/.env.example for backend)
   ├── docker-compose.yml         ← Optional: Docker Compose for services like MongoDB
+
 ```
 
 ## Prerequisites
@@ -187,6 +188,10 @@ All backend routes are prefixed with `/api`.
 -   `GET /api/subscriptions/:id`: Get a specific subscription. (Requires JWT)
 -   `PUT /api/subscriptions/:id`: Update a specific subscription. (Requires JWT)
 -   `DELETE /api/subscriptions/:id`: Delete a specific subscription. (Requires JWT)
+
+### Plans
+-   `POST /api/plans`: Create a new service plan. (Requires JWT)
+-   `GET /api/plans`: Get all service plans for the authenticated user. (Requires JWT)
 
 ### Users
 -   `GET /api/users/me`: Get the profile of the currently authenticated user. (Requires JWT)

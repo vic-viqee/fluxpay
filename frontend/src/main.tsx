@@ -22,6 +22,7 @@ import Plans from './pages/Plans'; // NEW IMPORT
 import GoogleCallback from './pages/GoogleCallback';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import GoogleRegistrationCompletion from './pages/GoogleRegistrationCompletion'; // NEW IMPORT
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -37,6 +38,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/documentation" element={<Documentation />} />
           <Route path="/subscribe" element={<SubscriptionCheckout />} />
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
+          <Route path="/google-register-complete" element={<GoogleRegistrationCompletion />} />
           
           <Route element={<PrivateRoute />}>
             <Route element={<MainLayout />}>
