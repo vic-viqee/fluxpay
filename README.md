@@ -2,244 +2,104 @@
 
 ## Project Overview
 
-FluxPay is a web application designed to manage M-Pesa payments and subscriptions for Kenyan small businesses. This project has been re-architected into a modern full-stack application with a React frontend and a Node.js/Express/TypeScript backend, ensuring strict separation of concerns, modularity, and scalability.
+FluxPay is a full-stack web app for Kenyan businesses to manage clients, service plans, subscriptions, and M-Pesa collections.
 
-It provides a complete solution for businesses to handle user authentication, subscription plans, and real-time payment processing via M-Pesa's STK push functionality.
+- Frontend: React + Vite + TypeScript + Tailwind
+- Backend: Node.js + Express + TypeScript + MongoDB (Mongoose)
 
-## Features
+## Implemented Features
 
 ### Frontend
--   **Modern UI:** Built with React, Vite, and Tailwind CSS for a responsive and intuitive user experience.
--   **Modular Components:** Reusable UI components and a clear page-based structure.
--   **Client-Side Routing:** Fast navigation using React Router DOM.
--   **Authentication Flow:** Secure user login and signup with JWT-based authentication.
--   **API Integration:** Seamless communication with the Node.js backend.
+- JWT-authenticated app flow (login/signup + protected routes).
+- Dashboard with subscriptions and transactions tables.
+- Service plan creation flow.
+- Subscription creation flow using `AddSubscriptionModal` (creates client first, then creates subscription with `clientId` + `planId`).
+- STK push simulation UI.
+- Public pricing checkout flow for new users (Starter/Growth) with plan-based STK push.
 
 ### Backend
--   **Robust API:** Developed with Node.js, Express.js, and TypeScript for a type-safe and scalable API.
--   **User Authentication:** JWT-based (Access + Refresh tokens) for secure API access.
--   **M-Pesa Integration:** Full Daraja API integration for STK Push, including OAuth token generation, callback handling, and **enhanced Kenyan phone number validation (ensuring numbers start with 254)**.
--   **Database Integration:** Configured for MongoDB (using Mongoose) for persistent data storage.
--   **Centralized Error Handling:** Consistent error responses across the API.
--   **Logging:** Integrated Winston for structured logging.
--   **Modular Architecture:** Clean separation of routes, controllers, services, and models.
+- Auth: signup, login, refresh-token flow, Google OAuth callback flow, forgot/reset password.
+- M-Pesa: STK push initiation + callback handling.
+- Phone validation/normalization for Kenyan M-Pesa numbers.
+- Public pricing STK endpoint with strict phone prefix rule (`2541` or `2547`) and fixed business name `FluxPay`.
+- Public pricing STK requests are persisted and reconciled via callback handling.
+- CRUD for subscriptions.
+- Service plan create/list endpoints.
+- Client create/list endpoints.
+- Customers analytics endpoint.
+- Dashboard analytics endpoint.
+- User settings get/update endpoints.
+- API docs endpoint with route index.
+- User profile endpoint (`/api/users/me`).
+- Transactions list endpoint (`/api/transactions`).
+- Logo upload middleware + static upload serving.
+- Global API hardening with security headers and request rate limiting.
+- Route-level anti-abuse throttling for pricing checkout endpoint (per-IP and per-phone).
+- Production logger now outputs to console (Render-friendly) and file transports.
 
-## Brand Color Palette
+## Current API Surface
 
-FluxPay uses a carefully selected brand color palette to ensure a consistent, modern, and accessible user experience. These colors are defined in `frontend/tailwind.config.cjs` and should be used according to their roles:
+All endpoints are under `/api`.
 
-| Role        | Color Name    | Hex Value   | Intent                                             |
-| :---------- | :------------ | :---------- | :------------------------------------------------- |
-| `main`      | Digital Blue  | `#0066FF`   | Primary brand identity, trust, automation, fintech reliability. Used for primary CTAs, active states, and key highlights. |
-| `secondary` | Teal Green    | `#00C2A8`   | Flow, motion, supporting actions. Used for secondary CTAs, hover states, and supporting visual elements. |
-| `accent`    | Sunset Orange | `#FF6B35`   | CTAs, emphasis, urgency, visual energy. Used sparingly for activation moments, empty-state emphasis, and success/celebration indicators. |
-| `primary-bg`| Gunmetal      | `#1C1F26`   | Primary backgrounds, typography, neutral structure. Used for the darkest backgrounds. |
-| `surface-bg`| Lighter Gunmetal| `#2D323E`   | Surfaces, cards, secondary backgrounds, and deeper UI elements to provide contrast against the `primary-bg`. |
+- Auth: `/auth/signup`, `/auth/login`, `/auth/refresh-token`, `/auth/google`, `/auth/google/callback`, `/auth/forgot-password`, `/auth/reset-password/:token`
+- Payments: `/payments/stk-push`, `/payments/simulate-stk-push`, `/payments/pricing-stk-push`, `/payments/callback`
+- Subscriptions: `POST/GET /subscriptions`, `GET/PUT/DELETE /subscriptions/:id`
+- Plans: `POST/GET /plans`
+- Clients: `POST/GET /clients`
+- Customers: `GET /customers`
+- Analytics: `GET /analytics`
+- Settings: `GET/PUT /settings`
+- Docs: `GET /docs`
+- Users: `GET /users/me`
+- Transactions: `GET /transactions`
 
-### Usage Guidelines:
--   Always use the defined Tailwind color names (e.g., `bg-main`, `text-secondary`, `border-accent`).
--   Ensure sufficient contrast for all text elements. Avoid placing `accent` text on `secondary` backgrounds.
--   Combine color indicators with icons or text for accessibility where relevant.
+## Known Gaps / Remaining Work
 
-## Tech Stack
+- Deployment reliability on Render still needs verification, but startup hardening is now in place:
+  - Backend `start` now builds before running (`npm run build && node dist/server.js`).
+  - Google OAuth strategy is conditionally enabled only when credentials are set.
+  - Uploads directory initialization now has safer fallback behavior.
+  - Global uncaught/unhandled error logging handlers are registered.
+  - JWT secret fallbacks are disabled in production (fail-fast on missing secrets).
+  - Google callback no longer exposes access/refresh tokens in URL query; one-time code exchange is used instead.
 
--   **Frontend:** React, Vite, TypeScript, Tailwind CSS, React Router DOM, Axios
--   **Backend:** Node.js, Express.js, TypeScript, Mongoose, jsonwebtoken, bcrypt, dotenv, Winston, Joi (for validation - future integration), Axios
--   **Database:** MongoDB (via Mongoose)
--   **Containerization (Optional):** Docker, Docker Compose
+## Recent Hardening Updates
 
-## Folder Structure
+- Fixed billing transaction creation flow to avoid duplicate unique `darajaRequestId` collisions.
+- Corrected M-Pesa auth token cache expiry logic.
+- Added one-time Google auth code exchange endpoint (`POST /api/auth/google/exchange-code`).
+- Added global rate limiter + security headers middleware.
+- Added pricing checkout route throttles.
+- Added dedicated model for public checkout transactions and callback reconciliation.
+- Replaced sync file cleanup (`unlinkSync`) with safe async cleanup in auth flow.
+- Clarified frontend API naming for simulated STK push (`initiateSimulatedStkPushPayment`).
 
-```
-fluxpay/
-  ├── README.md                  ← This file
-  ├── frontend/                  ← React application
-  │   ├── public/                ← Static assets (e.g., images)
-  │   ├── src/
-  │   │   ├── assets/            ← Images, icons
-  │   │   ├── components/        ← Reusable UI components (Navbar, Footer, StatCard, etc.)
-  │   │   ├── context/           ← React Context for global state (e.g., AuthContext)
-  │   │   ├── hooks/             ← Custom React Hooks
-  │   │   ├── layouts/           ← Layout components (e.g., MainLayout)
-  │   │   ├── pages/             ← React components for each route/page
-  │   │   ├── services/          ← API service (Axios instance)
-  │   │   └── App.tsx            ← Main application component (or main.tsx entry)
-  │   ├── index.html             ← Frontend HTML entry point
-  │   ├── package.json           ← Frontend dependencies and scripts
-  │   ├── tailwind.config.js     ← Tailwind CSS configuration
-  │   └── tsconfig.json          ← TypeScript configuration for frontend
-  ├── backend/                   ← Node.js/Express/TypeScript API
-  │   ├── src/
-  │   │   ├── api/               ← API modules (auth, payments, subscriptions, users, etc.)
-  │   │   │   ├── auth/
-  │   │   │   ├── payments/
-  │   │   │   ├── subscriptions/
-  │   │   │   ├── users/
-  │   │   │   └── ...
-  │   │   ├── config/            ← Configuration files (db, index)
-  │   │   ├── middleware/        ← Express middleware (auth, errorHandler)
-  │   │   ├── models/            ← Mongoose schemas (User, Subscription, Transaction)
-  │   │   ├── services/          ← Business logic services (e.g., mpesa.service)
-  │   │   ├── utils/             ← Utility functions (logger, phone number validation)
-  │   │   └── server.ts          ← Main backend application entry point
-  │   ├── package.json           ← Backend dependencies and scripts
-  │   ├── tsconfig.json          ← TypeScript configuration for backend
-  │   └── .env.example           ← Example environment variables for backend
-  ├── .env.example               ← Combined example environment variables for both (legacy, use backend/.env.example for backend)
-  ├── docker-compose.yml         ← Optional: Docker Compose for services like MongoDB
+## Environment Variables (Backend)
 
-```
+Create `backend/.env` with at least:
 
-## Prerequisites
+- `PORT`
+- `JWT_SECRET`
+- `MONGODB_URI`
+- `CONSUMER_KEY`
+- `CONSUMER_SECRET`
+- `SHORTCODE`
+- `PASSKEY`
+- `CALLBACK_URL`
+- Optional OAuth/email settings used by auth/password-reset flows.
 
--   **Node.js**: (v18 or higher recommended)
--   **npm**: (Node Package Manager)
--   **MongoDB**: (running locally or a cloud instance like MongoDB Atlas)
--   **ngrok**: (for M-Pesa Daraja API callbacks to your local machine)
+## Local Run
 
-## Backend Setup
+1. Start MongoDB.
+2. Backend:
+   - `cd backend`
+   - `npm install`
+   - `npm run dev`
+3. Frontend:
+   - `cd frontend`
+   - `npm install`
+   - `npm run dev`
 
-1.  **Navigate to the backend directory:**
-    ```bash
-    cd fluxpay/backend
-    ```
+Set `frontend/.env` only if needed:
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-3.  **Configure environment variables:**
-    -   Copy the example environment file:
-        ```bash
-        cp .env.example .env
-        ```
-        (On Windows: `copy .env.example .env`)
-    -   Open the newly created `.env` file and fill in the required values:
-        -   `PORT`: Port for the backend server (default: `3000`).
-        -   `JWT_SECRET`: A strong, random string for JWT signing.
-        -   `MONGODB_URI`: Your MongoDB connection string (e.g., `mongodb://localhost:27017/fluxpay`).
-        -   **M-Pesa Credentials (from Safaricom Daraja Developer Portal):**
-            -   `CONSUMER_KEY`
-            -   `CONSUMER_SECRET`
-            -   `SHORTCODE` (Your LIPA NA MPESA Short Code)
-            -   `PASSKEY` (Your LIPA NA MPESA Online Checkout Passkey)
-            -   `CALLBACK_URL`: Public URL for Daraja API callbacks (see ngrok setup below).
-
-4.  **M-Pesa Ngrok Setup (for local development callbacks):**
-    The Daraja API requires a publicly accessible URL to send payment notifications.
-    -   Start ngrok, forwarding to your backend port (e.g., 3000):
-        ```bash
-        ngrok http 3000
-        ```
-    -   Ngrok will provide a "Forwarding" URL (e.g., `https://random-string.ngrok.io`).
-    -   Update `CALLBACK_URL` in your `.env` file with this URL, appending the callback path:
-        Example: `CALLBACK_URL=https://random-string.ngrok.io/api/payments/callback`
-
-5.  **Run the backend server (development mode):**
-    ```bash
-    npm run dev
-    ```
-    The server will start and automatically restart on file changes.
-
-## Frontend Setup
-
-1.  **Navigate to the frontend directory:**
-    ```bash
-    cd fluxpay/frontend
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-3.  **Configure environment variables (optional, if different from default):**
-    The frontend uses `VITE_API_URL` to connect to the backend. By default, it points to `http://localhost:3000/api`. If your backend runs on a different URL/port, create a `.env` file in `fluxpay/frontend` and add:
-    ```
-    VITE_API_URL=http://localhost:YOUR_BACKEND_PORT/api
-    ```
-
-4.  **Run the frontend development server:**
-    ```bash
-    npm run dev
-    ```
-    The frontend will start on a local port (e.g., `http://localhost:5173`).
-
-## Connecting Frontend to Backend
-
-The frontend `fluxpay/frontend/src/services/api.ts` file is configured with Axios to automatically attach the JWT authentication token from `localStorage` to all outgoing requests to the backend API. It uses `import.meta.env.VITE_API_URL` for the backend base URL, falling back to `http://localhost:3000/api`.
-
-## API Endpoints (Backend)
-
-All backend routes are prefixed with `/api`.
-
-### Authentication
--   `POST /api/auth/signup`: Register a new user.
--   `POST /api/auth/login`: Log in a user and receive a JWT.
-
-### Payments
--   `POST /api/payments/stk-push`: Initiate an M-Pesa STK push payment. (Requires JWT)
--   `POST /api/payments/callback`: Webhook endpoint for M-Pesa Daraja API notifications.
-
-### Subscriptions
--   `POST /api/subscriptions`: Create a new subscription. (Requires JWT)
--   `GET /api/subscriptions`: Get all subscriptions for the authenticated user. (Requires JWT)
--   `GET /api/subscriptions/:id`: Get a specific subscription. (Requires JWT)
--   `PUT /api/subscriptions/:id`: Update a specific subscription. (Requires JWT)
--   `DELETE /api/subscriptions/:id`: Delete a specific subscription. (Requires JWT)
-
-### Plans
--   `POST /api/plans`: Create a new service plan. (Requires JWT)
--   `GET /api/plans`: Get all service plans for the authenticated user. (Requires JWT)
-
-### Users
--   `GET /api/users/me`: Get the profile of the currently authenticated user. (Requires JWT)
-
-### Transactions
--   `GET /api/transactions`: Get all transactions for the authenticated user. (Requires JWT)
-
-## Current Status
-
-### What Has Been Done
-*   **Core Application Setup**: A full-stack application with a React frontend and Node.js/Express/TypeScript backend.
-*   **User Authentication**: Implemented JWT-based authentication (signup, login, refresh tokens).
-*   **M-Pesa Integration**: Full Daraja API integration for STK Push, including OAuth token generation, callback handling, and **enhanced Kenyan phone number validation**.
-*   **Subscription & Plans API**: The API endpoints for creating (`POST /api/plans`) and fetching (`GET /api/plans`) service plans, and managing subscriptions, have been implemented on the backend.
-*   **Logo Upload Feature**: Fully implemented on both frontend and backend.
-*   **Backend Error Logging**: Enhanced database connection error logging in `backend/src/config/db.ts` and `backend/src/server.ts` to provide clearer messages during startup.
-
-### Known Issues
-*   **Backend Deployment on Render**: The `fluxpay-backend` service is not starting successfully after deployment. It reports "Your service is live 🎉" in deploy logs, but no runtime logs are visible, indicating an immediate crash upon `npm start` execution. This prevents the frontend from connecting (`ERR_CONNECTION_CLOSED`, `Network Error`). Likely due to an incorrect or missing environment variable in the Render environment (e.g., `MONGODB_URI`) or an environment-specific crash.
-*   **Frontend Subscription Creation Error**: When attempting to create a new subscription, the frontend receives a `400 Bad Request` from `fluxpay-backend.onrender.com/api/subscriptions`. This suggests a validation error in the request payload, likely due to `clientId` or `planId` being missing or malformed in the data sent from the frontend.
-*   **Remaining Placeholder APIs**: The following API endpoints are still placeholders and require further implementation:
-    *   `GET /api/customers`
-    *   `GET /api/analytics`
-    *   `GET /api/settings`
-    *   `GET /api/docs`
-*   **Frontend `ERR_BLOCKED_BY_CLIENT`**: This error appears in the browser console, often related to browser extensions like ad-blockers, and is likely a secondary issue or unrelated to the core backend/API problems.
-
-## Running the Complete Application
-
-1.  **Start MongoDB:** Ensure your MongoDB instance is running. If using Docker Compose:
-    ```bash
-    cd fluxpay
-    docker-compose up -d mongo
-    ```
-2.  **Start the Backend:**
-    ```bash
-    cd fluxpay/backend
-    npm run dev
-    ```
-3.  **Start ngrok:** (if testing M-Pesa locally)
-    ```bash
-    ngrok http 3000
-    ```
-    Update your backend's `.env` `CALLBACK_URL`.
-4.  **Start the Frontend:**
-    ```bash
-    cd fluxpay/frontend
-    npm run dev
-    ```
-
-Open your browser to the frontend address (e.g., `http://localhost:5173`). You can now sign up, log in, and interact with the FluxPay application.
+- `VITE_API_URL=http://localhost:3000/api`

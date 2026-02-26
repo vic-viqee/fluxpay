@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { initiateStkPushPayment } from '../services/api';
+import { initiateSimulatedStkPushPayment } from '../services/api';
 
 interface StkPushModalProps {
   isOpen: boolean;
@@ -34,7 +34,7 @@ export const StkPushModal: React.FC<StkPushModalProps> = ({ isOpen, onClose, onS
 
     setLoading(true);
     try {
-      await initiateStkPushPayment({
+      await initiateSimulatedStkPushPayment({
         phoneNumber,
         amount: Number(amount),
       });

@@ -1,19 +1,48 @@
 # PROMPT.md - Project Status Summary
 
-This document summarizes the current development status of the FluxPay project, including completed work and outstanding issues.
+This file reflects the validated codebase status.
 
-## What Has Been Done
+## Working
 
-*   **Core Application Setup**: A full-stack application with a React frontend and Node.js/Express/TypeScript backend.
-*   **User Authentication**: Implemented JWT-based authentication (signup, login, refresh tokens).
-*   **M-Pesa Integration**: Full Daraja API integration for STK Push, including OAuth token generation, callback handling, and **enhanced Kenyan phone number validation**.
-*   **Subscription & Plans API**: The API endpoints for creating (`POST /api/plans`) and fetching (`GET /api/plans`) service plans, and managing subscriptions, have been implemented on the backend.
-*   **Logo Upload Feature**: Fully implemented on both frontend and backend.
-*   **Backend Error Logging**: Enhanced database connection error logging in `backend/src/config/db.ts` and `backend/src/server.ts` to provide clearer messages during startup.
+- React + Vite frontend and Express + TypeScript backend are in place.
+- Auth: signup/login, refresh-token flow, Google OAuth flow, forgot/reset password.
+- Google callback now uses one-time auth code exchange (`POST /api/auth/google/exchange-code`) instead of token query params.
+- M-Pesa STK push and callback handling are implemented.
+- M-Pesa auth token cache expiry handling is fixed.
+- Kenyan phone formatting/validation utilities are implemented.
+- Public pricing checkout is implemented for non-auth users via `POST /api/payments/pricing-stk-push`.
+- Pricing checkout phone input now enforces prefixes `2541` or `2547`, and STK requests use `FluxPay` as business name.
+- Public pricing STK pushes are now persisted and reconciled in callback processing.
+- Plans API is implemented (`POST/GET /api/plans`).
+- Clients API is implemented (`POST/GET /api/clients`).
+- Subscriptions CRUD is implemented (`/api/subscriptions`).
+- Customers endpoint is implemented (`GET /api/customers`).
+- Analytics endpoint is implemented (`GET /api/analytics`).
+- Settings endpoints are implemented (`GET/PUT /api/settings`).
+- Docs endpoint is implemented (`GET /api/docs`).
+- Transactions and user profile endpoints are implemented.
+- Logo upload works through backend upload middleware.
+- Subscriptions page now uses the same valid creation flow as dashboard modal (`clientId` + `planId`).
+- Global security headers + global rate limiter are active.
+- Pricing checkout endpoint has per-IP and per-phone throttling.
+- Production logger now writes to console (in addition to files), improving Render observability.
+- Sync file deletes in auth flow were replaced with safe async cleanup.
+- Simulated STK helper naming is clarified in frontend (`initiateSimulatedStkPushPayment`).
 
-## Known Issues
+## Remaining / Known Issues
 
-*   **Backend Deployment on Render**: The `fluxpay-backend` service is not starting successfully after deployment. No runtime logs are visible, indicating an immediate crash upon `npm start` execution. This prevents the frontend from connecting (`ERR_CONNECTION_CLOSED`, `Network Error`). Likely due to an incorrect or missing environment variable (e.g., `MONGODB_URI`) or an environment-specific crash.
-*   **Frontend Subscription Creation Error**: When attempting to create a new subscription, the frontend receives a `400 Bad Request` from `fluxpay-backend.onrender.com/api/subscriptions`. This suggests a validation error in the request payload, likely due to `clientId` or `planId` being missing or malformed.
-*   **Remaining Placeholder APIs**: The following API endpoints are still placeholders and require further implementation: `GET /api/customers`, `GET /api/analytics`, `GET /api/settings`, `GET /api/docs`.
-*   **Frontend `ERR_BLOCKED_BY_CLIENT`**: This error appears in the browser console, often related to browser extensions like ad-blockers, and is likely a secondary issue or unrelated to the core backend/API problems.
+- Deployment on Render needs verification after the startup-hardening changes (build-on-start, OAuth strategy guard, safer uploads dir init, and crash handlers).
+- `ERR_BLOCKED_BY_CLIENT` is typically extension-side (ad blocker/privacy extension), not a backend logic error.
+
+## Completion Tracker
+
+- [ ] 1. Backend deployment stability on Render (fixes implemented, pending deploy verification)
+- [x] 2. Refresh-token auth flow
+- [x] 3. Customers API
+- [x] 4. Analytics API
+- [x] 5. Settings API
+- [x] 6. Docs API
+- [x] 7. Public pricing STK persistence + callback reconciliation
+- [x] 8. Production console logging hardening
+- [x] 9. Async-safe uploaded file cleanup
+- [x] 10. Frontend STK simulation naming/usage cleanup

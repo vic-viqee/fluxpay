@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { initiateStkPushPayment } from '../services/api';
+import { initiatePricingStkPushPayment } from '../services/api';
 
 const SubscriptionCheckout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const plan = location.state?.plan;
+  const plan = location.state?.plan as 'Starter' | 'Growth' | undefined;
 
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [amount, setAmount] = useState<number | string>('');
-  const [accountReference, setAccountReference] = useState('');
-  const [transactionDescription, setTransactionDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | '' }>({ text: '', type: '' });
 
-  if (!plan) {
+  if (!plan || !['Starter', 'Growth'].includes(plan)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-primary-bg">
         <div className="text-center">
@@ -34,13 +31,8 @@ const SubscriptionCheckout: React.FC = () => {
     if (!phoneNumber) {
       setMessage({ text: 'Phone Number is required.', type: 'error' });
       isValid = false;
-    } else if (!/^2547\d{8}$/.test(phoneNumber)) { // Basic Kenyan M-Pesa format validation
-      setMessage({ text: 'Invalid Kenyan M-Pesa phone number (e.g., 2547XXXXXXXX).', type: 'error' });
-      isValid = false;
-    }
-
-    if (!amount || Number(amount) <= 1) {
-      setMessage({ text: 'Amount must be greater than 1.', type: 'error' });
+    } else if (!/^254[17]\d{8}$/.test(phoneNumber)) {
+      setMessage({ text: 'Invalid phone number. Use a valid M-Pesa number starting with 2541 or 2547.', type: 'error' });
       isValid = false;
     }
 
@@ -55,22 +47,12 @@ const SubscriptionCheckout: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await initiateStkPushPayment({
+      await initiatePricingStkPushPayment({
         phoneNumber,
-        amount: Number(amount),
-        accountReference: accountReference || `${plan} Subscription`, // Default if not provided
-        transactionDescription: transactionDescription || `Payment for ${plan} plan`, // Default if not provided
+        plan,
       });
       setMessage({ text: `STK Push sent to ${phoneNumber}. Please check your phone.`, type: 'success' });
-      // Clear form after successful initiation
       setPhoneNumber('');
-      setAmount('');
-      setAccountReference('');
-      setTransactionDescription('');
-      // Optionally, navigate to dashboard after successful initiation
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 3000);
     } catch (error: any) {
       console.error('STK Push initiation failed:', error);
       setMessage({ text: error.response?.data?.message || 'Failed to initiate STK Push. Please try again.', type: 'error' });
@@ -106,7 +88,7 @@ const SubscriptionCheckout: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-300">Phone Number (e.g., 2547XXXXXXXX)</label>
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-300">Phone Number (e.g., 2547XXXXXXXX or 2541XXXXXXXX)</label>
             <input
               type="text"
               id="phoneNumber"
@@ -114,41 +96,6 @@ const SubscriptionCheckout: React.FC = () => {
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               required
-              disabled={isLoading}
-            />
-          </div>
-          <div>
-            <label htmlFor="amount" className="block text-sm font-medium text-gray-300">Amount (KES)</label>
-            <input
-              type="number"
-              id="amount"
-              className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-main focus:border-main sm:text-sm bg-primary-bg text-white"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              min="1"
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <div>
-            <label htmlFor="accountReference" className="block text-sm font-medium text-gray-300">Account Reference (Optional)</label>
-            <input
-              type="text"
-              id="accountReference"
-              className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-main focus:border-main sm:text-sm bg-primary-bg text-white"
-              value={accountReference}
-              onChange={(e) => setAccountReference(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
-          <div>
-            <label htmlFor="transactionDescription" className="block text-sm font-medium text-gray-300">Transaction Description (Optional)</label>
-            <input
-              type="text"
-              id="transactionDescription"
-              className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-main focus:border-main sm:text-sm bg-primary-bg text-white"
-              value={transactionDescription}
-              onChange={(e) => setTransactionDescription(e.target.value)}
               disabled={isLoading}
             />
           </div>

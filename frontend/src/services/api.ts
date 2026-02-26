@@ -19,15 +19,29 @@ api.interceptors.request.use(
 
 export default api;
 
-export const initiateStkPushPayment = async (data: {
+export const initiateSimulatedStkPushPayment = async (data: {
   phoneNumber: string;
   amount: number;
   accountReference?: string;
   transactionDescription?: string;
 }) => {
   try {
-    // Correctly point to the new simulation endpoint
     const response = await api.post('/payments/simulate-stk-push', data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Backward-compatible alias for older imports.
+export const initiateStkPushPayment = initiateSimulatedStkPushPayment;
+
+export const initiatePricingStkPushPayment = async (data: {
+  phoneNumber: string;
+  plan: 'Starter' | 'Growth';
+}) => {
+  try {
+    const response = await api.post('/payments/pricing-stk-push', data);
     return response.data;
   } catch (error) {
     throw error;

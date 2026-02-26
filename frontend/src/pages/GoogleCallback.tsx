@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 const GoogleCallback: React.FC = () => {
   const location = useLocation();
@@ -8,15 +9,32 @@ const GoogleCallback: React.FC = () => {
   const { login } = useAuth();
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get('token');
+    const completeGoogleLogin = async () => {
+      const params = new URLSearchParams(location.search);
+      const code = params.get('code');
+      const token = params.get('token'); // Backward compatibility for older redirects.
 
-    if (token) {
-      login(token);
-      navigate('/dashboard');
-    } else {
-      navigate('/login');
-    }
+      if (token) {
+        login(token);
+        navigate('/dashboard');
+        return;
+      }
+
+      if (!code) {
+        navigate('/login');
+        return;
+      }
+
+      try {
+        const response = await api.post('/auth/google/exchange-code', { code });
+        login(response.data.token);
+        navigate('/dashboard');
+      } catch (error) {
+        navigate('/login');
+      }
+    };
+
+    completeGoogleLogin();
   }, [location, login, navigate]);
 
   return (
