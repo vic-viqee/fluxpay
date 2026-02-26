@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import api from '../services/api';
+import api, { googleAuthUrl } from '../services/api';
 
 const Signup: React.FC = () => {
   const [step, setStep] = useState(1); // New state for multi-step form
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [businessType, setBusinessType] = useState('');
   const [kraPin, setKraPin] = useState('');
@@ -19,6 +20,15 @@ const Signup: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const plan = location.state?.plan;
+
+  const isStrongPassword = (value: string) => {
+    if (value.length < 8) return false;
+    if (!/[a-z]/.test(value)) return false;
+    if (!/[A-Z]/.test(value)) return false;
+    if (!/\d/.test(value)) return false;
+    if (!/[^A-Za-z0-9]/.test(value)) return false;
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,11 +68,18 @@ const Signup: React.FC = () => {
   const handleNext = () => {
     // Basic validation for current step before proceeding
     if (step === 1) {
-      if (!username || !email || !password) {
+      if (!username || !email || !password || !confirmPassword) {
         setError('Please fill in all required user details.');
         return;
       }
-      // Password strength/email format validation could go here
+      if (!isStrongPassword(password)) {
+        setError('Password must be at least 8 characters and include uppercase, lowercase, number, and special character.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('Password and confirm password do not match.');
+        return;
+      }
     } else if (step === 2) {
       if (!businessName || !businessType || !businessPhoneNumber) {
         setError('Please fill in all required business details.');
@@ -97,7 +114,7 @@ const Signup: React.FC = () => {
 
         <div>
           <a
-            href={`https://fluxpay-backend.onrender.com/api/auth/google`}
+            href={googleAuthUrl}
             className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -153,6 +170,20 @@ const Signup: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-3 py-2 mt-1 bg-primary-bg border border-gray-600 rounded-md shadow-sm text-white focus:ring-main focus:border-main"
                   placeholder="Create a strong password"
+                  required
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Use at least 8 characters with uppercase, lowercase, number, and symbol.
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300">Confirm Password</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-3 py-2 mt-1 bg-primary-bg border border-gray-600 rounded-md shadow-sm text-white focus:ring-main focus:border-main"
+                  placeholder="Re-enter your password"
                   required
                 />
               </div>
@@ -262,7 +293,6 @@ const Signup: React.FC = () => {
                   className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-main file:text-white hover:file:bg-blue-500"
                 />
                 {logoFile && <p className="text-sm text-gray-400 mt-2">Selected: {logoFile.name}</p>}
-                <p className="text-xs text-gray-500 mt-1">Note: Actual logo upload functionality requires backend setup.</p>
               </div>
               <div className="flex justify-between space-x-4">
                 <button type="button" onClick={handleBack} className="w-1/2 px-4 py-2 text-sm font-medium text-main bg-transparent border border-main rounded-md shadow-sm hover:bg-main hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-main">

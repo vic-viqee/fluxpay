@@ -27,7 +27,7 @@ const GoogleCallback: React.FC = () => {
 
       try {
         const response = await api.post('/auth/google/exchange-code', { code });
-        login(response.data.token);
+        login(response.data.token, response.data.refreshToken);
         navigate('/dashboard');
       } catch (error) {
         navigate('/login');

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import moment from 'moment';
 
 interface UserProfile {
   _id: string;
@@ -8,7 +7,7 @@ interface UserProfile {
   username: string;
   email: string;
   createdAt: string;
-  has_received_payment: boolean;
+  has_received_payment?: boolean;
 }
 
 interface SidebarProps {
@@ -41,9 +40,6 @@ const NavLink: React.FC<{ to: string; label: string; disabled: boolean; onClick:
 };
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, user }) => {
-  const accountAgeInHours = user ? moment().diff(moment(user.createdAt), 'hours') : 0;
-  const canSeeAdvancedFeatures = user?.has_received_payment || accountAgeInHours < 48;
-
   return (
     <aside
       className={"transform top-0 left-0 w-64 bg-primary-bg text-white fixed h-full overflow-auto ease-in-out transition-all duration-300 z-50 " +
@@ -54,6 +50,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, user }) => {
         <Link to="/dashboard" className="flex items-center mb-6">
           <img src="/img/fluxpay logo.png" alt="FluxPay Logo" className="h-10" />
         </Link>
+        {user ? (
+          <p className="mb-6 text-xs text-gray-400">
+            {user.businessName || user.username}
+          </p>
+        ) : null}
         
         <nav className="flex-1">
           <ul className="space-y-2">
@@ -61,8 +62,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, user }) => {
             <NavLink to="/customers" label="Customers" disabled={false} onClick={toggleSidebar} />
             <NavLink to="/subscriptions" label="Subscriptions" disabled={false} onClick={toggleSidebar} />
             <NavLink to="/payments" label="Payments" disabled={false} onClick={toggleSidebar} />
-            <NavLink to="/analytics" label="Analytics" disabled={!canSeeAdvancedFeatures} onClick={toggleSidebar} />
-            <NavLink to="/settings" label="Settings" disabled={!canSeeAdvancedFeatures} onClick={toggleSidebar} />
+            <NavLink to="/analytics" label="Analytics" disabled={false} onClick={toggleSidebar} />
+            <NavLink to="/settings" label="Settings" disabled={false} onClick={toggleSidebar} />
           </ul>
         </nav>
       </div>

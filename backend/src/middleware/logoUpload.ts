@@ -1,12 +1,11 @@
 import multer from 'multer';
 import path from 'path';
+import { resolveUploadsDir } from '../utils/uploads';
 
 // Define storage settings for Multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Files will be stored in the 'uploads' directory relative to the project root
-    // Ensure this directory exists (it will be created in server.ts)
-    cb(null, 'uploads/'); 
+    cb(null, resolveUploadsDir());
   },
   filename: (req, file, cb) => {
     // Generate a unique filename: fieldname-timestamp.ext

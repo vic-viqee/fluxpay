@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import api, { googleAuthUrl } from '../services/api';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +15,7 @@ const Login: React.FC = () => {
     try {
       const response = await api.post('/auth/login', { email, password });
       if (response.data.token) {
-        login(response.data.token);
+        login(response.data.token, response.data.refreshToken);
         navigate('/dashboard');
       }
     } catch (err: any) {
@@ -36,7 +36,7 @@ const Login: React.FC = () => {
 
         <div>
           <a
-            href={`https://fluxpay-backend.onrender.com/api/auth/google`}
+            href={googleAuthUrl}
             className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">

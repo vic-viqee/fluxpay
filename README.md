@@ -22,7 +22,7 @@ All endpoints are under `/api`.
 - Auth: `/auth/signup`, `/auth/login`, `/auth/refresh-token`, `/auth/google`, `/auth/google/callback`, `/auth/google/exchange-code`, `/auth/forgot-password`, `/auth/reset-password/:token`
 - Payments: `/payments/stk-push`, `/payments/simulate-stk-push`, `/payments/pricing-stk-push`, `/payments/callback`
 - Subscriptions: `POST/GET /subscriptions`, `GET/PUT/DELETE /subscriptions/:id`
-- Plans: `POST/GET /plans`
+- Plans: `POST/GET /plans`, `PUT/DELETE /plans/:id`
 - Clients: `POST/GET /clients`
 - Customers: `GET /customers`
 - Analytics: `GET /analytics`
@@ -67,4 +67,7 @@ Set `frontend/.env` only if needed:
 ## Notes
 
 - Public pricing checkout phone validation currently allows prefixes `2541` and `2547`.
+- Signup now requires password confirmation, and backend enforces strong passwords (minimum 8 chars with uppercase, lowercase, number, and symbol).
+- Backend upload handling now uses a unified resolved uploads directory for both write and static serving, and saved logo URLs are generated with robust base URL resolution for deployed environments.
+- Dashboard includes a first-run setup checklist and improved empty-state actions for plan/subscription onboarding.
 - For current risk items and deployment verification status, use `STATUS.md`.

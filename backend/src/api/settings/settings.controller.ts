@@ -1,6 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
 import { IUser } from '../../models/User';
 import User from '../../models/User';
+import config from '../../config';
+
+const getBackendBaseUrl = (req: Request) => {
+  const configuredBackendUrl = (process.env.BACKEND_URL || '').trim();
+  if (configuredBackendUrl) {
+    return configuredBackendUrl.replace(/\/+$/, '');
+  }
+
+  const forwardedProto = req.headers['x-forwarded-proto'];
+  const protocol =
+    typeof forwardedProto === 'string' && forwardedProto.length > 0
+      ? forwardedProto.split(',')[0].trim()
+      : req.protocol;
+  const host = req.get('host');
+  if (host) {
+    return `${protocol}://${host}`;
+  }
+
+  return config.backendUrl.replace(/\/+$/, '');
+};
 
 export const getSettings = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -52,6 +72,10 @@ export const updateSettings = async (req: Request, res: Response, next: NextFunc
       if (Object.prototype.hasOwnProperty.call(req.body, field)) {
         updatePayload[field] = req.body[field];
       }
+    }
+
+    if (req.file) {
+      updatePayload.logoUrl = `${getBackendBaseUrl(req)}/uploads/${req.file.filename}`;
     }
 
     if (Object.keys(updatePayload).length === 0) {

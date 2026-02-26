@@ -49,7 +49,10 @@ const Subscriptions: React.FC = () => {
           New Subscription
         </button>
       </div>
-      <SubscriptionsTable subscriptions={subscriptions} />
+      <SubscriptionsTable
+        subscriptions={subscriptions}
+        onCreateSubscription={() => setIsAddSubModalOpen(true)}
+      />
       <AddSubscriptionModal
         isOpen={isAddSubModalOpen}
         onClose={() => setIsAddSubModalOpen(false)}

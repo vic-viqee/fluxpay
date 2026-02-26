@@ -18,11 +18,9 @@ import connectDB from './config/db';
 import cron from 'node-cron'; // NEW IMPORT
 import { processDuePayments, processFailedTransactions } from './services/billing.service'; // NEW IMPORT
 import passport from './config/passport';
-import fs from 'fs'; // NEW IMPORT
-import path from 'path'; // NEW IMPORT
-import os from 'os';
 import securityHeaders from './middleware/securityHeaders';
 import { globalRateLimiter } from './middleware/rateLimit';
+import { resolveUploadsDir } from './utils/uploads';
 
 const app: Express = express();
 const port = config.port;
@@ -67,21 +65,8 @@ app.use(globalRateLimiter);
 
 app.use(passport.initialize());
 
-// Create uploads directory if it doesn't exist
-let uploadsDir = path.join(__dirname, '../uploads');
-try {
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
-} catch (error) {
-  logger.warn('Failed to initialize default uploads directory, falling back to temp dir.', error);
-  uploadsDir = path.join(os.tmpdir(), 'fluxpay-uploads');
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
-}
-
-// Serve static files from the 'uploads' directory
+// Serve static files from the resolved uploads directory.
+const uploadsDir = resolveUploadsDir();
 app.use('/uploads', express.static(uploadsDir));
 
 app.get('/', (req: Request, res: Response) => {

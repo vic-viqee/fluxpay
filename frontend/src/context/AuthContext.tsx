@@ -1,11 +1,15 @@
 import { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
 import { IUser } from '../types/User'; // Import IUser
-import api from '../services/api'; // Import API service
+import api, {
+  clearStoredAuth,
+  getStoredAccessToken,
+  storeAuthTokens,
+} from '../services/api'; // Import API service
 
 interface AuthContextType {
   token: string | null;
   user: IUser | null; // Add user to context type
-  login: (token: string) => void;
+  login: (token: string, refreshToken?: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -13,8 +17,14 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [token, setToken] = useState<string | null>(getStoredAccessToken());
   const [user, setUser] = useState<IUser | null>(null); // State for user data
+
+  const logout = useCallback(() => {
+    setToken(null);
+    setUser(null); // Clear user data on logout
+    clearStoredAuth();
+  }, []);
 
   const fetchUser = useCallback(async () => {
     if (token) {
@@ -29,22 +39,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setUser(null);
     }
-  }, [token]);
+  }, [token, logout]);
 
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
-  const login = (newToken: string) => {
+  const login = (newToken: string, refreshToken?: string) => {
     setToken(newToken);
-    localStorage.setItem('token', newToken);
+    storeAuthTokens(newToken, refreshToken);
     // User data will be fetched by the useEffect hook after token changes
-  };
-
-  const logout = () => {
-    setToken(null);
-    setUser(null); // Clear user data on logout
-    localStorage.removeItem('token');
   };
 
   const isAuthenticated = !!token;

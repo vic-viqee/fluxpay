@@ -24,6 +24,11 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import GoogleRegistrationCompletion from './pages/GoogleRegistrationCompletion'; // NEW IMPORT
 
+const persistedTheme = localStorage.getItem('themeMode');
+if (persistedTheme === 'light') {
+  document.documentElement.classList.add('theme-light');
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AuthProvider>

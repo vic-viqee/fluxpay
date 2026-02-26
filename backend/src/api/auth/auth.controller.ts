@@ -8,7 +8,6 @@ import User, {IUser} from '../../models/User';
 import { sendResetPasswordEmail } from '../../services/email.service';
 import { Profile } from 'passport-google-oauth20'; // Import Profile type
 import fs from 'fs'; // NEW IMPORT
-import path from 'path'; // NEW IMPORT
 
 // Augment Request type to include authInfo from Passport.js
 declare module 'express-serve-static-core' {
@@ -18,7 +17,32 @@ declare module 'express-serve-static-core' {
   }
 }
 
+interface GoogleRegistrationTicketClaims extends jwt.JwtPayload {
+  purpose: 'google_registration';
+  googleId: string;
+  email: string;
+  username: string;
+  jti: string;
+}
+
 const googleAuthCodeStore = new Map<string, { token: string; refreshToken: string; expiresAt: number }>();
+const usedGoogleRegistrationTickets = new Map<string, number>();
+
+const pruneExpiredStores = () => {
+  const now = Date.now();
+
+  for (const [code, entry] of googleAuthCodeStore.entries()) {
+    if (entry.expiresAt <= now) {
+      googleAuthCodeStore.delete(code);
+    }
+  }
+
+  for (const [jti, expiresAt] of usedGoogleRegistrationTickets.entries()) {
+    if (expiresAt <= now) {
+      usedGoogleRegistrationTickets.delete(jti);
+    }
+  }
+};
 
 const generateAccessToken = (user: IUser) =>
   jwt.sign(
@@ -44,6 +68,49 @@ const generateGoogleAuthCode = (token: string, refreshToken: string) => {
   return code;
 };
 
+const generateGoogleRegistrationTicket = (profile: Profile) => {
+  const email = profile.emails?.[0]?.value;
+  if (!email) {
+    throw new Error('Google profile email is required.');
+  }
+
+  return jwt.sign(
+    {
+      purpose: 'google_registration',
+      googleId: profile.id,
+      email,
+      username: profile.displayName || email.split('@')[0],
+      jti: crypto.randomBytes(16).toString('hex'),
+    },
+    config.jwtSecret,
+    { expiresIn: '10m' }
+  );
+};
+
+const verifyGoogleRegistrationTicket = (ticket: string) => {
+  const decoded = jwt.verify(ticket, config.jwtSecret) as GoogleRegistrationTicketClaims;
+  if (
+    decoded.purpose !== 'google_registration' ||
+    !decoded.googleId ||
+    !decoded.email ||
+    !decoded.username ||
+    !decoded.jti
+  ) {
+    throw new Error('Invalid registration ticket.');
+  }
+
+  const expiresAt =
+    typeof decoded.exp === 'number' ? decoded.exp * 1000 : Date.now() + 10 * 60 * 1000;
+
+  return {
+    googleId: decoded.googleId,
+    email: decoded.email,
+    username: decoded.username,
+    jti: decoded.jti,
+    expiresAt,
+  };
+};
+
 const safeUnlink = async (filePath?: string) => {
   if (!filePath) return;
   try {
@@ -51,6 +118,34 @@ const safeUnlink = async (filePath?: string) => {
   } catch {
     // Best-effort cleanup only.
   }
+};
+
+const getBackendBaseUrl = (req: Request) => {
+  const configuredBackendUrl = (process.env.BACKEND_URL || '').trim();
+  if (configuredBackendUrl) {
+    return configuredBackendUrl.replace(/\/+$/, '');
+  }
+
+  const forwardedProto = req.headers['x-forwarded-proto'];
+  const protocol =
+    typeof forwardedProto === 'string' && forwardedProto.length > 0
+      ? forwardedProto.split(',')[0].trim()
+      : req.protocol;
+  const host = req.get('host');
+  if (host) {
+    return `${protocol}://${host}`;
+  }
+
+  return config.backendUrl.replace(/\/+$/, '');
+};
+
+const isStrongPassword = (password: string) => {
+  if (password.length < 8) return false;
+  if (!/[a-z]/.test(password)) return false;
+  if (!/[A-Z]/.test(password)) return false;
+  if (!/\d/.test(password)) return false;
+  if (!/[^A-Za-z0-9]/.test(password)) return false;
+  return true;
 };
 
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
@@ -72,13 +167,21 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
 
     let logoUrl = '';
     if (req.file) {
-      logoUrl = `${config.backendUrl}/uploads/${req.file.filename}`; // Corrected to use backendUrl
+      logoUrl = `${getBackendBaseUrl(req)}/uploads/${req.file.filename}`;
     }
 
     // Email, password, businessName, and businessPhoneNumber are now required.
     if (!email || !password || !businessName || !businessPhoneNumber) {
       await safeUnlink(req.file?.path);
       return res.status(400).json({ message: 'Email, password, business name, and business phone number are required' });
+    }
+
+    if (!isStrongPassword(password)) {
+      await safeUnlink(req.file?.path);
+      return res.status(400).json({
+        message:
+          'Password must be at least 8 characters and include uppercase, lowercase, number, and special character.',
+      });
     }
 
     const existingUser = await User.findOne({ email });
@@ -181,18 +284,13 @@ export const googleCallback = (req: Request, res: Response) => {
   }
 
   if (authInfo && authInfo.message === 'Registration required' && authInfo.profile) {
-    // New Google user, redirect to frontend to complete registration
-    const { displayName, emails, id } = authInfo.profile; // Added id for googleId
-    const email = emails?.[0]?.value;
-    const username = displayName;
-    const googleId = id; // Get googleId from profile
-
-    const queryParams = new URLSearchParams();
-    if (username) queryParams.append('username', username);
-    if (email) queryParams.append('email', email);
-    if (googleId) queryParams.append('googleId', googleId); // Add googleId
-
-    return res.redirect(`${config.frontendUrl}/google-register-complete?${queryParams.toString()}`);
+    try {
+      const ticket = generateGoogleRegistrationTicket(authInfo.profile);
+      return res.redirect(`${config.frontendUrl}/google-register-complete?ticket=${encodeURIComponent(ticket)}`);
+    } catch (error) {
+      logger.error('Failed to generate Google registration ticket:', error);
+      return res.redirect(`${config.frontendUrl}/login`);
+    }
   }
   
   // Default to login page if something unexpected happened
@@ -200,6 +298,7 @@ export const googleCallback = (req: Request, res: Response) => {
 }; // CLOSING BRACE HERE
 
 export const exchangeGoogleAuthCode = async (req: Request, res: Response) => {
+  pruneExpiredStores();
   const { code } = req.body || {};
 
   if (!code || typeof code !== 'string') {
@@ -215,17 +314,35 @@ export const exchangeGoogleAuthCode = async (req: Request, res: Response) => {
     googleAuthCodeStore.delete(code);
     return res.status(400).json({ message: 'Authorization code has expired.' });
   }
-
   googleAuthCodeStore.delete(code);
   return res.status(200).json({ token: entry.token, refreshToken: entry.refreshToken });
 };
 
-export const googleCompleteRegistration = async (req: Request, res: Response, next: NextFunction) => {
+export const googleRegistrationContext = async (req: Request, res: Response) => {
+  pruneExpiredStores();
+  const { ticket } = req.body || {};
+
+  if (!ticket || typeof ticket !== 'string') {
+    return res.status(400).json({ message: 'Registration ticket is required.' });
+  }
+
   try {
-    const { 
-      username, 
-      email, 
-      googleId,
+    const { username, email, jti } = verifyGoogleRegistrationTicket(ticket);
+    if (usedGoogleRegistrationTickets.has(jti)) {
+      return res.status(409).json({ message: 'Registration ticket has already been used.' });
+    }
+    return res.status(200).json({ username, email });
+  } catch {
+    return res.status(400).json({ message: 'Invalid or expired registration ticket.' });
+  }
+};
+
+export const googleCompleteRegistration = async (req: Request, res: Response, next: NextFunction) => {
+  let consumedTicketJti: string | null = null;
+  try {
+    pruneExpiredStores();
+    const {
+      ticket,
       businessName, 
       businessType, 
       businessPhoneNumber,
@@ -238,29 +355,50 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
 
     let logoUrl = '';
     if (req.file) {
-      logoUrl = `${config.backendUrl}/uploads/${req.file.filename}`; // Corrected to use backendUrl
+      logoUrl = `${getBackendBaseUrl(req)}/uploads/${req.file.filename}`;
     }
 
-    // Validate required fields
-    if (!username || !email || !googleId || !businessName || !businessType || !businessPhoneNumber) {
+    if (!ticket || typeof ticket !== 'string') {
+      await safeUnlink(req.file?.path);
+      return res.status(400).json({ message: 'Registration ticket is required.' });
+    }
+
+    // Validate required business fields
+    if (!businessName || !businessType || !businessPhoneNumber) {
       await safeUnlink(req.file?.path);
       return res.status(400).json({ message: 'Missing required registration details.' });
     }
 
-    // Check if user already exists (e.g., by email or googleId)
-    const existingUser = await User.findOne({ $or: [{ email }, { googleId }] });
-    if (existingUser) {
+    const { username, email, googleId, jti, expiresAt } = verifyGoogleRegistrationTicket(ticket);
+
+    if (usedGoogleRegistrationTickets.has(jti)) {
       await safeUnlink(req.file?.path);
-      // If a user with that email already exists but doesn't have a googleId, link the googleId
-      if (existingUser.email === email && !existingUser.googleId) {
-        existingUser.googleId = googleId;
-        await existingUser.save();
-        const token = generateAccessToken(existingUser);
-        const refreshToken = generateRefreshToken(existingUser);
+      return res.status(409).json({ message: 'Registration ticket has already been used.' });
+    }
+
+    usedGoogleRegistrationTickets.set(jti, expiresAt);
+    consumedTicketJti = jti;
+
+    const existingByGoogleId = await User.findOne({ googleId });
+    if (existingByGoogleId) {
+      const token = generateAccessToken(existingByGoogleId);
+      const refreshToken = generateRefreshToken(existingByGoogleId);
+      logger.info(`Existing Google user completed registration flow: ${email}`);
+      return res.status(200).json({ message: 'Logged in successfully', token, refreshToken, user: existingByGoogleId });
+    }
+
+    const existingByEmail = await User.findOne({ email });
+    if (existingByEmail) {
+      if (!existingByEmail.googleId) {
+        existingByEmail.googleId = googleId;
+        await existingByEmail.save();
+        const token = generateAccessToken(existingByEmail);
+        const refreshToken = generateRefreshToken(existingByEmail);
         logger.info(`Existing user linked with Google: ${email}`);
-        return res.status(200).json({ message: 'Account linked successfully', token, refreshToken, user: existingUser });
+        return res.status(200).json({ message: 'Account linked successfully', token, refreshToken, user: existingByEmail });
       }
-      return res.status(409).json({ message: 'User with that email or Google ID already exists' });
+
+      return res.status(409).json({ message: 'User with that email already exists and is linked to another Google account.' });
     }
 
     // Create new user with Google details and provided business info
@@ -286,6 +424,9 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
     res.status(201).json({ message: 'User registered successfully', token, refreshToken, user: newUser });
 
   } catch (error) {
+    if (consumedTicketJti) {
+      usedGoogleRegistrationTickets.delete(consumedTicketJti);
+    }
     await safeUnlink(req.file?.path);
     logger.error('Google complete registration error:', error);
     next(error);

@@ -10,7 +10,7 @@ const GoogleRegistrationCompletion: React.FC = () => {
 
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [googleId, setGoogleId] = useState('');
+  const [registrationTicket, setRegistrationTicket] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [businessType, setBusinessType] = useState('');
   const [businessPhoneNumber, setBusinessPhoneNumber] = useState('');
@@ -20,20 +20,25 @@ const GoogleRegistrationCompletion: React.FC = () => {
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const qUsername = queryParams.get('username');
-    const qEmail = queryParams.get('email');
-    const qGoogleId = queryParams.get('googleId');
+    const ticket = queryParams.get('ticket');
 
-    if (!qUsername || !qEmail || !qGoogleId) {
-      setError('Missing Google profile information. Please try signing in with Google again.');
-      // Optionally, redirect after a short delay
-      // setTimeout(() => navigate('/login'), 3000);
+    if (!ticket) {
+      setError('Missing registration ticket. Please try signing in with Google again.');
       return;
     }
 
-    setUsername(qUsername);
-    setEmail(qEmail);
-    setGoogleId(qGoogleId);
+    const loadTrustedContext = async () => {
+      try {
+        const response = await api.post('/auth/google/registration-context', { ticket });
+        setRegistrationTicket(ticket);
+        setUsername(response.data.username || '');
+        setEmail(response.data.email || '');
+      } catch {
+        setError('Your Google registration session is invalid or expired. Please try again.');
+      }
+    };
+
+    loadTrustedContext();
   }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,11 +51,14 @@ const GoogleRegistrationCompletion: React.FC = () => {
       return;
     }
 
+    if (!registrationTicket) {
+      setError('Missing registration ticket. Please restart Google sign-in.');
+      return;
+    }
+
     try {
       const formData = new FormData();
-      formData.append('username', username);
-      formData.append('email', email);
-      formData.append('googleId', googleId);
+      formData.append('ticket', registrationTicket);
       formData.append('businessName', businessName);
       formData.append('businessType', businessType);
       formData.append('businessPhoneNumber', businessPhoneNumber);
@@ -64,7 +72,7 @@ const GoogleRegistrationCompletion: React.FC = () => {
       });
 
       if (response.data.token) {
-        login(response.data.token);
+        login(response.data.token, response.data.refreshToken);
         setMessage('Registration complete! Redirecting to dashboard...');
         setTimeout(() => navigate('/dashboard'), 1500);
       } else {
