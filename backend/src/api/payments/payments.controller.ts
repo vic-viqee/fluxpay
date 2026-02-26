@@ -84,6 +84,48 @@ export const simulateStkPush = async (req: Request, res: Response, next: NextFun
   }
 };
 
+export const initiatePricingStkPush = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { phoneNumber, plan } = req.body;
+
+    if (!phoneNumber || !plan) {
+      return res.status(400).json({ message: 'Phone number and plan are required.' });
+    }
+
+    const planKey = String(plan).toLowerCase();
+    const planAmounts: Record<string, number> = {
+      starter: 999,
+      growth: 2499,
+    };
+
+    const amount = planAmounts[planKey];
+    if (!amount) {
+      return res.status(400).json({ message: 'Unsupported plan for STK checkout.' });
+    }
+
+    const phoneValidation = isValidMpesaPhoneNumber(phoneNumber);
+    if (!phoneValidation.isValid) {
+      return res.status(400).json({ message: phoneValidation.message });
+    }
+
+    const formatted = phoneNumber.replace(/\D/g, '');
+    if (!(formatted.startsWith('2541') || formatted.startsWith('2547'))) {
+      return res.status(400).json({ message: 'Phone number must start with 2541 or 2547.' });
+    }
+
+    const response: any = await initiateStkPush(phoneNumber, amount, 'FluxPay');
+    return res.status(200).json({
+      message: 'STK push initiated successfully',
+      data: response,
+      plan: planKey,
+      amount,
+    });
+  } catch (error) {
+    logger.error('Pricing STK Push Error:', error);
+    next(error);
+  }
+};
+
 export const handleCallback = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = req.body.Body || req.body; 

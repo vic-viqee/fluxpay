@@ -18,6 +18,20 @@ declare module 'express-serve-static-core' {
   }
 }
 
+const generateAccessToken = (user: IUser) =>
+  jwt.sign(
+    { id: user._id, email: user.email },
+    config.jwtSecret,
+    {
+      expiresIn: config.jwtAccessExpiresIn as jwt.SignOptions['expiresIn'],
+    }
+  );
+
+const generateRefreshToken = (user: IUser) =>
+  jwt.sign({ id: user._id, email: user.email }, config.jwtRefreshSecret, {
+    expiresIn: config.jwtRefreshExpiresIn as jwt.SignOptions['expiresIn'],
+  });
+
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { 
@@ -95,12 +109,38 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: user._id, email: user.email }, config.jwtSecret, { expiresIn: '1h' });
+    const token = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
 
     logger.info(`User logged in: ${email}`);
-    res.status(200).json({ message: 'Logged in successfully', token, user });
+    res.status(200).json({ message: 'Logged in successfully', token, refreshToken, user });
   } catch (error) {
     next(error);
+  }
+};
+
+export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const providedToken =
+      req.body?.refreshToken ||
+      req.header('Authorization')?.replace('Bearer ', '');
+
+    if (!providedToken) {
+      return res.status(400).json({ message: 'Refresh token is required.' });
+    }
+
+    const decoded = jwt.verify(providedToken, config.jwtRefreshSecret) as { id: string; email: string };
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid refresh token user.' });
+    }
+
+    const newAccessToken = generateAccessToken(user);
+    const newRefreshToken = generateRefreshToken(user);
+    return res.status(200).json({ token: newAccessToken, refreshToken: newRefreshToken });
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid or expired refresh token.' });
   }
 };
 
@@ -113,8 +153,9 @@ export const googleCallback = (req: Request, res: Response) => {
 
   if (user) {
     // Existing user or successfully created user, proceed with login
-    const token = jwt.sign({ id: user._id, email: user.email }, config.jwtSecret, { expiresIn: '1h' });
-    return res.redirect(`${config.frontendUrl}/auth/google/callback?token=${token}`);
+    const token = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    return res.redirect(`${config.frontendUrl}/auth/google/callback?token=${token}&refreshToken=${refreshToken}`);
   }
 
   if (authInfo && authInfo.message === 'Registration required' && authInfo.profile) {
@@ -171,9 +212,10 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
       if (existingUser.email === email && !existingUser.googleId) {
         existingUser.googleId = googleId;
         await existingUser.save();
-        const token = jwt.sign({ id: existingUser._id, email: existingUser.email }, config.jwtSecret, { expiresIn: '1h' });
+        const token = generateAccessToken(existingUser);
+        const refreshToken = generateRefreshToken(existingUser);
         logger.info(`Existing user linked with Google: ${email}`);
-        return res.status(200).json({ message: 'Account linked successfully', token, user: existingUser });
+        return res.status(200).json({ message: 'Account linked successfully', token, refreshToken, user: existingUser });
       }
       return res.status(409).json({ message: 'User with that email or Google ID already exists' });
     }
@@ -195,9 +237,10 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
     });
     await newUser.save();
 
-    const token = jwt.sign({ id: newUser._id, email: newUser.email }, config.jwtSecret, { expiresIn: '1h' });
+    const token = generateAccessToken(newUser);
+    const refreshToken = generateRefreshToken(newUser);
     logger.info(`New Google user registered: ${email}, Business: ${businessName}`);
-    res.status(201).json({ message: 'User registered successfully', token, user: newUser });
+    res.status(201).json({ message: 'User registered successfully', token, refreshToken, user: newUser });
 
   } catch (error) {
     if (req.file) { fs.unlinkSync(req.file.path); } // Clean up uploaded file on any error

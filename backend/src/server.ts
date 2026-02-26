@@ -20,6 +20,7 @@ import { processDuePayments, processFailedTransactions } from './services/billin
 import passport from './config/passport';
 import fs from 'fs'; // NEW IMPORT
 import path from 'path'; // NEW IMPORT
+import os from 'os';
 
 const app: Express = express();
 const port = config.port;
@@ -63,9 +64,17 @@ app.use(express.json());
 app.use(passport.initialize());
 
 // Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
+let uploadsDir = path.join(__dirname, '../uploads');
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (error) {
+  logger.warn('Failed to initialize default uploads directory, falling back to temp dir.', error);
+  uploadsDir = path.join(os.tmpdir(), 'fluxpay-uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
 }
 
 // Serve static files from the 'uploads' directory
@@ -100,4 +109,12 @@ app.use(errorHandler);
 
 app.listen(port, () => {
   logger.info(`[server]: Server is running at http://localhost:${port}`);
+});
+
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught exception:', error);
+});
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled rejection:', reason);
 });
