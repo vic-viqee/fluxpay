@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  LayoutDashboard, Users, CreditCard, 
+  LayoutDashboard, Users,
   History, PieChart, Settings, 
-  ChevronRight, LogOut, Package
+  ChevronRight, Package
 } from 'lucide-react';
 
 interface UserProfile {

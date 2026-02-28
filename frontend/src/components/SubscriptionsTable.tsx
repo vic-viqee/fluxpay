@@ -1,6 +1,6 @@
 import React from 'react';
 import moment from 'moment';
-import { CreditCard, Plus, Calendar, User, ArrowRight, AlertCircle } from 'lucide-react';
+import { CreditCard, Plus, Calendar, User, ArrowRight } from 'lucide-react';
 
 interface ISubscription {
   _id: string;

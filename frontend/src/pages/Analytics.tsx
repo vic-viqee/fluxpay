@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, BarChart, Bar, Legend, AreaChart, Area
 } from 'recharts';
 import { 
   TrendingUp, Users, CreditCard, Activity, DollarSign, 
-  ArrowUpRight, ArrowDownRight, CheckCircle, Clock, AlertCircle 
+  ArrowUpRight, ArrowDownRight, AlertCircle 
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -195,7 +195,7 @@ const Analytics: React.FC = () => {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {statusData.map((entry: any, index: number) => (
+                    {statusData.map((_, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>

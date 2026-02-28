@@ -2,8 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   RefreshCw, Plus, CreditCard, Users, Activity, 
-  TrendingUp, ArrowRight, Settings, PieChart, Search,
-  Filter, CheckCircle2, AlertCircle, Clock
+  TrendingUp, ArrowRight, Settings, PieChart,
+  CheckCircle2, Clock
 } from 'lucide-react';
 import api from '../services/api';
 import { AddSubscriptionModal } from '../components/AddSubscriptionModal';
@@ -86,7 +86,7 @@ const Dashboard: React.FC = () => {
         .filter((t: ITransaction) => t.status === 'SUCCESS')
         .reduce((acc: number, t: ITransaction) => acc + t.amountKes, 0);
 
-      const activeSubs = subsData.filter((s: ISubscription) => s.status === 'ACTIVE').length;
+      const activeSubscriptionsCount = subsData.filter((s: ISubscription) => s.status === 'ACTIVE').length;
       const successRateCalc =
         transData.length > 0
           ? (transData.filter((t: ITransaction) => t.status === 'SUCCESS').length / transData.length) * 100
@@ -95,7 +95,7 @@ const Dashboard: React.FC = () => {
 
       setStats({
         totalRevenue: totalRev,
-        activeSubscriptions: activeSubs,
+        activeSubscriptions: activeSubscriptionsCount,
         successRate: successRateCalc,
         pendingPayments: pendingPay,
       });
