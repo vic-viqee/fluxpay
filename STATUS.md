@@ -56,12 +56,17 @@ This file is the canonical implementation and verification status for FluxPay.
   - Subscription table now handles deleted/missing plans gracefully instead of crashing on `planId.name`.
   - Plan deletion now blocks when subscriptions still reference that plan, with a clear API error (`409`).
   - Google auth CTA links in login/signup are now environment-driven from frontend API base URL (no hardcoded Render host).
-- New-user first-run UX pass (zero plans/clients/subscriptions) was completed:
+- New-user first-run onboarding UX pass was completed:
   - Dashboard now shows a setup checklist with direct actions for initial plan creation and first subscription creation.
   - Dashboard subscriptions table empty-state CTA now opens the create-subscription modal directly.
   - Create-subscription modal now prevents selecting `Existing Client` when no clients exist and explains what to do.
   - Inline quick-plan creation now shows positive confirmation before continuing subscription creation.
   - Removed outdated signup copy claiming logo upload was not implemented.
+- **Frontend UX & Analytics Visualizations pass was completed**:
+  - **Analytics Dashboard**: Fully implemented with Recharts, featuring Revenue Trends (Area Chart), Transaction Status (Pie Chart), and Subscription Health (Bar Chart).
+  - **Interactive Dashboard**: Added manual data refresh with rotation animations, quick-action shortcuts (Add Customer, New Plan, Business Settings), and improved stat cards.
+  - **Loading & Empty States**: Implemented pulsed skeleton loaders for `SubscriptionsTable` and `TransactionsTable` to eliminate layout shifts. Enhanced empty states with `lucide-react` icons and clear CTA buttons.
+  - **Mobile Responsiveness**: Updated Sidebar with navigation icons and a responsive overlay. Refined `DashboardNavbar` with a glassmorphism effect, sticky positioning, and dynamic page titles.
 
 ## Verified
 
@@ -72,12 +77,14 @@ This file is the canonical implementation and verification status for FluxPay.
 - Logo upload path/base-url fix is type-checked in backend (`npx tsc --noEmit`).
 - End-to-end UX pass changes are type-checked in backend and frontend (`npx tsc --noEmit`).
 - New-user first-run onboarding UX pass is type-checked in backend and frontend (`npx tsc --noEmit`).
+- Frontend UX & Analytics Visualizations are type-checked and visually verified in local development.
 - Backend startup hardening changes were implemented and reviewed:
   - Build-on-start for production start command.
   - Conditional OAuth strategy enablement when credentials are present.
   - Safer uploads directory initialization fallback behavior.
   - Global uncaught/unhandled error logging handlers.
   - Production fail-fast when required JWT secret is missing.
+
 
 ## Pending Verification
 
