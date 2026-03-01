@@ -66,7 +66,7 @@ const Signup: React.FC = () => {
 
       // AUTO-LOGIN Logic
       if (response.data.token && response.data.refreshToken) {
-        authLogin(response.data.token, response.data.refreshToken, response.data.user);
+        authLogin(response.data.token, response.data.refreshToken);
         navigate('/dashboard');
       } else {
         navigate('/login', { state: { message: 'Registration successful. Please log in.' } });
