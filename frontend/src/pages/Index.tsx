@@ -2,225 +2,171 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { 
+  BarChart3, 
+  Smartphone, 
+  ShieldCheck, 
+  Zap, 
+  Clock, 
+  Receipt,
+  CheckCircle2,
+  ArrowRight
+} from 'lucide-react';
 
 const Index: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-primary-bg">
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative bg-primary-bg text-white py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-main to-secondary opacity-20"></div>
+      <section className="relative text-white py-20 lg:py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-main/20 to-secondary/20 opacity-30"></div>
         <div className="relative container mx-auto px-4 text-center">
-
-          
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
-            Smart <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-main">M-Pesa</span> Payments<br />
-            for Kenyan Businesses
-          </h1>
-          
-          <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-8">
-            Automate recurring billing, instant checkouts, and payment tracking. 
-            No Paybill needed. Built for freelancers, gyms, SaaS, and subscription businesses.
-          </p>
-          
-          <div className="flex justify-center space-x-4 mb-12">
-            <Link to="/signup" className="px-6 py-3 text-lg font-medium text-white bg-main border border-transparent rounded-md shadow-lg hover:bg-blue-500 transition-colors flex items-center space-x-2">
-              <span>Start Free Today</span>
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </Link>
-            <Link to="/documentation" className="px-6 py-3 text-lg font-medium text-white bg-transparent border border-white rounded-md shadow-lg hover:bg-white hover:text-primary-bg transition-colors">View Documentation</Link>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-main/10 border border-main/20 text-main text-xs font-bold uppercase tracking-wider mb-8">
+            <Zap size={14} /> Built for Kenyan Entrepreneurs
           </div>
           
-          <div className="flex justify-center space-x-8 md:space-x-16 text-left">
-            <div>
-              <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-secondary to-main">0</div>
-              <div className="text-gray-400 text-sm">Active Businesses</div>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight mb-6 tracking-tight">
+            Stop Chasing <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-main">M-Pesa</span> Payments.<br />
+            Start Automating Them.
+          </h1>
+          
+          <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
+            FluxPay helps you collect recurring payments, track business revenue, and send automated receipts. 
+            No more Paybill stress. Perfect for gyms, property managers, and schools.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-16">
+            <Link to="/signup" className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-white bg-main rounded-xl shadow-xl shadow-main/20 hover:bg-blue-600 transition-all flex items-center justify-center gap-2 active:scale-95">
+              Get Started for Free
+              <ArrowRight size={20} />
+            </Link>
+            <Link to="/documentation" className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-gray-300 bg-surface-bg border border-gray-800 rounded-xl hover:text-white hover:border-gray-700 transition-all">
+              How it Works
+            </Link>
+          </div>
+          
+          <div className="flex flex-wrap justify-center gap-8 md:gap-16 text-left border-t border-gray-800 pt-12">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-secondary/10 rounded-lg text-secondary">
+                <CheckCircle2 size={20} />
+              </div>
+              <span className="text-gray-400 font-medium">99.9% Success Rate</span>
             </div>
-            <div>
-              <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-secondary to-main">KES 0</div>
-              <div className="text-gray-400 text-sm">Processed Monthly</div>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-main/10 rounded-lg text-main">
+                <CheckCircle2 size={20} />
+              </div>
+              <span className="text-gray-400 font-medium">No Paybill Needed</span>
             </div>
-            <div>
-              <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-secondary to-main">99.9%</div>
-              <div className="text-gray-400 text-sm">Uptime</div>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-accent/10 rounded-lg text-accent">
+                <CheckCircle2 size={20} />
+              </div>
+              <span className="text-gray-400 font-medium">Instant Settlements</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-primary-bg">
+      <section id="features" className="py-24 bg-primary-bg">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
-              Everything you need to <span className="text-transparent bg-clip-text bg-gradient-to-r from-main to-accent">collect payments</span>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
+              Manage your <span className="text-transparent bg-clip-text bg-gradient-to-r from-main to-secondary">cashflow</span> with ease
             </h2>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-              Built for Kenyan businesses that need predictable, professional, automated M-Pesa collections.
+              Professional tools designed to make your business look good and run smoothly.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-surface-bg p-8 rounded-lg shadow-md flex flex-col items-center text-center border border-surface-bg">
-              <div className="p-3 bg-secondary text-white rounded-full mb-4">
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="23 4 23 10 17 10"></polyline>
-                  <polyline points="1 20 1 14 7 14"></polyline>
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Recurring Billing</h3>
-              <p className="text-gray-400">Automatically charge customers weekly, monthly, or on custom schedules using M-Pesa STK Push.</p>
-            </div>
-            
-            <div className="bg-surface-bg p-8 rounded-lg shadow-md flex flex-col items-center text-center border border-surface-bg">
-              <div className="p-3 bg-secondary text-white rounded-full mb-4">
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Instant STK Checkout</h3>
-              <p className="text-gray-400">Fast, clean checkout flow for one-time payments with branded confirmation and receipts.</p>
-            </div>
-            
-            <div className="bg-surface-bg p-8 rounded-lg shadow-md flex flex-col items-center text-center border border-surface-bg">
-              <div className="p-3 bg-secondary text-white rounded-full mb-4">
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Virtual Till</h3>
-              <p className="text-gray-400">No Paybill? No problem. Get a shared virtual Till with auto-reconciliation and branded receipts.</p>
-            </div>
-            
-            <div className="bg-surface-bg p-8 rounded-lg shadow-md flex flex-col items-center text-center border border-surface-bg">
-              <div className="p-3 bg-secondary text-white rounded-full mb-4">
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="20" x2="18" y2="10"></line>
-                  <line x1="12" y1="20" x2="12" y2="4"></line>
-                  <line x1="6" y1="20" x2="6" y2="14"></line>
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Real-Time Dashboard</h3>
-              <p className="text-gray-400">Track revenue, active subscriptions, overdue payments, customer history, and churn—all in one place.</p>
-            </div>
-            
-            <div className="bg-surface-bg p-8 rounded-lg shadow-md flex flex-col items-center text-center border border-surface-bg">
-              <div className="p-3 bg-secondary text-white rounded-full mb-4">
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Smart Reminders</h3>
-              <p className="text-gray-400">Friendly, automated payment reminders that feel human. Failed payments retry automatically.</p>
-            </div>
-            
-            <div className="bg-surface-bg p-8 rounded-lg shadow-md flex flex-col items-center text-center border border-surface-bg">
-              <div className="p-3 bg-secondary text-white rounded-full mb-4">
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Developer API</h3>
-              <p className="text-gray-400">Full-featured API with webhooks for SaaS integrations and custom workflows.</p>
-            </div>
+            <FeatureCard 
+              icon={<Clock className="text-main" />}
+              title="Automated Subscriptions"
+              desc="Set it and forget it. We'll prompt your customers automatically when their payment is due."
+            />
+            <FeatureCard 
+              icon={<Smartphone className="text-secondary" />}
+              title="One-Tap STK Push"
+              desc="No more manual Paybill typing. Customers pay by simply entering their PIN on a popup."
+            />
+            <FeatureCard 
+              icon={<Receipt className="text-accent" />}
+              title="Branded Receipts"
+              desc="Every successful payment automatically generates a professional PDF receipt for your client."
+            />
+            <FeatureCard 
+              icon={<BarChart3 className="text-main" />}
+              title="Revenue Tracking"
+              desc="See exactly how much you've made today, this month, and this year at a single glance."
+            />
+            <FeatureCard 
+              icon={<ShieldCheck className="text-secondary" />}
+              title="Verified Transactions"
+              desc="Every payment is verified directly with M-Pesa. No more 'fake' text messages."
+            />
+            <FeatureCard 
+              icon={<Zap className="text-accent" />}
+              title="Fast Setup"
+              desc="Create your account, add your plans, and start collecting payments in less than 5 minutes."
+            />
           </div>
         </div>
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 bg-surface-bg">
+      <section className="py-24 bg-surface-bg/50 border-y border-gray-800">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
-                Why businesses <span className="text-transparent bg-clip-text bg-gradient-to-r from-main to-accent">choose FluxPay</span>
+              <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6 leading-tight tracking-tight">
+                Why Kenyan businesses <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-main">trust FluxPay</span>
               </h2>
-              <p className="text-lg text-gray-400 mb-8">
-                Built specifically for Kenyan businesses that need reliable, automated M-Pesa payment collection.
+              <p className="text-lg text-gray-400 mb-10 leading-relaxed">
+                We've built FluxPay to solve the specific problems Kenyan entrepreneurs face every day.
               </p>
               
-              <div className="space-y-6">
-                <div className="flex items-start space-x-3">
-                  <svg className="w-6 h-6 text-secondary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  <div>
-                    <h4 className="text-xl font-semibold text-white">No Paybill Required</h4>
-                    <p className="text-gray-400">Get started immediately with our shared virtual Till. Perfect for freelancers.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <svg className="w-6 h-6 text-secondary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  <div>
-                    <h4 className="text-xl font-semibold text-white">Automatic Reconciliation</h4>
-                    <p className="text-gray-400">Every payment is matched, logged, and categorized automatically.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <svg className="w-6 h-6 text-secondary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  <div>
-                    <h4 className="text-xl font-semibold text-white">Smart Retry Logic</h4>
-                    <p className="text-gray-400">Failed payments retry automatically with friendly reminders.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <svg className="w-6 h-6 text-secondary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  <div>
-                    <h4 className="text-xl font-semibold text-white">WhatsApp Integration</h4>
-                    <p className="text-gray-400">Send receipts and reminders via WhatsApp automatically.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <svg className="w-6 h-6 text-secondary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  <div>
-                    <h4 className="text-xl font-semibold text-white">Professional Reports</h4>
-                    <p className="text-gray-400">Generate PDF receipts and export reports without accounting knowledge.</p>
-                  </div>
-                </div>
+              <div className="space-y-8">
+                <BenefitItem 
+                  title="Professional Image"
+                  desc="Give your customers a world-class checkout experience that rivals major tech companies."
+                />
+                <BenefitItem 
+                  title="End-to-End Control"
+                  desc="From client registration to final payment, manage everything from one simple dashboard."
+                />
+                <BenefitItem 
+                  title="Smart Follow-ups"
+                  desc="We help you track who hasn't paid yet so you can follow up without the awkwardness."
+                />
               </div>
             </div>
             
-            <div className="bg-surface-bg p-8 rounded-lg shadow-md border border-surface-bg">
-              <div className="text-center text-sm text-gray-400 mb-4">Your Business Metrics</div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-primary-bg rounded-lg">
-                  <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-main to-secondary">KES 0</div>
-                  <div className="text-gray-400">This Month</div>
+            <div className="bg-primary-bg p-8 rounded-3xl border border-gray-800 shadow-2xl relative overflow-hidden">
+              <div className="absolute -top-24 -right-24 w-64 h-64 bg-main opacity-10 blur-[100px]"></div>
+              <div className="text-center text-sm font-bold text-gray-500 uppercase tracking-widest mb-8">Business Insights Preview</div>
+              <div className="grid grid-cols-2 gap-6">
+                <StatPreview label="This Month" value="KES 45,200" color="text-secondary" />
+                <StatPreview label="Active Clients" value="12" color="text-main" />
+                <StatPreview label="Success Rate" value="98.5%" color="text-secondary" />
+                <StatPreview label="Pending" value="2" color="text-accent" />
+              </div>
+              <div className="mt-10 pt-8 border-t border-gray-800">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold text-gray-500 uppercase">Recent Payment</span>
+                  <span className="text-xs text-secondary font-bold">SUCCESS</span>
                 </div>
-                <div className="text-center p-4 bg-primary-bg rounded-lg">
-                  <div className="text-2xl font-bold text-main">0</div>
-                  <div className="text-gray-400">Active Subscriptions</div>
-                </div>
-                <div className="text-center p-4 bg-primary-bg rounded-lg">
-                  <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-main to-secondary">98.5%</div>
-                  <div className="text-gray-400">Success Rate</div>
-                </div>
-                <div className="text-center p-4 bg-primary-bg rounded-lg">
-                  <div className="text-2xl font-bold text-accent">0</div>
-                  <div className="text-gray-400">Pending Payments</div>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-surface-bg rounded-lg flex items-center justify-center text-main">
+                    <Smartphone size={20} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white">James Kamau</p>
+                    <p className="text-[10px] text-gray-500">Premium Fitness Plan • 2 mins ago</p>
+                  </div>
+                  <div className="ml-auto font-bold text-white">KES 2,500</div>
                 </div>
               </div>
             </div>
@@ -229,22 +175,21 @@ const Index: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-main text-white">
-        <div className="container mx-auto px-4 text-center">
+      <section className="py-24 bg-main relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-transparent"></div>
+        <div className="container mx-auto px-4 text-center relative z-10">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4">Ready to get started?</h2>
-            <p className="text-white opacity-80 mb-8">
-              Join thousands of Kenyan businesses already using FluxPay to automate their M-Pesa payments.
+            <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">Ready to focus on your business?</h2>
+            <p className="text-xl text-blue-100 mb-10 leading-relaxed">
+              Join dozens of Kenyan entrepreneurs who have recovered 20+ hours every month by automating their payments.
             </p>
-            <div className="flex justify-center space-x-4">
-              <Link to="/signup" className="px-6 py-3 text-lg font-medium text-white bg-secondary border border-transparent rounded-md shadow-lg hover:bg-teal-500 transition-colors flex items-center space-x-2">
-                <span>Create Free Account</span>
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                  <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Link to="/signup" className="px-10 py-4 text-lg font-bold text-main bg-white rounded-xl shadow-2xl hover:bg-gray-100 transition-all active:scale-95">
+                Create My Account
               </Link>
-              <Link to="/pricing" className="px-6 py-3 text-lg font-medium text-white bg-transparent border border-white rounded-md shadow-lg hover:bg-white hover:text-main transition-colors">Talk to Sales</Link>
+              <Link to="/pricing" className="px-10 py-4 text-lg font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all border border-blue-400">
+                Check Pricing
+              </Link>
             </div>
           </div>
         </div>
@@ -254,5 +199,34 @@ const Index: React.FC = () => {
     </div>
   );
 };
+
+const FeatureCard: React.FC<{ icon: React.ReactNode, title: string, desc: string }> = ({ icon, title, desc }) => (
+  <div className="bg-surface-bg p-8 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all group">
+    <div className="w-12 h-12 bg-primary-bg rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+      {icon}
+    </div>
+    <h3 className="text-xl font-bold text-white mb-3 tracking-tight">{title}</h3>
+    <p className="text-gray-400 leading-relaxed">{desc}</p>
+  </div>
+);
+
+const BenefitItem: React.FC<{ title: string, desc: string }> = ({ title, desc }) => (
+  <div className="flex items-start gap-4">
+    <div className="mt-1 p-1 bg-secondary/20 rounded-full text-secondary">
+      <CheckCircle2 size={18} />
+    </div>
+    <div>
+      <h4 className="text-xl font-bold text-white mb-1 tracking-tight">{title}</h4>
+      <p className="text-gray-400 leading-relaxed">{desc}</p>
+    </div>
+  </div>
+);
+
+const StatPreview: React.FC<{ label: string, value: string, color: string }> = ({ label, value, color }) => (
+  <div className="text-center p-5 bg-surface-bg rounded-2xl border border-gray-800">
+    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">{label}</p>
+    <p className={`text-xl font-extrabold ${color} tracking-tight`}>{value}</p>
+  </div>
+);
 
 export default Index;
