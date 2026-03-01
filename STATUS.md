@@ -1,6 +1,6 @@
 # STATUS.md - Project Status Summary
 
-Last updated: 2026-02-26
+Last updated: 2026-02-28
 
 This file is the canonical implementation and verification status for FluxPay.
 
@@ -62,11 +62,18 @@ This file is the canonical implementation and verification status for FluxPay.
   - Create-subscription modal now prevents selecting `Existing Client` when no clients exist and explains what to do.
   - Inline quick-plan creation now shows positive confirmation before continuing subscription creation.
   - Removed outdated signup copy claiming logo upload was not implemented.
-- **Frontend UX & Analytics Visualizations pass was completed**:
-  - **Analytics Dashboard**: Fully implemented with Recharts, featuring Revenue Trends (Area Chart), Transaction Status (Pie Chart), and Subscription Health (Bar Chart).
-  - **Interactive Dashboard**: Added manual data refresh with rotation animations, quick-action shortcuts (Add Customer, New Plan, Business Settings), and improved stat cards.
-  - **Loading & Empty States**: Implemented pulsed skeleton loaders for `SubscriptionsTable` and `TransactionsTable` to eliminate layout shifts. Enhanced empty states with `lucide-react` icons and clear CTA buttons.
-  - **Mobile Responsiveness**: Updated Sidebar with navigation icons and a responsive overlay. Refined `DashboardNavbar` with a glassmorphism effect, sticky positioning, and dynamic page titles.
+- Frontend UX & Analytics Visualizations pass was completed:
+  - Analytics Dashboard: Fully implemented with Recharts, featuring Revenue Trends (Area Chart), Transaction Status (Pie Chart), and Subscription Health (Bar Chart).
+  - Interactive Dashboard: Added manual data refresh with rotation animations, quick-action shortcuts (Add Customer, New Plan, Business Settings), and improved stat cards.
+  - Loading & Empty States: Implemented pulsed skeleton loaders for `SubscriptionsTable` and `TransactionsTable` to eliminate layout shifts. Enhanced empty states with `lucide-react` icons and clear CTA buttons.
+  - Mobile Responsiveness: Updated Sidebar with navigation icons and a responsive overlay. Refined `DashboardNavbar` with a glassmorphism effect, sticky positioning, and dynamic page titles.
+- **Customer-First Focus & Onboarding UX pass was completed**:
+  - **Business Success Center**: Replaced developer-centric documentation with a practical guide for Kenyan entrepreneurs.
+  - **Simplified Landing Page**: Removed "Developer API" focus and emphasized "Simplified Collections" and "Business Insights."
+  - **Frictionless Signup**: Implemented **Auto-Login** after email registration, redirecting users directly to the dashboard.
+  - **Enhanced Backend Security**: Implemented **SHA-256 hashing for password reset tokens** in the database.
+  - **Password Management**: Added a secure **Change Password** feature in the Settings page with a modern, tabbed interface.
+  - **UI/UX Cleanup**: Refined Navbar and Footer to point to business resources ("How it Works", "Success Center") and removed technical jargon.
 
 ## Verified
 
@@ -78,6 +85,8 @@ This file is the canonical implementation and verification status for FluxPay.
 - End-to-end UX pass changes are type-checked in backend and frontend (`npx tsc --noEmit`).
 - New-user first-run onboarding UX pass is type-checked in backend and frontend (`npx tsc --noEmit`).
 - Frontend UX & Analytics Visualizations are type-checked and visually verified in local development.
+- Reset token hashing and auto-login logic were reviewed and type-checked.
+- Change-password feature was reviewed and type-checked.
 - Backend startup hardening changes were implemented and reviewed:
   - Build-on-start for production start command.
   - Conditional OAuth strategy enablement when credentials are present.
@@ -96,7 +105,7 @@ This file is the canonical implementation and verification status for FluxPay.
 
 ## Improvement Backlog
 
-- [ ] 1. Hash password reset tokens in DB instead of storing raw tokens.
+- [x] 1. Hash password reset tokens in DB instead of storing raw tokens.
 - [ ] 2. Move OAuth state/code/registration-ticket replay tracking from in-memory `Map` to shared storage for multi-instance reliability.
 - [ ] 3. Unify upload write path and static serve path so fallback temp-dir mode still serves uploaded logos reliably.
 - [x] 4. Implement frontend refresh-token handling (token rotation/retry flow) so sessions survive access-token expiry.
@@ -119,7 +128,7 @@ This file is the canonical implementation and verification status for FluxPay.
 
 ## Future Plans (Dashboard/User Flow)
 
-- [ ] 1. Auto-login immediately after successful email signup (skip forced login step)
+- [x] 1. Auto-login immediately after successful email signup (skip forced login step)
 - [x] 2. Guided first-time onboarding checklist on dashboard (plan -> client -> subscription -> payment)
 - [x] 3. Context-aware primary CTA on dashboard based on onboarding stage
 - [ ] 4. Separate production payment flow and clearly isolated test/simulated payment UI
@@ -142,3 +151,4 @@ This file is the canonical implementation and verification status for FluxPay.
 - [x] 13. Signup password confirmation and strong-password policy enforcement (frontend + backend)
 - [x] 14. New-user logo upload/dashboard visibility fix (upload path + logo URL base hardening)
 - [x] 15. New-user first-run onboarding UX hardening (checklist + empty-state/create flow improvements)
+- [x] 16. Customer-first focus & Onboarding UX pass (Success center, landing page pivot, auto-login, hashed tokens, password management)

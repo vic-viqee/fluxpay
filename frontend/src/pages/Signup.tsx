@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api, { googleAuthUrl } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const Signup: React.FC = () => {
   const [step, setStep] = useState(1); // New state for multi-step form
@@ -17,8 +18,11 @@ const Signup: React.FC = () => {
   const [businessDescription, setBusinessDescription] = useState(''); // New field
   const [logoFile, setLogoFile] = useState<File | null>(null); // New field for file upload
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const navigate = useNavigate();
   const location = useLocation();
+  const { login: authLogin } = useAuth();
   const plan = location.state?.plan;
 
   const isStrongPassword = (value: string) => {
@@ -32,12 +36,12 @@ const Signup: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Final validation before submission
     if (!businessName || !businessType || !businessPhoneNumber) {
         setError('Please fill in all required business details.');
         return;
     }
-    setError(''); // Clear previous errors
+    setError('');
+    setIsSubmitting(true);
 
     try {
       const formData = new FormData();
@@ -52,16 +56,25 @@ const Signup: React.FC = () => {
       formData.append('businessPhoneNumber', businessPhoneNumber);
       formData.append('preferredPaymentMethod', preferredPaymentMethod);
       if (businessDescription) formData.append('businessDescription', businessDescription);
-      if (logoFile) formData.append('logo', logoFile); // 'logo' is the field name for the file
+      if (logoFile) formData.append('logo', logoFile);
 
-      await api.post('/auth/signup', formData, {
+      const response = await api.post('/auth/signup', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      navigate('/login');
+
+      // AUTO-LOGIN Logic
+      if (response.data.token && response.data.refreshToken) {
+        authLogin(response.data.token, response.data.refreshToken, response.data.user);
+        navigate('/dashboard');
+      } else {
+        navigate('/login', { state: { message: 'Registration successful. Please log in.' } });
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'An error occurred during signup.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

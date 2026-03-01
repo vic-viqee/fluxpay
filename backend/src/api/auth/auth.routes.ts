@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import { signup, login, refreshToken, googleCallback, exchangeGoogleAuthCode, forgotPassword, resetPassword, googleCompleteRegistration, googleRegistrationContext } from './auth.controller';
+import { signup, login, refreshToken, googleCallback, exchangeGoogleAuthCode, forgotPassword, resetPassword, googleCompleteRegistration, googleRegistrationContext, changePassword } from './auth.controller';
 import passport from 'passport';
-import { uploadLogo } from '../../middleware/logoUpload'; // NEW IMPORT
+import { uploadLogo } from '../../middleware/logoUpload'; 
+import { authenticate } from '../../middleware/auth.middleware';
 import config from '../../config';
 
 const router = Router();
@@ -18,14 +19,15 @@ const pruneExpiredStates = () => {
   }
 };
 
-router.post('/signup', uploadLogo, signup); // Add uploadLogo middleware
+router.post('/signup', uploadLogo, signup); 
 router.post('/login', login);
 router.post('/refresh-token', refreshToken);
 
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
+router.post('/change-password', authenticate, changePassword);
 
-router.post('/google-complete-registration', uploadLogo, googleCompleteRegistration); // Add uploadLogo middleware
+router.post('/google-complete-registration', uploadLogo, googleCompleteRegistration); 
 router.post('/google/exchange-code', exchangeGoogleAuthCode);
 router.post('/google/registration-context', googleRegistrationContext);
 

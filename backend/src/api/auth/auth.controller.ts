@@ -161,7 +161,6 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       businessPhoneNumber,
       preferredPaymentMethod,
       businessDescription,
-      // logoUrl is now handled by req.file
       plan
     } = req.body;
 
@@ -170,7 +169,6 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       logoUrl = `${getBackendBaseUrl(req)}/uploads/${req.file.filename}`;
     }
 
-    // Email, password, businessName, and businessPhoneNumber are now required.
     if (!email || !password || !businessName || !businessPhoneNumber) {
       await safeUnlink(req.file?.path);
       return res.status(400).json({ message: 'Email, password, business name, and business phone number are required' });
@@ -202,13 +200,28 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       businessPhoneNumber,
       preferredPaymentMethod,
       businessDescription,
-      logoUrl, // Assign the constructed logoUrl
+      logoUrl,
       plan
     });
     await newUser.save();
 
-    logger.info(`New user signed up: ${email}, Business: ${businessName}, Plan: ${plan || 'N/A'}`);
-    res.status(201).json({ message: 'User registered successfully' });
+    logger.info(`New user signed up: ${email}, Business: ${businessName}`);
+    
+    // AUTO-LOGIN: Generate tokens immediately after signup
+    const token = generateAccessToken(newUser);
+    const refreshToken = generateRefreshToken(newUser);
+
+    res.status(201).json({ 
+      message: 'User registered successfully', 
+      token, 
+      refreshToken, 
+      user: {
+        _id: newUser._id,
+        email: newUser.email,
+        username: newUser.username,
+        businessName: newUser.businessName
+      } 
+    });
   } catch (error) {
     await safeUnlink(req.file?.path);
     next(error);
@@ -269,14 +282,10 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
 };
 
 export const googleCallback = (req: Request, res: Response) => {
-  // logger.info("googleCallback function entered."); // Removed temporary log
-  // logger.info(`googleCallback: Redirecting with config.frontendUrl: ${config.frontendUrl}`); // Removed temporary log
-  const user = req.user as IUser; // Cast req.user to IUser
-  // Passport.js places info object in req.authInfo on failure or special conditions
+  const user = req.user as IUser; 
   const authInfo = req.authInfo;
 
   if (user) {
-    // Existing user or successfully created user, proceed with login
     const token = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
     const code = generateGoogleAuthCode(token, refreshToken);
@@ -293,9 +302,8 @@ export const googleCallback = (req: Request, res: Response) => {
     }
   }
   
-  // Default to login page if something unexpected happened
   return res.redirect(`${config.frontendUrl}/login`);
-}; // CLOSING BRACE HERE
+};
 
 export const exchangeGoogleAuthCode = async (req: Request, res: Response) => {
   pruneExpiredStores();
@@ -346,11 +354,11 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
       businessName, 
       businessType, 
       businessPhoneNumber,
-      kraPin, // Optional
-      businessTillOrPaybill, // Optional
-      preferredPaymentMethod, // Optional
-      businessDescription, // Optional
-      plan // Optional
+      kraPin,
+      businessTillOrPaybill,
+      preferredPaymentMethod,
+      businessDescription,
+      plan
     } = req.body;
 
     let logoUrl = '';
@@ -363,7 +371,6 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
       return res.status(400).json({ message: 'Registration ticket is required.' });
     }
 
-    // Validate required business fields
     if (!businessName || !businessType || !businessPhoneNumber) {
       await safeUnlink(req.file?.path);
       return res.status(400).json({ message: 'Missing required registration details.' });
@@ -401,7 +408,6 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
       return res.status(409).json({ message: 'User with that email already exists and is linked to another Google account.' });
     }
 
-    // Create new user with Google details and provided business info
     const newUser = new User({
       googleId,
       username,
@@ -413,7 +419,7 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
       businessTillOrPaybill,
       preferredPaymentMethod,
       businessDescription,
-      logoUrl, // Assign the constructed logoUrl
+      logoUrl,
       plan
     });
     await newUser.save();
@@ -434,29 +440,33 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
 };
 
 export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
-  let user; // Declare user outside try-catch for catch block access
+  let user; 
   try {
     const { email } = req.body;
     user = await User.findOne({ email });
 
     if (!user) {
-      // Send a success message even if user not found to prevent email enumeration
       return res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
     }
 
-    // Generate a reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
-    user.passwordResetToken = resetToken;
-    user.passwordResetExpires = new Date(Date.now() + 3600000); // 1 hour from now
+    
+    // HASH TOKEN before saving to DB
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    user.passwordResetToken = hashedToken;
+    user.passwordResetExpires = new Date(Date.now() + 3600000); 
 
     await user.save();
 
-    // Send the email
+    // Send UNHASHED token in email
     await sendResetPasswordEmail(user.email, resetToken);
 
     res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
   } catch (error) {
-    // Check if user was found before trying to clear fields
     if (user) { 
       user.passwordResetToken = undefined;
       user.passwordResetExpires = undefined;
@@ -471,10 +481,16 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     const { token } = req.params;
     const { password } = req.body;
 
+    // Hash the incoming token to compare with DB
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
     const user = await User.findOne({
-      passwordResetToken: token,
+      passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: new Date() },
-    });
+    }).select('+password');
 
     if (!user) {
       return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
@@ -487,6 +503,39 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     await user.save();
 
     res.status(200).json({ message: 'Password has been reset successfully.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = (req as any).user.id;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current and new passwords are required.' });
+    }
+
+    if (!isStrongPassword(newPassword)) {
+      return res.status(400).json({ message: 'New password does not meet security requirements.' });
+    }
+
+    const user = await User.findById(userId).select('+password');
+    if (!user || !user.password) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Incorrect current password.' });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    logger.info(`User changed password: ${user.email}`);
+    res.status(200).json({ message: 'Password updated successfully.' });
   } catch (error) {
     next(error);
   }
