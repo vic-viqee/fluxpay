@@ -7,6 +7,7 @@ M-Pesa payment and subscription platform for Kenyan businesses.
 - **Business Success Center**: Comprehensive guides on automating M-Pesa collections and scaling Kenyan businesses.
 - **Analytics Dashboard**: Real-time revenue trends, transaction status distribution, and subscription health visualizations using Recharts.
 - **Interactive Dashboard**: Manual data refresh, quick-action shortcuts, and a guided onboarding checklist for new users.
+- **Data Export & Reporting**: One-click **CSV Export** for both Transactions and Customer lists, perfect for accounting and KRA returns.
 - **Streamlined Onboarding**: Auto-login after signup and a frictionless, business-focused registration flow.
 - **Enhanced Security**: Hashed password reset tokens, protected password change flow, and JWT-based session management with refresh tokens.
 - **Robust UX**: Skeleton loaders for all tables to prevent layout shifts, and descriptive empty states with clear calls to action.

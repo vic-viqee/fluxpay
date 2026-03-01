@@ -62,13 +62,13 @@ This file is the canonical implementation and verification status for FluxPay.
   - Create-subscription modal now prevents selecting `Existing Client` when no clients exist and explains what to do.
   - Inline quick-plan creation now shows positive confirmation before continuing subscription creation.
   - Removed outdated signup copy claiming logo upload was not implemented.
-- **Frontend UX & Analytics Visualizations pass was completed**:
-  - **Analytics Dashboard**: Fully implemented with Recharts, featuring Revenue Trends (Area Chart), Transaction Status (Pie Chart), and Subscription Health (Bar Chart).
-  - **Interactive Dashboard**: Added manual data refresh with rotation animations, quick-action shortcuts (Add Customer, New Plan, Business Settings), and improved stat cards.
-  - **Customers Page**: Fully implemented with summary stats (Lifetime Revenue, Active Subs), searchable customer table, and direct integration with the subscription creation flow.
-  - **Loading & Empty States**: Implemented pulsed skeleton loaders for `SubscriptionsTable`, `TransactionsTable`, and the Customers page to eliminate layout shifts. Enhanced empty states with `lucide-react` icons and clear CTA buttons.
-  - **Mobile Responsiveness**: Updated Sidebar with navigation icons and a responsive overlay. Refined `DashboardNavbar` with a glassmorphism effect, sticky positioning, and dynamic page titles.
-- **Customer-First Focus & Onboarding UX pass was completed**:
+- Frontend UX & Analytics Visualizations pass was completed:
+  - Analytics Dashboard: Fully implemented with Recharts, featuring Revenue Trends (Area Chart), Transaction Status (Pie Chart), and Subscription Health (Bar Chart).
+  - Interactive Dashboard: Added manual data refresh with rotation animations, quick-action shortcuts (Add Customer, New Plan, Business Settings), and improved stat cards.
+  - Customers Page: Fully implemented with summary stats (Lifetime Revenue, Active Subs), searchable customer table, and direct integration with the subscription creation flow.
+  - Loading & Empty States: Implemented pulsed skeleton loaders for `SubscriptionsTable`, `TransactionsTable`, and the Customers page to eliminate layout shifts. Enhanced empty states with `lucide-react` icons and clear CTA buttons.
+  - Mobile Responsiveness: Updated Sidebar with navigation icons and a responsive overlay. Refined `DashboardNavbar` with a glassmorphism effect, sticky positioning, and dynamic page titles.
+- Customer-First Focus & Onboarding UX pass was completed:
   - **Business Success Center**: Replaced developer-centric documentation with a practical guide for Kenyan entrepreneurs.
   - **Simplified Landing Page**: Removed "Developer API" focus and emphasized "Simplified Collections" and "Business Insights."
   - **Frictionless Signup**: Implemented **Auto-Login** after email registration, redirecting users directly to the dashboard.
@@ -76,6 +76,10 @@ This file is the canonical implementation and verification status for FluxPay.
   - **Password Management**: Added a secure **Change Password** feature in the Settings page with a modern, tabbed interface.
   - **UI/UX Cleanup**: Refined Navbar and Footer to point to business resources ("How it Works", "Success Center") and removed technical jargon.
   - **Deployment Fixes**: Resolved TypeScript errors blocking Render builds (unused `isSubmitting` in Signup, incorrect argument count for `authLogin`, and corrected `authMiddleware` import in auth routes).
+- **Data Export & Business Reporting pass was completed**:
+  - **Transaction Export**: Implemented one-click **CSV Download** for the Payments page, exporting all transaction data for accounting.
+  - **Customer List Export**: Implemented one-click **CSV Download** for the Customers page, exporting subscriber data and lifetime value metrics.
+  - **Payments Dashboard**: Redesigned the Payments page with a professional, searchable interface, manual refresh, and volume summary stats.
 
 ## Verified
 
@@ -89,6 +93,7 @@ This file is the canonical implementation and verification status for FluxPay.
 - Frontend UX & Analytics Visualizations are type-checked and visually verified in local development.
 - Reset token hashing and auto-login logic were reviewed and type-checked.
 - Change-password feature was reviewed and type-checked.
+- Data export logic (CSV generation and download) was reviewed and type-checked.
 - Backend startup hardening changes were implemented and reviewed:
   - Build-on-start for production start command.
   - Conditional OAuth strategy enablement when credentials are present.
@@ -154,3 +159,4 @@ This file is the canonical implementation and verification status for FluxPay.
 - [x] 14. New-user logo upload/dashboard visibility fix (upload path + logo URL base hardening)
 - [x] 15. New-user first-run onboarding UX hardening (checklist + empty-state/create flow improvements)
 - [x] 16. Customer-first focus & Onboarding UX pass (Success center, landing page pivot, auto-login, hashed tokens, password management)
+- [x] 17. Data Export & Business Reporting pass (CSV exports, redesigned payments page, volume stats)

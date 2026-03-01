@@ -10,7 +10,9 @@ import {
   Mail, 
   TrendingUp,
   Activity,
-  ExternalLink
+  ExternalLink,
+  Download,
+  RefreshCw
 } from 'lucide-react';
 import api from '../services/api';
 import { AddSubscriptionModal } from '../components/AddSubscriptionModal';
@@ -37,12 +39,15 @@ const Customers: React.FC = () => {
     activeSubscriptions: 0
   });
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const fetchCustomerData = async () => {
+  const fetchCustomerData = async (isManual = false) => {
     try {
-      setLoading(true);
+      if (isManual) setRefreshing(true);
+      else setLoading(true);
+      
       const response = await api.get('/customers');
       setCustomers(response.data.customers);
       setSummary(response.data.summary);
@@ -50,12 +55,52 @@ const Customers: React.FC = () => {
       console.error('Failed to fetch customer data:', err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     fetchCustomerData();
   }, []);
+
+  const handleExportCSV = () => {
+    if (customers.length === 0) return;
+
+    const headers = [
+      'Customer Name',
+      'Phone Number',
+      'Email',
+      'Date Joined',
+      'Active Subscriptions',
+      'Total Revenue (KES)',
+      'Successful Payments'
+    ];
+
+    const rows = customers.map(c => [
+      c.name,
+      c.phoneNumber,
+      c.email || 'N/A',
+      new Date(c.createdAt).toLocaleDateString(),
+      c.activeSubscriptions,
+      c.totalRevenue,
+      c.successfulTransactions
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(value => `"${value}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `FluxPay_Customers_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const filteredCustomers = customers.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -104,18 +149,37 @@ const Customers: React.FC = () => {
               <p className="text-gray-400 text-sm mt-1">Manage your subscriber base and payment history</p>
             </div>
           </div>
-          <button 
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-main hover:bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-main/20 transition-all active:scale-95"
-          >
-            <Plus size={20} />
-            Add Customer
-          </button>
+          
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => fetchCustomerData(true)}
+              disabled={refreshing}
+              className="p-2.5 bg-surface-bg border border-gray-800 rounded-xl text-gray-400 hover:text-white transition-all disabled:opacity-50"
+              title="Refresh Data"
+            >
+              <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
+            </button>
+            <button 
+              onClick={handleExportCSV}
+              disabled={customers.length === 0}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-surface-bg border border-gray-700 hover:border-gray-500 text-white rounded-xl font-bold transition-all active:scale-95 disabled:opacity-50"
+            >
+              <Download size={18} />
+              <span className="hidden sm:inline">Export CSV</span>
+            </button>
+            <button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-main hover:bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-main/20 transition-all active:scale-95"
+            >
+              <Plus size={20} />
+              Add Customer
+            </button>
+          </div>
         </div>
 
         {/* Summary Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-          <div className="bg-surface-bg border border-gray-800 p-6 rounded-2xl">
+          <div className="bg-surface-bg border border-gray-800 p-6 rounded-2xl shadow-sm">
             <div className="flex items-center gap-4 mb-4">
               <div className="p-3 bg-main/10 rounded-xl text-main">
                 <Users size={24} />
@@ -124,7 +188,7 @@ const Customers: React.FC = () => {
             </div>
             <p className="text-3xl font-bold">{summary.totalCustomers}</p>
           </div>
-          <div className="bg-surface-bg border border-gray-800 p-6 rounded-2xl">
+          <div className="bg-surface-bg border border-gray-800 p-6 rounded-2xl shadow-sm">
             <div className="flex items-center gap-4 mb-4">
               <div className="p-3 bg-secondary/10 rounded-xl text-secondary">
                 <TrendingUp size={24} />
@@ -133,7 +197,7 @@ const Customers: React.FC = () => {
             </div>
             <p className="text-3xl font-bold">{formatKES(summary.totalRevenue)}</p>
           </div>
-          <div className="bg-surface-bg border border-gray-800 p-6 rounded-2xl">
+          <div className="bg-surface-bg border border-gray-800 p-6 rounded-2xl shadow-sm">
             <div className="flex items-center gap-4 mb-4">
               <div className="p-3 bg-accent/10 rounded-xl text-accent">
                 <Activity size={24} />
