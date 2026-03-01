@@ -74,6 +74,7 @@ This file is the canonical implementation and verification status for FluxPay.
   - **Enhanced Backend Security**: Implemented **SHA-256 hashing for password reset tokens** in the database.
   - **Password Management**: Added a secure **Change Password** feature in the Settings page with a modern, tabbed interface.
   - **UI/UX Cleanup**: Refined Navbar and Footer to point to business resources ("How it Works", "Success Center") and removed technical jargon.
+  - **Deployment Fixes**: Resolved TypeScript errors blocking Render builds (unused `isSubmitting` in Signup, incorrect argument count for `authLogin`, and corrected `authMiddleware` import in auth routes).
 
 ## Verified
 

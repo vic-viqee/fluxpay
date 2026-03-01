@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { signup, login, refreshToken, googleCallback, exchangeGoogleAuthCode, forgotPassword, resetPassword, googleCompleteRegistration, googleRegistrationContext, changePassword } from './auth.controller';
 import passport from 'passport';
 import { uploadLogo } from '../../middleware/logoUpload'; 
-import { authenticate } from '../../middleware/auth.middleware';
+import { authMiddleware } from '../../middleware/auth.middleware';
 import config from '../../config';
 
 const router = Router();
@@ -25,7 +25,7 @@ router.post('/refresh-token', refreshToken);
 
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
-router.post('/change-password', authenticate, changePassword);
+router.post('/change-password', authMiddleware, changePassword);
 
 router.post('/google-complete-registration', uploadLogo, googleCompleteRegistration); 
 router.post('/google/exchange-code', exchangeGoogleAuthCode);

@@ -311,8 +311,12 @@ const Signup: React.FC = () => {
                 <button type="button" onClick={handleBack} className="w-1/2 px-4 py-2 text-sm font-medium text-main bg-transparent border border-main rounded-md shadow-sm hover:bg-main hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-main">
                   Back
                 </button>
-                <button type="submit" className="w-1/2 px-4 py-2 text-sm font-medium text-white bg-main border border-transparent rounded-md shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-main">
-                  Create Account
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-1/2 px-4 py-2 text-sm font-medium text-white bg-main border border-transparent rounded-md shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-main disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Creating...' : 'Create Account'}
                 </button>
               </div>
             </>
