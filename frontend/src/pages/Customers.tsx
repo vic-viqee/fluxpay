@@ -6,14 +6,10 @@ import {
   Search, 
   Plus, 
   ArrowLeft, 
-  CreditCard, 
   Smartphone, 
   Mail, 
-  Calendar,
-  ChevronRight,
   TrendingUp,
   Activity,
-  MoreVertical,
   ExternalLink
 } from 'lucide-react';
 import api from '../services/api';
@@ -41,7 +37,6 @@ const Customers: React.FC = () => {
     activeSubscriptions: 0
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -52,7 +47,7 @@ const Customers: React.FC = () => {
       setCustomers(response.data.customers);
       setSummary(response.data.summary);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch customer data.');
+      console.error('Failed to fetch customer data:', err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
     }
