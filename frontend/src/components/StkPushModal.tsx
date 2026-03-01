@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Smartphone, DollarSign, X, Send, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { initiateSimulatedStkPushPayment } from '../services/api';
 
 interface StkPushModalProps {
@@ -24,7 +25,7 @@ export const StkPushModal: React.FC<StkPushModalProps> = ({ isOpen, onClose, onS
       return;
     }
     if (!/^254(7|1)\d{8}$/.test(phoneNumber)) {
-      setMessage({ text: 'Invalid Kenyan M-Pesa phone number format (e.g., 2547... or 2541...).', type: 'error' });
+      setMessage({ text: 'Invalid M-Pesa format (e.g., 2547... or 2541...).', type: 'error' });
       return;
     }
     if (Number(amount) <= 0) {
@@ -38,9 +39,8 @@ export const StkPushModal: React.FC<StkPushModalProps> = ({ isOpen, onClose, onS
         phoneNumber,
         amount: Number(amount),
       });
-      setMessage({ text: `STK Push sent to ${phoneNumber}. Please check your phone.`, type: 'success' });
+      setMessage({ text: `STK Push sent! Please check your phone.`, type: 'success' });
       
-      // Clear form and close modal after a delay
       setTimeout(() => {
         setPhoneNumber('');
         setAmount('');
@@ -49,7 +49,6 @@ export const StkPushModal: React.FC<StkPushModalProps> = ({ isOpen, onClose, onS
       }, 2000);
 
     } catch (error: any) {
-      console.error('STK Push initiation failed:', error);
       setMessage({ text: error.response?.data?.message || 'Failed to initiate STK Push.', type: 'error' });
     } finally {
       setLoading(false);
@@ -57,54 +56,91 @@ export const StkPushModal: React.FC<StkPushModalProps> = ({ isOpen, onClose, onS
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Simulate STK Push</h2>
-          <button onClick={onClose} className="btn btn-secondary">&times;</button>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-surface-bg border border-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="p-6 border-b border-gray-800 flex items-center justify-between bg-primary-bg/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-secondary/10 rounded-lg text-secondary">
+              <Smartphone size={20} />
+            </div>
+            <h2 className="text-xl font-bold text-white tracking-tight">Test STK Push</h2>
+          </div>
+          <button onClick={onClose} className="p-2 text-gray-500 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+            <X size={20} />
+          </button>
         </div>
         
-        {message.text && (
-          <div className={`p-3 mb-4 text-sm rounded-md ${message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-            {message.text}
-          </div>
-        )}
+        <div className="p-8">
+          {message.text && (
+            <div className={`p-4 mb-6 text-sm rounded-xl flex items-center gap-3 border ${
+              message.type === 'error' 
+              ? 'bg-red-900/20 border-red-800 text-red-400' 
+              : 'bg-secondary/10 border-secondary/20 text-secondary'
+            }`}>
+              {message.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+              {message.text}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="stkPhoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
-            <input
-              type="tel"
-              id="stkPhoneNumber"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="e.g., 2547XXXXXXXX"
-              required
-              disabled={loading}
-            />
-          </div>
-          <div>
-            <label htmlFor="stkAmount" className="block text-sm font-medium text-gray-700">Amount (KES)</label>
-            <input
-              type="number"
-              id="stkAmount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              min="1"
-              required
-              disabled={loading}
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="stkPhoneNumber" className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <Smartphone size={14} /> M-Pesa Number
+              </label>
+              <input
+                type="tel"
+                id="stkPhoneNumber"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="w-full bg-primary-bg border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-main/50 outline-none transition-all placeholder:text-gray-600"
+                placeholder="2547..."
+                required
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <label htmlFor="stkAmount" className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <DollarSign size={14} /> Amount (KES)
+              </label>
+              <input
+                type="number"
+                id="stkAmount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full bg-primary-bg border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-main/50 outline-none transition-all placeholder:text-gray-600"
+                placeholder="Enter amount"
+                min="1"
+                required
+                disabled={loading}
+              />
+            </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <button type="button" onClick={onClose} className="btn btn-outline" disabled={loading}>Cancel</button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Sending...' : 'Send STK Push'}
-            </button>
-          </div>
-        </form>
+            <div className="flex gap-3 pt-4">
+              <button 
+                type="button" 
+                onClick={onClose} 
+                className="flex-1 px-4 py-3 bg-primary-bg border border-gray-700 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all"
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                className="flex-1 px-4 py-3 bg-main hover:bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-main/20 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Send size={18} />
+                    Send STK
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

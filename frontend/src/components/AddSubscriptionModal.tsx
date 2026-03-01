@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { X, User, CreditCard, Calendar, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
 import api, {
   createClient,
   createServicePlan,
@@ -99,19 +100,14 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
   };
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
+    if (!isOpen) return;
     setError('');
     setQuickPlanMessage('');
     fetchPlans();
     fetchClientsList();
   }, [isOpen]);
 
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   const handleCreateQuickPlan = async () => {
     setError('');
@@ -121,16 +117,6 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
 
     if (!quickPlanName.trim() || !amount || !billingDay) {
       setError('Plan name, amount, frequency, and billing day are required.');
-      return;
-    }
-
-    if (amount <= 0) {
-      setError('Plan amount must be greater than 0.');
-      return;
-    }
-
-    if (billingDay < 1 || billingDay > 31) {
-      setError('Billing day must be between 1 and 31.');
       return;
     }
 
@@ -153,9 +139,7 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
 
       setQuickPlanName('');
       setQuickPlanAmount('');
-      setQuickPlanFrequency('monthly');
-      setQuickPlanBillingDay('1');
-      setQuickPlanMessage('Plan created. Continue with subscription details below.');
+      setQuickPlanMessage('Service plan created successfully!');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create service plan.');
     } finally {
@@ -172,26 +156,9 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
       return;
     }
 
-    if (clientMode === 'existing' && !selectedClientId) {
-      setError('Please select an existing client.');
-      return;
-    }
-
-    if (clientMode === 'new') {
-      if (!clientName.trim() || !clientPhoneNumber.trim()) {
-        setError('Client name and phone number are required for a new client.');
-        return;
-      }
-      if (!/^(2541|2547)\d{8}$/.test(clientPhoneNumber.trim())) {
-        setError('Invalid phone number. Use 2541XXXXXXXX or 2547XXXXXXXX.');
-        return;
-      }
-    }
-
     setLoading(true);
     try {
       let clientId = '';
-
       if (clientMode === 'existing') {
         clientId = selectedClientId;
       } else {
@@ -210,12 +177,8 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
             );
             if (existingClient?._id) {
               clientId = existingClient._id;
-            } else {
-              throw clientErr;
-            }
-          } else {
-            throw clientErr;
-          }
+            } else throw clientErr;
+          } else throw clientErr;
         }
       }
 
@@ -226,13 +189,7 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
       });
 
       onSuccess(response.data);
-      setClientName('');
-      setClientPhoneNumber('');
-      setClientEmail('');
-      setClientMode('new');
-      setSelectedClientId(clients[0]?._id || '');
-      setSelectedPlanId(servicePlans[0]?._id || '');
-      setNotes('');
+      onClose();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create subscription.');
     } finally {
@@ -241,256 +198,173 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-xl">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Create Subscription</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded border border-gray-300 px-3 py-1 text-gray-700 hover:bg-gray-100"
-          >
-            Close
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg bg-surface-bg border border-gray-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="p-6 border-b border-gray-800 flex items-center justify-between bg-primary-bg/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-main/10 rounded-lg text-main">
+              <Plus size={20} />
+            </div>
+            <h2 className="text-xl font-bold text-white tracking-tight">New Subscription</h2>
+          </div>
+          <button onClick={onClose} className="p-2 text-gray-500 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+            <X size={20} />
           </button>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-100 p-3 text-sm text-red-700" role="alert">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <h3 className="mb-4 border-b pb-2 text-lg font-semibold text-gray-800">Client Details</h3>
-          <div className="flex items-center gap-4">
-            <label className="text-sm text-gray-700">
-              <input
-                type="radio"
-                name="clientMode"
-                value="new"
-                checked={clientMode === 'new'}
-                onChange={() => setClientMode('new')}
-                disabled={loading}
-                className="mr-2"
-              />
-              New Client
-            </label>
-            <label className="text-sm text-gray-700">
-              <input
-                type="radio"
-                name="clientMode"
-                value="existing"
-                checked={clientMode === 'existing'}
-                onChange={() => setClientMode('existing')}
-                disabled={loading || clients.length === 0}
-                className="mr-2"
-              />
-              Existing Client
-            </label>
-          </div>
-          {clients.length === 0 ? (
-            <p className="text-xs text-gray-500">
-              No existing clients yet. Create one in this form.
-            </p>
-          ) : null}
-          {clientMode === 'existing' ? (
-            <div>
-              <label htmlFor="selectedClientId" className="block text-sm font-medium text-gray-700">
-                Select Client
-              </label>
-              <select
-                id="selectedClientId"
-                value={selectedClientId}
-                onChange={(e) => setSelectedClientId(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                required
-                disabled={loading || clients.length === 0}
-              >
-                {clients.length === 0 ? <option value="">No clients available</option> : null}
-                {clients.map((client) => (
-                  <option key={client._id} value={client._id}>
-                    {client.name} ({client.phoneNumber})
-                  </option>
-                ))}
-              </select>
+        <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+          {error && (
+            <div className="mb-6 p-4 bg-red-900/20 border border-red-800 rounded-xl flex items-center gap-3 text-red-400 text-sm">
+              <AlertCircle size={18} />
+              {error}
             </div>
-          ) : (
-            <>
-          <div>
-            <label htmlFor="clientName" className="block text-sm font-medium text-gray-700">
-              Client Name
-            </label>
-            <input
-              type="text"
-              id="clientName"
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              required
-              disabled={loading}
-            />
-          </div>
-            </>
           )}
-          {clientMode === 'new' ? (
-            <>
-              <div>
-                <label htmlFor="clientPhoneNumber" className="block text-sm font-medium text-gray-700">
-                  Client Phone Number
-                </label>
-                <input
-                  type="tel"
-                  id="clientPhoneNumber"
-                  value={clientPhoneNumber}
-                  onChange={(e) => setClientPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  placeholder="2547XXXXXXXX or 2541XXXXXXXX"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <label htmlFor="clientEmail" className="block text-sm font-medium text-gray-700">
-                  Client Email (Optional)
-                </label>
-                <input
-                  type="email"
-                  id="clientEmail"
-                  value={clientEmail}
-                  onChange={(e) => setClientEmail(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  disabled={loading}
-                />
-              </div>
-            </>
-          ) : null}
 
-          <h3 className="mb-4 mt-6 border-b pb-2 text-lg font-semibold text-gray-800">Plan Details</h3>
-          <div>
-            <label htmlFor="selectedPlanId" className="block text-sm font-medium text-gray-700">
-              Service Plan
-            </label>
-            {plansLoading ? (
-              <p className="mt-1 text-gray-600">Loading plans...</p>
-            ) : (
+          <form onSubmit={handleSubmit} className="space-y-8 text-white">
+            {/* Client Section */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                <User size={14} /> Client Information
+              </h3>
+              
+              <div className="flex bg-primary-bg p-1 rounded-xl border border-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setClientMode('new')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${clientMode === 'new' ? 'bg-surface-bg text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                  New Client
+                </button>
+                <button
+                  type="button"
+                  disabled={clients.length === 0}
+                  onClick={() => setClientMode('existing')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${clientMode === 'existing' ? 'bg-surface-bg text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'} disabled:opacity-30`}
+                >
+                  Existing Client
+                </button>
+              </div>
+
+              {clientMode === 'existing' ? (
+                <div>
+                  <select
+                    value={selectedClientId}
+                    onChange={(e) => setSelectedClientId(e.target.value)}
+                    className="w-full bg-primary-bg border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-main/50 outline-none transition-all"
+                  >
+                    {clients.map(c => <option key={c._id} value={c._id}>{c.name} ({c.phoneNumber})</option>)}
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-4 animate-in slide-in-from-top-2 duration-200">
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
+                    className="w-full bg-primary-bg border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-main/50 outline-none transition-all placeholder:text-gray-600"
+                    required
+                  />
+                  <input
+                    type="tel"
+                    placeholder="M-Pesa Number (2547...)"
+                    value={clientPhoneNumber}
+                    onChange={(e) => setClientPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                    className="w-full bg-primary-bg border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-main/50 outline-none transition-all placeholder:text-gray-600"
+                    required
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email Address (Optional)"
+                    value={clientEmail}
+                    onChange={(e) => setClientEmail(e.target.value)}
+                    className="w-full bg-primary-bg border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-main/50 outline-none transition-all placeholder:text-gray-600"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Plan Section */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                <CreditCard size={14} /> Subscription Plan
+              </h3>
+              
               <select
-                id="selectedPlanId"
                 value={selectedPlanId}
                 onChange={(e) => setSelectedPlanId(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                required
-                disabled={loading || creatingPlan || servicePlans.length === 0}
+                disabled={servicePlans.length === 0}
+                className="w-full bg-primary-bg border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-main/50 outline-none transition-all disabled:opacity-50"
               >
-                {servicePlans.length === 0 ? <option value="">No plans available</option> : null}
-                {servicePlans.map((plan) => (
-                  <option key={plan._id} value={plan._id}>
-                    {plan.name} (KES {plan.amountKes} / {plan.frequency})
-                  </option>
-                ))}
+                {servicePlans.length === 0 && <option value="">No plans available</option>}
+                {servicePlans.map(p => <option key={p._id} value={p._id}>{p.name} — KES {p.amountKes.toLocaleString()} / {p.frequency}</option>)}
               </select>
-            )}
-          </div>
 
-          {servicePlans.length === 0 && !plansLoading ? (
-            <div className="space-y-3 rounded-md border border-yellow-300 bg-yellow-50 p-4">
-              <p className="text-sm text-yellow-800">
-                No service plans found. Create one here and continue.
-              </p>
-              <input
-                type="text"
-                value={quickPlanName}
-                onChange={(e) => setQuickPlanName(e.target.value)}
-                placeholder="Plan name"
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                disabled={creatingPlan || loading}
+              {servicePlans.length === 0 && !plansLoading && (
+                <div className="p-5 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl space-y-4">
+                  <p className="text-xs font-bold text-yellow-500 flex items-center gap-2">
+                    <AlertCircle size={14} /> NO PLANS FOUND. CREATE ONE QUICKLY:
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      placeholder="Plan Name"
+                      value={quickPlanName}
+                      onChange={(e) => setQuickPlanName(e.target.value)}
+                      className="bg-primary-bg border border-gray-700 rounded-lg px-3 py-2 text-xs text-white"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Amount (KES)"
+                      value={quickPlanAmount}
+                      onChange={(e) => setQuickPlanAmount(e.target.value)}
+                      className="bg-primary-bg border border-gray-700 rounded-lg px-3 py-2 text-xs text-white"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCreateQuickPlan}
+                    disabled={creatingPlan}
+                    className="w-full py-2 bg-yellow-500 hover:bg-yellow-600 text-black text-xs font-bold rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {creatingPlan ? 'Creating...' : 'Create Quick Plan'}
+                  </button>
+                  {quickPlanMessage && <p className="text-[10px] text-green-500 font-bold text-center">{quickPlanMessage}</p>}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                <Calendar size={14} /> Internal Notes
+              </h3>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Optional notes about this subscriber..."
+                rows={2}
+                className="w-full bg-primary-bg border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-main/50 outline-none transition-all placeholder:text-gray-600"
               />
-              <input
-                type="number"
-                min="1"
-                value={quickPlanAmount}
-                onChange={(e) => setQuickPlanAmount(e.target.value)}
-                placeholder="Amount (KES)"
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                disabled={creatingPlan || loading}
-              />
-              <select
-                value={quickPlanFrequency}
-                onChange={(e) => setQuickPlanFrequency(e.target.value as PlanFrequency)}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                disabled={creatingPlan || loading}
-              >
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="annually">Annually</option>
-              </select>
-              <input
-                type="number"
-                min="1"
-                max="31"
-                value={quickPlanBillingDay}
-                onChange={(e) => setQuickPlanBillingDay(e.target.value)}
-                placeholder="Billing day (1-31)"
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                disabled={creatingPlan || loading}
-              />
+            </div>
+
+            <div className="flex items-center gap-3 pt-4 border-t border-gray-800">
               <button
                 type="button"
-                onClick={handleCreateQuickPlan}
-                className="rounded bg-main px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-60"
-                disabled={creatingPlan || loading}
+                onClick={onClose}
+                className="flex-1 px-4 py-3 bg-primary-bg border border-gray-700 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all"
               >
-                {creatingPlan ? 'Creating Plan...' : 'Create Plan'}
+                Cancel
               </button>
-              {quickPlanMessage ? (
-                <p className="text-sm text-green-700">{quickPlanMessage}</p>
-              ) : null}
               <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  navigate('/plans');
-                }}
-                className="rounded border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-                disabled={creatingPlan || loading}
+                type="submit"
+                disabled={loading || !selectedPlanId}
+                className="flex-1 px-4 py-3 bg-secondary hover:bg-teal-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-secondary/20 transition-all disabled:opacity-50 active:scale-95"
               >
-                Go to Plans
+                {loading ? 'Processing...' : 'Create Subscription'}
               </button>
             </div>
-          ) : null}
-
-          <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-              Notes (Optional)
-            </label>
-            <textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              disabled={loading}
-            />
-          </div>
-
-          <div className="flex justify-end space-x-2 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100"
-              disabled={loading || creatingPlan}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="rounded bg-secondary px-4 py-2 font-medium text-white hover:bg-teal-500 disabled:opacity-60"
-              disabled={loading || plansLoading || !selectedPlanId}
-            >
-              {loading ? 'Creating...' : 'Create Subscription'}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );
