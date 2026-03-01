@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { X, User, CreditCard, Calendar, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, User, CreditCard, Calendar, Plus, AlertCircle } from 'lucide-react';
 import api, {
   createClient,
   createServicePlan,
@@ -47,7 +46,6 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const navigate = useNavigate();
   const [clientName, setClientName] = useState('');
   const [clientPhoneNumber, setClientPhoneNumber] = useState('');
   const [clientEmail, setClientEmail] = useState('');
@@ -64,8 +62,8 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
 
   const [quickPlanName, setQuickPlanName] = useState('');
   const [quickPlanAmount, setQuickPlanAmount] = useState('');
-  const [quickPlanFrequency, setQuickPlanFrequency] = useState<PlanFrequency>('monthly');
-  const [quickPlanBillingDay, setQuickPlanBillingDay] = useState('1');
+  const [quickPlanFrequency] = useState<PlanFrequency>('monthly');
+  const [quickPlanBillingDay] = useState('1');
   const [quickPlanMessage, setQuickPlanMessage] = useState('');
 
   const fetchPlans = async () => {
@@ -116,7 +114,7 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
     const billingDay = Number(quickPlanBillingDay);
 
     if (!quickPlanName.trim() || !amount || !billingDay) {
-      setError('Plan name, amount, frequency, and billing day are required.');
+      setError('Plan name and amount are required.');
       return;
     }
 
@@ -212,7 +210,7 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
           </button>
         </div>
 
-        <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+        <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar text-white">
           {error && (
             <div className="mb-6 p-4 bg-red-900/20 border border-red-800 rounded-xl flex items-center gap-3 text-red-400 text-sm">
               <AlertCircle size={18} />
@@ -220,7 +218,7 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8 text-white">
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Client Section */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
