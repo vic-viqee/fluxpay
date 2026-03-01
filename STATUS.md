@@ -62,11 +62,12 @@ This file is the canonical implementation and verification status for FluxPay.
   - Create-subscription modal now prevents selecting `Existing Client` when no clients exist and explains what to do.
   - Inline quick-plan creation now shows positive confirmation before continuing subscription creation.
   - Removed outdated signup copy claiming logo upload was not implemented.
-- Frontend UX & Analytics Visualizations pass was completed:
-  - Analytics Dashboard: Fully implemented with Recharts, featuring Revenue Trends (Area Chart), Transaction Status (Pie Chart), and Subscription Health (Bar Chart).
-  - Interactive Dashboard: Added manual data refresh with rotation animations, quick-action shortcuts (Add Customer, New Plan, Business Settings), and improved stat cards.
-  - Loading & Empty States: Implemented pulsed skeleton loaders for `SubscriptionsTable` and `TransactionsTable` to eliminate layout shifts. Enhanced empty states with `lucide-react` icons and clear CTA buttons.
-  - Mobile Responsiveness: Updated Sidebar with navigation icons and a responsive overlay. Refined `DashboardNavbar` with a glassmorphism effect, sticky positioning, and dynamic page titles.
+- **Frontend UX & Analytics Visualizations pass was completed**:
+  - **Analytics Dashboard**: Fully implemented with Recharts, featuring Revenue Trends (Area Chart), Transaction Status (Pie Chart), and Subscription Health (Bar Chart).
+  - **Interactive Dashboard**: Added manual data refresh with rotation animations, quick-action shortcuts (Add Customer, New Plan, Business Settings), and improved stat cards.
+  - **Customers Page**: Fully implemented with summary stats (Lifetime Revenue, Active Subs), searchable customer table, and direct integration with the subscription creation flow.
+  - **Loading & Empty States**: Implemented pulsed skeleton loaders for `SubscriptionsTable`, `TransactionsTable`, and the Customers page to eliminate layout shifts. Enhanced empty states with `lucide-react` icons and clear CTA buttons.
+  - **Mobile Responsiveness**: Updated Sidebar with navigation icons and a responsive overlay. Refined `DashboardNavbar` with a glassmorphism effect, sticky positioning, and dynamic page titles.
 - **Customer-First Focus & Onboarding UX pass was completed**:
   - **Business Success Center**: Replaced developer-centric documentation with a practical guide for Kenyan entrepreneurs.
   - **Simplified Landing Page**: Removed "Developer API" focus and emphasized "Simplified Collections" and "Business Insights."
