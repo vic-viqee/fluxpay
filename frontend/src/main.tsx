@@ -23,6 +23,8 @@ import GoogleCallback from './pages/GoogleCallback';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import GoogleRegistrationCompletion from './pages/GoogleRegistrationCompletion'; // NEW IMPORT
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 const persistedTheme = localStorage.getItem('themeMode');
 if (persistedTheme === 'light') {
@@ -41,6 +43,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/documentation" element={<Documentation />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/subscribe" element={<SubscriptionCheckout />} />
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
           <Route path="/google-register-complete" element={<GoogleRegistrationCompletion />} />

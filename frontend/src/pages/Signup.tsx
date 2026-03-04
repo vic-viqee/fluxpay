@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import api, { googleAuthUrl } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,6 +9,7 @@ const Signup: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false); // State for terms agreement
   const [businessName, setBusinessName] = useState('');
   const [businessType, setBusinessType] = useState('');
   const [kraPin, setKraPin] = useState('');
@@ -91,6 +92,10 @@ const Signup: React.FC = () => {
       }
       if (password !== confirmPassword) {
         setError('Password and confirm password do not match.');
+        return;
+      }
+      if (!agreedToTerms) {
+        setError('You must agree to the Terms of Service and Privacy Policy to continue.');
         return;
       }
     } else if (step === 2) {
@@ -202,10 +207,18 @@ const Signup: React.FC = () => {
               </div>
               <div className="flex items-start">
                 <div className="flex items-center h-5">
-                  <input type="checkbox" className="w-4 h-4 text-main bg-gray-700 border-gray-600 rounded focus:ring-main" required />
+                  <input 
+                    type="checkbox" 
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="w-4 h-4 text-main bg-gray-700 border-gray-600 rounded focus:ring-main" 
+                    required 
+                  />
                 </div>
                 <div className="ml-3 text-sm">
-                  <label className="text-gray-400">I agree to the <a href="#" className="font-medium text-main hover:underline">Terms of Service</a> and <a href="#" className="font-medium text-main hover:underline">Privacy Policy</a></label>
+                  <label className="text-gray-400">
+                    I agree to the <Link to="/terms" target="_blank" className="font-medium text-main hover:underline">Terms of Service</Link> and <Link to="/privacy" target="_blank" className="font-medium text-main hover:underline">Privacy Policy</Link>
+                  </label>
                 </div>
               </div>
               <button type="button" onClick={handleNext} className="w-full px-4 py-2 text-sm font-medium text-white bg-main border border-transparent rounded-md shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-main">

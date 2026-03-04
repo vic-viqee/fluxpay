@@ -295,7 +295,7 @@ export const googleCallback = (req: Request, res: Response) => {
   if (authInfo && authInfo.message === 'Registration required' && authInfo.profile) {
     try {
       const ticket = generateGoogleRegistrationTicket(authInfo.profile);
-      return res.redirect(`${config.frontendUrl}/google-register-complete?ticket=${encodeURIComponent(ticket)}`);
+      return res.redirect(`${config.frontendUrl}/auth/google/callback?ticket=${encodeURIComponent(ticket)}`);
     } catch (error) {
       logger.error('Failed to generate Google registration ticket:', error);
       return res.redirect(`${config.frontendUrl}/login`);

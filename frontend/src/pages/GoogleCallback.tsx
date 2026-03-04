@@ -12,7 +12,13 @@ const GoogleCallback: React.FC = () => {
     const completeGoogleLogin = async () => {
       const params = new URLSearchParams(location.search);
       const code = params.get('code');
-      const token = params.get('token'); // Backward compatibility for older redirects.
+      const token = params.get('token');
+      const ticket = params.get('ticket');
+
+      if (ticket) {
+        navigate(`/google-register-complete?ticket=${encodeURIComponent(ticket)}`);
+        return;
+      }
 
       if (token) {
         login(token);
