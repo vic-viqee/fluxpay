@@ -118,7 +118,7 @@ This file is the canonical implementation and verification status for FluxPay.
 - [x] 4. Implement frontend refresh-token handling (token rotation/retry flow) so sessions survive access-token expiry.
 - [ ] 5. Remove legacy `token` query-param fallback in Google callback page; keep code-exchange-only flow.
 - [x] 6. Replace hardcoded Google auth backend URLs in frontend with environment-driven API base.
-- [ ] 7. Add stricter auth-specific rate limits (login/forgot/reset/google exchange) beyond global limiter.
+- [x] 7. Add stricter auth-specific rate limits (login/forgot/reset/google exchange) beyond global limiter.
 - [ ] 8. Strengthen security headers with CSP and HSTS (in production).
 - [ ] 9. Add working ESLint configuration so `npm run lint` becomes an actual quality gate.
 - [ ] 10. Update `/api/docs` endpoint list to include latest auth endpoints and flow changes.

@@ -49,3 +49,17 @@ export const globalRateLimiter = createRateLimiter({
   maxRequests: 120,
   message: 'Too many requests from this IP. Please slow down.',
 });
+
+// Stricter limiter for sensitive auth endpoints (Login, Signup, Google Exchange)
+export const authRateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 10, // 10 attempts
+  message: 'Too many authentication attempts. Please try again after 15 minutes.',
+});
+
+// Very strict limiter for password reset requests
+export const passwordResetRateLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 3, // 3 attempts
+  message: 'Too many password reset requests. Please try again after an hour.',
+});

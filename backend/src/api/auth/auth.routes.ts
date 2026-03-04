@@ -4,6 +4,7 @@ import { signup, login, refreshToken, googleCallback, exchangeGoogleAuthCode, fo
 import passport from 'passport';
 import { uploadLogo } from '../../middleware/logoUpload'; 
 import { authMiddleware } from '../../middleware/auth.middleware';
+import { authRateLimiter, passwordResetRateLimiter } from '../../middleware/rateLimit';
 import config from '../../config';
 
 const router = Router();
@@ -19,17 +20,17 @@ const pruneExpiredStates = () => {
   }
 };
 
-router.post('/signup', uploadLogo, signup); 
-router.post('/login', login);
+router.post('/signup', authRateLimiter, uploadLogo, signup); 
+router.post('/login', authRateLimiter, login);
 router.post('/refresh-token', refreshToken);
 
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password/:token', resetPassword);
+router.post('/forgot-password', passwordResetRateLimiter, forgotPassword);
+router.post('/reset-password/:token', passwordResetRateLimiter, resetPassword);
 router.post('/change-password', authMiddleware, changePassword);
 
-router.post('/google-complete-registration', uploadLogo, googleCompleteRegistration); 
-router.post('/google/exchange-code', exchangeGoogleAuthCode);
-router.post('/google/registration-context', googleRegistrationContext);
+router.post('/google-complete-registration', authRateLimiter, uploadLogo, googleCompleteRegistration); 
+router.post('/google/exchange-code', authRateLimiter, exchangeGoogleAuthCode);
+router.post('/google/registration-context', authRateLimiter, googleRegistrationContext);
 
 router.get('/google', async (req, res, next) => {
   if (!config.google.clientId || !config.google.clientSecret) {
