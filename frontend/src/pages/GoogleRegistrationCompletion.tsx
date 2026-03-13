@@ -62,8 +62,7 @@ const GoogleRegistrationCompletion: React.FC = () => {
       formData.append('businessName', businessName);
       formData.append('businessType', businessType);
       formData.append('businessPhoneNumber', businessPhoneNumber);
-      if (logoFile) formData.append('logo', logoFile); // Append logo file if selected
-      // kraPin, businessTillOrPaybill, etc. if you want to add them here
+      if (logoFile) formData.append('logo', logoFile);
 
       const response = await api.post('/auth/google-complete-registration', formData, {
         headers: {
@@ -73,6 +72,9 @@ const GoogleRegistrationCompletion: React.FC = () => {
 
       if (response.data.token) {
         login(response.data.token, response.data.refreshToken);
+        setMessage('Registration complete! Redirecting to dashboard...');
+        setTimeout(() => navigate('/dashboard'), 1500);
+      } else if (response.data.user) {
         setMessage('Registration complete! Redirecting to dashboard...');
         setTimeout(() => navigate('/dashboard'), 1500);
       } else {

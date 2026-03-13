@@ -423,6 +423,7 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
     if (existingByGoogleId) {
       const token = generateAccessToken(existingByGoogleId);
       const refreshToken = generateRefreshToken(existingByGoogleId);
+      setAuthCookies(res, token, refreshToken);
       logger.info(`Existing Google user completed registration flow: ${email}`);
       return res.status(200).json({ message: 'Logged in successfully', token, refreshToken, user: existingByGoogleId });
     }
@@ -434,6 +435,7 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
         await existingByEmail.save();
         const token = generateAccessToken(existingByEmail);
         const refreshToken = generateRefreshToken(existingByEmail);
+        setAuthCookies(res, token, refreshToken);
         logger.info(`Existing user linked with Google: ${email}`);
         return res.status(200).json({ message: 'Account linked successfully', token, refreshToken, user: existingByEmail });
       }
@@ -459,6 +461,7 @@ export const googleCompleteRegistration = async (req: Request, res: Response, ne
 
     const token = generateAccessToken(newUser);
     const refreshToken = generateRefreshToken(newUser);
+    setAuthCookies(res, token, refreshToken);
     logger.info(`New Google user registered: ${email}, Business: ${businessName}`);
     res.status(201).json({ message: 'User registered successfully', token, refreshToken, user: newUser });
 
