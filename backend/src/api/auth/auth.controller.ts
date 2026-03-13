@@ -279,7 +279,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     setAuthCookies(res, token, refreshToken);
 
     logger.info(`User logged in: ${email}`);
-    res.status(200).json({ message: 'Logged in successfully', user });
+    res.status(200).json({ message: 'Logged in successfully', token, refreshToken, user });
   } catch (error) {
     next(error);
   }
