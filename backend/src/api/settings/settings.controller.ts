@@ -19,7 +19,7 @@ const getBackendBaseUrl = (req: Request) => {
     return `${protocol}://${host}`;
   }
 
-  return config.backendUrl.replace(/\/+$/, '');
+  return (config.backendUrl || 'http://localhost:3000').replace(/\/+$/, '');
 };
 
 export const getSettings = async (req: Request, res: Response, next: NextFunction) => {

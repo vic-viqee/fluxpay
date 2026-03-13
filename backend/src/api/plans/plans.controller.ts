@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import ServicePlan from '../../models/ServicePlan';
 import Subscription from '../../models/Subscription';
-// Removed `import { AuthenticatedRequest } from '../../middleware/auth.middleware';`
 import { IUser } from '../../models/User';
+import { getPaginationParams, createPaginatedResponse } from '../../utils/pagination';
 
 export const createServicePlan = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -34,13 +34,23 @@ export const createServicePlan = async (req: Request, res: Response, next: NextF
 
 export const getServicePlans = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = req.user as IUser; // Cast req.user to IUser
+    const user = req.user as IUser;
     if (!user || !user._id) {
       return res.status(401).json({ message: 'User not authenticated.' });
     }
 
-    const plans = await ServicePlan.find({ ownerId: user._id });
-    res.status(200).json({ plans });
+    const { page, limit, skip } = getPaginationParams(req);
+    const query = { ownerId: user._id };
+    
+    const [plans, total] = await Promise.all([
+      ServicePlan.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      ServicePlan.countDocuments(query)
+    ]);
+    
+    res.status(200).json(createPaginatedResponse(plans, total, { page, limit, skip }));
   } catch (error) {
     next(error);
   }

@@ -1,67 +1,42 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import Subscription from '../../models/Subscription';
-import Client from '../../models/Client'; // Import Client model
-import ServicePlan from '../../models/ServicePlan'; // Import ServicePlan model
-// Removed `import { AuthenticatedRequest } from '../../middleware/auth.middleware';`
+import Client from '../../models/Client';
+import ServicePlan from '../../models/ServicePlan';
 import { IUser } from '../../models/User';
-
-// Helper function to calculate next billing date
-const calculateNextBillingDate = (frequency: string, billingDay: number): Date => {
-  const now = new Date();
-  let nextBillingDate = new Date(now);
-
-  if (frequency === 'monthly') {
-    nextBillingDate.setDate(billingDay);
-    if (nextBillingDate <= now) {
-      nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
-    }
-  } else if (frequency === 'weekly') {
-    const dayOfWeek = billingDay % 7; // Convert 1-7 to 0-6 (Sunday-Saturday)
-    const currentDay = now.getDay();
-    const daysToAdd = (dayOfWeek - currentDay + 7) % 7;
-    nextBillingDate.setDate(now.getDate() + daysToAdd);
-    if (nextBillingDate <= now) { // If it's today or in the past, add a week
-      nextBillingDate.setDate(nextBillingDate.getDate() + 7);
-    }
-  } else if (frequency === 'daily') {
-    nextBillingDate.setDate(now.getDate() + 1); // Next day
-  } else if (frequency === 'annually') {
-    // Assuming billingDay is day of month, and billingMonth (if needed) is implicit (e.g., current month)
-    // For simplicity, setting to next year's same month/day if current day has passed
-    nextBillingDate.setFullYear(now.getFullYear() + 1);
-    nextBillingDate.setDate(billingDay); // This will handle overflow correctly for months with fewer days
-    if (nextBillingDate <= now) {
-      nextBillingDate.setFullYear(nextBillingDate.getFullYear() + 1);
-    }
-  }
-  // Reset time to start of day to avoid timezone issues
-  nextBillingDate.setHours(0, 0, 0, 0);
-  return nextBillingDate;
-};
-
+import { calculateNextBillingDate, BillingFrequency } from '../../utils/billing';
+import { getPaginationParams, createPaginatedResponse } from '../../utils/pagination';
 
 export const createSubscription = async (req: Request, res: Response, next: NextFunction) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { clientId, planId, notes } = req.body;
-    const user = req.user as IUser; // Cast req.user to IUser
+    const user = req.user as IUser;
     const ownerId = user?._id;
 
     if (!clientId || !planId || !ownerId) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ message: 'Client ID and Plan ID are required.' });
     }
 
-    // Verify client and plan exist and belong to the owner
-    const client = await Client.findOne({ _id: clientId, ownerId });
+    const client = await Client.findOne({ _id: clientId, ownerId }).session(session);
     if (!client) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ message: 'Client not found or does not belong to this user.' });
     }
 
-    const servicePlan = await ServicePlan.findOne({ _id: planId, ownerId });
+    const servicePlan = await ServicePlan.findOne({ _id: planId, ownerId }).session(session);
     if (!servicePlan) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ message: 'Service Plan not found or does not belong to this user.' });
     }
 
-    const nextBillingDate = calculateNextBillingDate(servicePlan.frequency, servicePlan.billingDay);
+    const nextBillingDate = calculateNextBillingDate(new Date(), servicePlan.frequency as BillingFrequency, servicePlan.billingDay);
 
     const newSubscription = new Subscription({
       clientId,
@@ -72,26 +47,41 @@ export const createSubscription = async (req: Request, res: Response, next: Next
       nextBillingDate,
       notes,
     });
-    const savedSubscription = await newSubscription.save();
 
-    // TODO: Trigger initial client invitation notification (e.g., SMS to client.phoneNumber)
+    const savedSubscription = await newSubscription.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(201).json(savedSubscription);
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     next(error);
   }
 };
 
 export const getSubscriptions = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = req.user as IUser; // Cast req.user to IUser
+    const user = req.user as IUser;
     if (!user || !user._id) {
       return res.status(401).json({ message: 'User not authenticated.' });
     }
-    const subscriptions = await Subscription.find({ ownerId: user._id })
-      .populate('clientId', 'name phoneNumber email') // Select specific fields
-      .populate('planId', 'name amountKes frequency'); // Select specific fields
-    res.status(200).json(subscriptions);
+    
+    const { page, limit, skip } = getPaginationParams(req);
+    const query = { ownerId: user._id };
+    
+    const [subscriptions, total] = await Promise.all([
+      Subscription.find(query)
+        .populate('clientId', 'name phoneNumber email')
+        .populate('planId', 'name amountKes frequency')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Subscription.countDocuments(query)
+    ]);
+    
+    res.status(200).json(createPaginatedResponse(subscriptions, total, { page, limit, skip }));
   } catch (error) {
     next(error);
   }

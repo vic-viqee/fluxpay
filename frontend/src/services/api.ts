@@ -21,6 +21,7 @@ export const clearStoredAuth = () => {
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
 });
 
 export const googleAuthUrl = (() => {
@@ -72,15 +73,12 @@ api.interceptors.response.use(
     try {
       const refreshResponse = await axios.post(`${api.defaults.baseURL}/auth/refresh-token`, {
         refreshToken,
-      });
+      }, { withCredentials: true });
       const newAccessToken = refreshResponse.data?.token;
-      const newRefreshToken = refreshResponse.data?.refreshToken;
-      if (!newAccessToken) {
-        throw new Error('Missing access token in refresh response.');
+      if (newAccessToken) {
+        storeAuthTokens(newAccessToken);
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
       }
-
-      storeAuthTokens(newAccessToken, newRefreshToken);
-      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
       return api(originalRequest);
     } catch (refreshError) {
       clearStoredAuth();
@@ -134,10 +132,10 @@ export const createServicePlan = async (planData: {
   }
 };
 
-export const getServicePlans = async () => {
+export const getServicePlans = async (page = 1, limit = 20) => {
   try {
-    const response = await api.get('/plans');
-    return response.data.plans;
+    const response = await api.get('/plans', { params: { page, limit } });
+    return response.data;
   } catch (error) {
     throw error;
   }
@@ -176,17 +174,23 @@ export const createClient = async (clientData: {
 }) => {
   try {
     const response = await api.post('/clients', clientData);
-    return response.data.client;
+    return response.data;
   } catch (error) {
     throw error;
   }
 };
 
-export const getClients = async () => {
+export const getClients = async (page = 1, limit = 20) => {
   try {
-    const response = await api.get('/clients');
-    return response.data?.clients || [];
+    const response = await api.get('/clients', { params: { page, limit } });
+    return response.data;
   } catch (error) {
     throw error;
   }
+};
+
+export const createAbortController = () => new AbortController();
+
+export const cancelRequest = (abortController: AbortController) => {
+  abortController.abort();
 };

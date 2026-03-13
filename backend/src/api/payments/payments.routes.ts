@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { initiatePayment, handleCallback, simulateStkPush, initiatePricingStkPush } from './payments.controller';
 import { authMiddleware } from '../../middleware/auth.middleware';
 import { createRateLimiter } from '../../middleware/rateLimit';
+import { validate, paymentSchema, simulateStkPushSchema, pricingStkPushSchema } from '../../middleware/validation';
 
 const router = Router();
 
@@ -21,9 +22,9 @@ const pricingPhoneLimiter = createRateLimiter({
   message: 'Please wait before sending another STK push to this phone number.',
 });
 
-router.post('/stk-push', authMiddleware, initiatePayment);
-router.post('/simulate-stk-push', authMiddleware, simulateStkPush); // New route for simulation
-router.post('/pricing-stk-push', pricingIpLimiter, pricingPhoneLimiter, initiatePricingStkPush);
+router.post('/stk-push', authMiddleware, validate(paymentSchema), initiatePayment);
+router.post('/simulate-stk-push', authMiddleware, validate(simulateStkPushSchema), simulateStkPush);
+router.post('/pricing-stk-push', pricingIpLimiter, pricingPhoneLimiter, validate(pricingStkPushSchema), initiatePricingStkPush);
 router.post('/callback', handleCallback);
 
 export default router;

@@ -1,5 +1,6 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import config from './config';
 import logger from './utils/logger';
 import errorHandler from './middleware/errorHandler';
@@ -53,13 +54,14 @@ app.use(cors({
     }
     return callback(null, true);
   },
-  credentials: true, // Required for cookies/authorization headers
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
 }));
 // --------------------------------
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(securityHeaders);
 app.use(globalRateLimiter);
 

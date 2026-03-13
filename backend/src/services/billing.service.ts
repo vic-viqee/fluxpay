@@ -2,37 +2,12 @@ import Subscription from '../models/Subscription';
 import Transaction from '../models/Transaction';
 import ServicePlan from '../models/ServicePlan';
 import Client from '../models/Client';
+import mongoose from 'mongoose';
 import { initiateStkPush } from './mpesa.service';
 import logger from '../utils/logger';
-import moment from 'moment'; // Using moment for date calculations due to complexity of billing cycles
+import moment from 'moment';
+import { calculateNextBillingDate } from '../utils/billing';
 
-// Helper to calculate the next billing date for a subscription based on its plan
-const getNextBillingDate = (currentDate: Date, frequency: 'daily' | 'weekly' | 'monthly' | 'annually', billingDay: number): Date => {
-  let nextDate = moment(currentDate);
-
-  if (frequency === 'daily') {
-    nextDate.add(1, 'days');
-  } else if (frequency === 'weekly') {
-    nextDate.isoWeekday(billingDay);
-    if (nextDate.isSameOrBefore(moment(currentDate))) {
-      nextDate.add(1, 'weeks').isoWeekday(billingDay);
-    }
-  } else if (frequency === 'monthly') {
-    nextDate.date(billingDay);
-    if (nextDate.isSameOrBefore(moment(currentDate))) {
-      nextDate.add(1, 'months').date(billingDay);
-    }
-  } else if (frequency === 'annually') {
-    nextDate.add(1, 'years').date(billingDay);
-    if (nextDate.isSameOrBefore(moment(currentDate))) {
-        nextDate.add(1, 'years').date(billingDay);
-    }
-  }
-  return nextDate.startOf('day').toDate();
-};
-
-
-// Function to process subscriptions with due payments
 export const processDuePayments = async () => {
   logger.info('Running processDuePayments...');
   const today = moment().startOf('day');
@@ -62,32 +37,55 @@ export const processDuePayments = async () => {
       }
 
       try {
-        // 1. Call the M-Pesa STK Push service
+        // 1. Call the M-Pesa STK Push service (outside of transaction since it's external)
         const stkPushResponse: any = await initiateStkPush(
           client.phoneNumber,
           plan.amountKes,
           owner?.businessName || 'FluxPay'
         );
 
-        // 2. Persist the PENDING transaction with the real CheckoutRequestID
-        const newTransaction = new Transaction({
-          subscriptionId: subscription._id,
-          ownerId: subscription.ownerId,
-          amountKes: plan.amountKes,
-          status: 'PENDING',
-          retryCount: 0,
-          darajaRequestId: stkPushResponse.CheckoutRequestID,
-        });
-        await newTransaction.save();
+        // 2. Persist the PENDING transaction in a session for atomicity
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        
+        try {
+          const newTransaction = new Transaction({
+            subscriptionId: subscription._id,
+            ownerId: subscription.ownerId,
+            amountKes: plan.amountKes,
+            status: 'PENDING',
+            retryCount: 0,
+            darajaRequestId: stkPushResponse.CheckoutRequestID,
+          });
+          await newTransaction.save({ session });
 
-        // 3. Update the Subscription's nextBillingDate to the next cycle
-        subscription.nextBillingDate = getNextBillingDate(subscription.nextBillingDate, plan.frequency, plan.billingDay);
-        await subscription.save();
+          // 3. Update the Subscription's nextBillingDate to the next cycle
+          subscription.nextBillingDate = calculateNextBillingDate(subscription.nextBillingDate, plan.frequency, plan.billingDay);
+          subscription.lastPaymentAttempt = new Date();
+          subscription.paymentFailureCount = 0;
+          await subscription.save({ session });
 
-        logger.info(`STK Push initiated for subscription ${subscription._id}. CheckoutRequestID: ${stkPushResponse.CheckoutRequestID}`);
+          await session.commitTransaction();
+          session.endSession();
+          
+          logger.info(`STK Push initiated for subscription ${subscription._id}. CheckoutRequestID: ${stkPushResponse.CheckoutRequestID}`);
+        } catch (txError: any) {
+          await session.abortTransaction();
+          session.endSession();
+          throw txError;
+        }
 
       } catch (error: any) {
         logger.error(`Failed to initiate STK Push for subscription ${subscription._id}: ${error.message}`);
+        
+        subscription.paymentFailureCount = (subscription.paymentFailureCount || 0) + 1;
+        
+        if (subscription.paymentFailureCount >= 3) {
+          subscription.status = 'FAILED';
+          logger.warn(`Subscription ${subscription._id} marked as FAILED after 3 consecutive payment failures. Owner: ${owner?.email}`);
+        }
+        
+        await subscription.save();
       }
     }
   } catch (error: any) {

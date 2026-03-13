@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 import { initiateStkPush } from '../../services/mpesa.service';
 import logger from '../../utils/logger';
 import User from '../../models/User';
@@ -6,7 +7,30 @@ import Transaction from '../../models/Transaction';
 import Subscription from '../../models/Subscription';
 import PublicCheckoutTransaction from '../../models/PublicCheckoutTransaction';
 import { IUser } from '../../models/User';
-import { isValidMpesaPhoneNumber } from '../../utils/phone'; // NEW IMPORT
+import { isValidMpesaPhoneNumber } from '../../utils/phone';
+import config from '../../config';
+
+const verifyMpesaSignature = (req: Request): boolean => {
+  const signature = req.headers['x-mpesa-signature'] as string;
+  if (!signature) {
+    logger.warn('M-Pesa callback missing signature header');
+    return false;
+  }
+
+  const callbackUrl = config.mpesa.callbackUrl;
+  const secret = config.mpesa.passKey;
+  const data = JSON.stringify(req.body);
+  
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(data)
+    .digest('base64');
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+};
 
 export const initiatePayment = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -139,6 +163,16 @@ export const initiatePricingStkPush = async (req: Request, res: Response, next: 
 
 export const handleCallback = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    if (isProduction) {
+      const isValid = verifyMpesaSignature(req);
+      if (!isValid) {
+        logger.error('Invalid M-Pesa callback signature');
+        return res.status(403).json({ ResultCode: 0, ResultDesc: 'Accepted' });
+      }
+    }
+    
     const body = req.body.Body || req.body; 
     const callbackData = body.stkCallback;
     
@@ -147,13 +181,21 @@ export const handleCallback = async (req: Request, res: Response, next: NextFunc
       return res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });
     }
 
-    const transaction = await Transaction.findOne({ darajaRequestId: callbackData.CheckoutRequestID });
-    const publicTransaction = transaction
+    const checkoutRequestId = callbackData.CheckoutRequestID;
+    
+    let transaction = await Transaction.findOne({ darajaRequestId: checkoutRequestId });
+    let publicTransaction = transaction
       ? null
-      : await PublicCheckoutTransaction.findOne({ darajaRequestId: callbackData.CheckoutRequestID });
+      : await PublicCheckoutTransaction.findOne({ darajaRequestId: checkoutRequestId });
 
     if (!transaction && !publicTransaction) {
-      logger.error('Transaction not found for darajaRequestId:', callbackData.CheckoutRequestID);
+      logger.error('Transaction not found for darajaRequestId:', checkoutRequestId);
+      return res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });
+    }
+
+    const currentStatus = transaction?.status || publicTransaction?.status;
+    if (currentStatus === 'SUCCESS') {
+      logger.info(`Transaction ${checkoutRequestId} already processed as SUCCESS. Ignoring duplicate callback.`);
       return res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });
     }
 

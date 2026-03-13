@@ -4,7 +4,7 @@ import config from '../config';
 import User, { IUser } from '../models/User';
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
+  const token = req.cookies?.accessToken || req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
     return res.status(401).json({ message: 'No token, authorization denied' });
@@ -18,7 +18,6 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       return res.status(401).json({ message: 'User not found' });
     }
 
-    // Cast req to any to bypass stubborn TypeScript type conflicts in Render's environment
     (req as any).user = user;
     next();
   } catch (error) {

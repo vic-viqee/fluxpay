@@ -28,6 +28,8 @@ interface GoogleRegistrationTicketClaims extends jwt.JwtPayload {
 const googleAuthCodeStore = new Map<string, { token: string; refreshToken: string; expiresAt: number }>();
 const usedGoogleRegistrationTickets = new Map<string, number>();
 
+const CLEANUP_INTERVAL = 60_000;
+
 const pruneExpiredStores = () => {
   const now = Date.now();
 
@@ -44,6 +46,8 @@ const pruneExpiredStores = () => {
   }
 };
 
+setInterval(pruneExpiredStores, CLEANUP_INTERVAL).unref();
+
 const generateAccessToken = (user: IUser) =>
   jwt.sign(
     { id: user._id, email: user.email },
@@ -57,6 +61,29 @@ const generateRefreshToken = (user: IUser) =>
   jwt.sign({ id: user._id, email: user.email }, config.jwtRefreshSecret, {
     expiresIn: config.jwtRefreshExpiresIn as jwt.SignOptions['expiresIn'],
   });
+
+const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  res.cookie('accessToken', accessToken, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 1000, // 1 hour
+  });
+  
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+};
+
+const clearAuthCookies = (res: Response) => {
+  res.cookie('accessToken', '', { httpOnly: true, maxAge: 0 });
+  res.cookie('refreshToken', '', { httpOnly: true, maxAge: 0 });
+};
 
 const generateGoogleAuthCode = (token: string, refreshToken: string) => {
   const code = crypto.randomBytes(24).toString('hex');
@@ -136,7 +163,7 @@ const getBackendBaseUrl = (req: Request) => {
     return `${protocol}://${host}`;
   }
 
-  return config.backendUrl.replace(/\/+$/, '');
+  return (config.backendUrl || 'http://localhost:3000').replace(/\/+$/, '');
 };
 
 const isStrongPassword = (password: string) => {
@@ -211,10 +238,10 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
     const token = generateAccessToken(newUser);
     const refreshToken = generateRefreshToken(newUser);
 
+    setAuthCookies(res, token, refreshToken);
+
     res.status(201).json({ 
       message: 'User registered successfully', 
-      token, 
-      refreshToken, 
       user: {
         _id: newUser._id,
         email: newUser.email,
@@ -249,8 +276,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const token = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
+    setAuthCookies(res, token, refreshToken);
+
     logger.info(`User logged in: ${email}`);
-    res.status(200).json({ message: 'Logged in successfully', token, refreshToken, user });
+    res.status(200).json({ message: 'Logged in successfully', user });
   } catch (error) {
     next(error);
   }
@@ -259,6 +288,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const providedToken =
+      req.cookies?.refreshToken ||
       req.body?.refreshToken ||
       req.header('Authorization')?.replace('Bearer ', '');
 
@@ -275,7 +305,10 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
 
     const newAccessToken = generateAccessToken(user);
     const newRefreshToken = generateRefreshToken(user);
-    return res.status(200).json({ token: newAccessToken, refreshToken: newRefreshToken });
+    
+    setAuthCookies(res, newAccessToken, newRefreshToken);
+    
+    return res.status(200).json({ token: newAccessToken });
   } catch (error) {
     return res.status(401).json({ message: 'Invalid or expired refresh token.' });
   }

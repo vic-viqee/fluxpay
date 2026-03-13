@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import Client from '../../models/Client';
-// Removed `import { AuthenticatedRequest } from '../../middleware/auth.middleware';`
 import { IUser } from '../../models/User';
+import { getPaginationParams, createPaginatedResponse } from '../../utils/pagination';
 
 export const createClient = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -35,13 +35,24 @@ export const createClient = async (req: Request, res: Response, next: NextFuncti
 
 export const getClients = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = req.user as IUser; // Cast req.user to IUser
+    const user = req.user as IUser;
     const ownerId = user?._id;
     if (!ownerId) {
       return res.status(401).json({ message: 'User not authenticated.' });
     }
-    const clients = await Client.find({ ownerId });
-    res.status(200).json({ clients });
+    
+    const { page, limit, skip } = getPaginationParams(req);
+    const query = { ownerId };
+    
+    const [clients, total] = await Promise.all([
+      Client.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Client.countDocuments(query)
+    ]);
+    
+    res.status(200).json(createPaginatedResponse(clients, total, { page, limit, skip }));
   } catch (error) {
     next(error);
   }

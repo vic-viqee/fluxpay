@@ -6,6 +6,7 @@ import { uploadLogo } from '../../middleware/logoUpload';
 import { authMiddleware } from '../../middleware/auth.middleware';
 import { authRateLimiter, passwordResetRateLimiter } from '../../middleware/rateLimit';
 import config from '../../config';
+import { validate, signupSchema, loginSchema, refreshTokenSchema, googleAuthCodeSchema, googleRegistrationContextSchema, googleCompleteRegistrationSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from '../../middleware/validation';
 
 const router = Router();
 const GOOGLE_OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
@@ -20,17 +21,19 @@ const pruneExpiredStates = () => {
   }
 };
 
-router.post('/signup', authRateLimiter, uploadLogo, signup); 
-router.post('/login', authRateLimiter, login);
-router.post('/refresh-token', refreshToken);
+setInterval(pruneExpiredStates, 60_000).unref();
 
-router.post('/forgot-password', passwordResetRateLimiter, forgotPassword);
-router.post('/reset-password/:token', passwordResetRateLimiter, resetPassword);
-router.post('/change-password', authMiddleware, changePassword);
+router.post('/signup', authRateLimiter, validate(signupSchema), uploadLogo, signup); 
+router.post('/login', authRateLimiter, validate(loginSchema), login);
+router.post('/refresh-token', validate(refreshTokenSchema), refreshToken);
 
-router.post('/google-complete-registration', authRateLimiter, uploadLogo, googleCompleteRegistration); 
-router.post('/google/exchange-code', authRateLimiter, exchangeGoogleAuthCode);
-router.post('/google/registration-context', authRateLimiter, googleRegistrationContext);
+router.post('/forgot-password', passwordResetRateLimiter, validate(forgotPasswordSchema), forgotPassword);
+router.post('/reset-password/:token', passwordResetRateLimiter, validate(resetPasswordSchema), resetPassword);
+router.post('/change-password', authMiddleware, validate(changePasswordSchema), changePassword);
+
+router.post('/google-complete-registration', authRateLimiter, validate(googleCompleteRegistrationSchema), uploadLogo, googleCompleteRegistration); 
+router.post('/google/exchange-code', authRateLimiter, validate(googleAuthCodeSchema), exchangeGoogleAuthCode);
+router.post('/google/registration-context', authRateLimiter, validate(googleRegistrationContextSchema), googleRegistrationContext);
 
 router.get('/google', async (req, res, next) => {
   if (!config.google.clientId || !config.google.clientSecret) {

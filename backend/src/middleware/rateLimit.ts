@@ -22,6 +22,19 @@ export const createRateLimiter = (options: {
   const buckets = new Map<string, LimitBucket>();
   const keyFn = options.keyFn || ((req: Request) => getClientIp(req));
 
+  const cleanupInterval = setInterval(() => {
+    const now = Date.now();
+    for (const [key, bucket] of buckets.entries()) {
+      if (now - bucket.windowStart > options.windowMs) {
+        buckets.delete(key);
+      }
+    }
+  }, Math.max(options.windowMs, 60_000));
+
+  if (cleanupInterval.unref) {
+    cleanupInterval.unref();
+  }
+
   return (req: Request, res: Response, next: NextFunction) => {
     const key = keyFn(req) || 'unknown';
     const now = Date.now();

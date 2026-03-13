@@ -2,23 +2,21 @@ import axios from 'axios';
 import config from '../config';
 import logger from '../utils/logger';
 import { formatKenyanPhoneNumber } from '../utils/phone';
+import NodeCache from 'node-cache';
+
+const tokenCache = new NodeCache({ stdTTL: 3500, checkperiod: 300 });
 
 const darajaApi = axios.create({
-  baseURL: 'https://sandbox.safaricom.co.ke', // Use sandbox for development
+  baseURL: 'https://sandbox.safaricom.co.ke',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-let token: {
-  access_token: string;
-  expires_in: string;
-  expires_at?: number;
-} | null = null;
-
 const getAuthToken = async () => {
-  if (token && token.expires_at && Date.now() < token.expires_at) {
-    return token.access_token;
+  const cachedToken = tokenCache.get<string>('mpesa_token');
+  if (cachedToken) {
+    return cachedToken;
   }
 
   const credentials = Buffer.from(
@@ -31,14 +29,12 @@ const getAuthToken = async () => {
         Authorization: `Basic ${credentials}`,
       },
     });
-    const ttlMs = parseInt(response.data.expires_in, 10) * 1000;
-    token = {
-      ...response.data,
-      // Refresh slightly early to avoid using an about-to-expire token.
-      expires_at: Date.now() + Math.max(ttlMs - 60_000, 0),
-    };
+    
+    const ttl = parseInt(response.data.expires_in, 10) - 60;
+    tokenCache.set('mpesa_token', response.data.access_token, ttl);
+    
     logger.info('M-Pesa auth token generated successfully');
-    return token?.access_token;
+    return response.data.access_token;
   } catch (error: any) {
     logger.error('Failed to generate M-Pesa auth token:', error.response?.data || error.message);
     throw new Error('Failed to authenticate with M-Pesa');
