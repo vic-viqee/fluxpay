@@ -31,6 +31,11 @@ continuation_notes.txt
 opencodetmp/
 .gemini/tmp/
 
+# Documentation (local only)
+STATUS.md
+FIXES_PROGRESS.md
+NEW_FEATURES.md
+
 # Dependency lock files (uncomment if you want to ignore them)
 # package-lock.json
 # yarn.lock
