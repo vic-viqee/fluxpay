@@ -401,26 +401,35 @@ interface DashboardStatCardProps {
   value: string | number;
   icon: React.ReactNode;
   footer: string;
-  color: string;
+  color: 'main' | 'secondary' | 'accent' | 'yellow-500';
 }
 
-const DashboardStatCard: React.FC<DashboardStatCardProps> = ({ label, value, icon, footer, color }) => (
-  <div className="bg-surface-bg border border-gray-800 rounded-xl p-6 shadow-sm hover:border-gray-700 transition-all group">
-    <div className="flex items-center justify-between mb-4">
-      <div className="p-2 bg-primary-bg rounded-lg group-hover:scale-110 transition-transform">
-        {icon}
+const DashboardStatCard: React.FC<DashboardStatCardProps> = ({ label, value, icon, footer, color }) => {
+  const colorClasses = {
+    'main': 'bg-main',
+    'secondary': 'bg-secondary',
+    'accent': 'bg-accent',
+    'yellow-500': 'bg-yellow-500'
+  };
+
+  return (
+    <div className="bg-surface-bg border border-gray-800 rounded-xl p-6 shadow-sm hover:border-gray-700 transition-all group">
+      <div className="flex items-center justify-between mb-4">
+        <div className="p-2 bg-primary-bg rounded-lg group-hover:scale-110 transition-transform">
+          {icon}
+        </div>
+        <div className="w-8 h-1 bg-gray-800 rounded-full overflow-hidden">
+          <div className={`h-full ${colorClasses[color]}`} style={{ width: '60%' }}></div>
+        </div>
       </div>
-      <div className="w-8 h-1 bg-gray-800 rounded-full overflow-hidden">
-        <div className={`h-full bg-${color}`} style={{ width: '60%' }}></div>
-      </div>
+      <p className="text-sm font-medium text-gray-400">{label}</p>
+      <h3 className="text-2xl font-bold mt-1 tracking-tight">{value}</h3>
+      <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+        <CheckCircle2 size={10} /> {footer}
+      </p>
     </div>
-    <p className="text-sm font-medium text-gray-400">{label}</p>
-    <h3 className="text-2xl font-bold mt-1 tracking-tight">{value}</h3>
-    <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-      <CheckCircle2 size={10} /> {footer}
-    </p>
-  </div>
-);
+  );
+};
 
 interface QuickActionButtonProps {
   label: string;

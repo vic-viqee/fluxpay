@@ -23,7 +23,7 @@ const pruneExpiredStates = () => {
 
 setInterval(pruneExpiredStates, 60_000).unref();
 
-router.post('/signup', authRateLimiter, validate(signupSchema), uploadLogo, signup); 
+router.post('/signup', authRateLimiter, uploadLogo, validate(signupSchema), signup); 
 router.post('/login', authRateLimiter, validate(loginSchema), login);
 router.post('/refresh-token', validate(refreshTokenSchema), refreshToken);
 
@@ -31,7 +31,7 @@ router.post('/forgot-password', passwordResetRateLimiter, validate(forgotPasswor
 router.post('/reset-password/:token', passwordResetRateLimiter, validate(resetPasswordSchema), resetPassword);
 router.post('/change-password', authMiddleware, validate(changePasswordSchema), changePassword);
 
-router.post('/google-complete-registration', authRateLimiter, validate(googleCompleteRegistrationSchema), uploadLogo, googleCompleteRegistration); 
+router.post('/google-complete-registration', authRateLimiter, uploadLogo, validate(googleCompleteRegistrationSchema), googleCompleteRegistration); 
 router.post('/google/exchange-code', authRateLimiter, validate(googleAuthCodeSchema), exchangeGoogleAuthCode);
 router.post('/google/registration-context', authRateLimiter, validate(googleRegistrationContextSchema), googleRegistrationContext);
 
