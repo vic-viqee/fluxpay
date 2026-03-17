@@ -24,7 +24,7 @@ import { globalRateLimiter } from './middleware/rateLimit';
 import { resolveUploadsDir } from './utils/uploads';
 
 const app: Express = express();
-const port = config.port;
+const port = parseInt(process.env.PORT || config.port || '3000', 10);
 
 // Connect to database
 (async () => {
@@ -98,8 +98,8 @@ cron.schedule('0 0 * * *', () => { // Runs daily at midnight
 // Error handling middleware
 app.use(errorHandler);
 
-app.listen(port, () => {
-  logger.info(`[server]: Server is running at http://localhost:${port}`);
+app.listen(Number(port), '0.0.0.0', () => {
+  logger.info(`[server]: Server is running at http://0.0.0.0:${port}`);
 });
 
 process.on('uncaughtException', (error) => {
