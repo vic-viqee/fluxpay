@@ -74,9 +74,9 @@ const Dashboard: React.FC = () => {
         api.get('/plans'),
       ]);
 
-      const subsData = subsRes.data || [];
-      const transData = transRes.data || [];
-      const plansData = plansRes.data?.plans || [];
+      const subsData = Array.isArray(subsRes.data) ? subsRes.data : subsRes.data?.data || [];
+      const transData = Array.isArray(transRes.data) ? transRes.data : transRes.data?.data || [];
+      const plansData = Array.isArray(plansRes.data) ? plansRes.data : plansRes.data?.data || plansRes.data?.plans || [];
 
       setSubscriptions(subsData);
       setTransactions(transData);
