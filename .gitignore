@@ -35,6 +35,8 @@ opencodetmp/
 STATUS.md
 FIXES_PROGRESS.md
 NEW_FEATURES.md
+features.md
+connection_test.txt
 
 # Dependency lock files (uncomment if you want to ignore them)
 # package-lock.json
