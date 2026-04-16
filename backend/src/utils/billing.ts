@@ -1,6 +1,6 @@
 import moment from 'moment';
 
-export type BillingFrequency = 'daily' | 'weekly' | 'monthly' | 'annually';
+export type BillingFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually';
 
 export const calculateNextBillingDate = (
   currentDate: Date | string,
@@ -21,6 +21,11 @@ export const calculateNextBillingDate = (
     nextDate.date(billingDay);
     if (nextDate.isSameOrBefore(moment(now))) {
       nextDate.add(1, 'months').date(billingDay);
+    }
+  } else if (frequency === 'quarterly') {
+    nextDate.add(3, 'months').date(billingDay);
+    if (nextDate.isSameOrBefore(moment(now))) {
+      nextDate.add(3, 'months').date(billingDay);
     }
   } else if (frequency === 'annually') {
     nextDate.add(1, 'years').date(billingDay);

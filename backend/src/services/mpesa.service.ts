@@ -13,6 +13,20 @@ const darajaApi = axios.create({
   },
 });
 
+export interface MpesaBalance {
+  availableBalance: string;
+  reservedBalance: string;
+  unclearedBalance: string;
+}
+
+export interface TransactionStatus {
+  transactionId: string;
+  transactionStatus: string;
+  amount: string;
+  recipient: string;
+  transactionDate: string;
+}
+
 const getAuthToken = async () => {
   const cachedToken = tokenCache.get<string>('mpesa_token');
   if (cachedToken) {
@@ -58,8 +72,8 @@ const initiateStkPush = async (phoneNumber: string, amount: number, businessName
       PartyB: config.mpesa.shortCode,
       PhoneNumber: formattedPhone,
       CallBackURL: config.mpesa.callbackUrl,
-      AccountReference: `${businessName} Subscription`, // Customize account reference
-      TransactionDesc: `Payment for ${businessName}`, // Customize transaction description
+      AccountReference: `${businessName} Subscription`,
+      TransactionDesc: `Payment for ${businessName}`,
     }, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -74,4 +88,69 @@ const initiateStkPush = async (phoneNumber: string, amount: number, businessName
   }
 };
 
-export { getAuthToken, initiateStkPush };
+const getAccountBalance = async (): Promise<MpesaBalance> => {
+  const token = await getAuthToken();
+  const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, -3);
+  const password = Buffer.from(`${config.mpesa.shortCode}${config.mpesa.passKey}${timestamp}`).toString('base64');
+
+  try {
+    const response = await darajaApi.post<{ Result: { ConversationCode: string; Owner: string; BusinessShortCode: string; Currency: string; Balances: { AvailableBalance: string; ReservedBalance: string; UnclearedBalance: string }[] } }>('/mpesa/accountbalance/v1/query', {
+      BusinessShortCode: config.mpesa.shortCode,
+      Password: password,
+      Timestamp: timestamp,
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const balanceData = response.data.Result?.Balances?.[0];
+    const result: MpesaBalance = {
+      availableBalance: balanceData?.AvailableBalance || '0',
+      reservedBalance: balanceData?.ReservedBalance || '0',
+      unclearedBalance: balanceData?.UnclearedBalance || '0',
+    };
+
+    logger.info('Account balance queried successfully');
+    return result;
+  } catch (error: any) {
+    logger.error('Failed to query account balance:', error.response?.data || error.message);
+    throw new Error('Failed to query account balance');
+  }
+};
+
+const getTransactionStatus = async (checkoutRequestId: string): Promise<TransactionStatus> => {
+  const token = await getAuthToken();
+  const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, -3);
+  const password = Buffer.from(`${config.mpesa.shortCode}${config.mpesa.passKey}${timestamp}`).toString('base64');
+
+  try {
+    const response = await darajaApi.post<{ Result: { ConversationCode: string; TransactionStatus: string; RefNumber: string; Occasion: string } }>('/mpesa/stkpushquery/v1/query', {
+      BusinessShortCode: config.mpesa.shortCode,
+      Password: password,
+      Timestamp: timestamp,
+      CheckoutRequestID: checkoutRequestId,
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const statusData = response.data.Result;
+    const result: TransactionStatus = {
+      transactionId: checkoutRequestId,
+      transactionStatus: statusData?.TransactionStatus || 'Unknown',
+      amount: '0',
+      recipient: statusData?.RefNumber || '',
+      transactionDate: new Date().toISOString(),
+    };
+
+    logger.info(`Transaction status queried for: ${checkoutRequestId}`);
+    return result;
+  } catch (error: any) {
+    logger.error('Failed to query transaction status:', error.response?.data || error.message);
+    throw new Error('Failed to query transaction status');
+  }
+};
+
+export { getAuthToken, initiateStkPush, getAccountBalance, getTransactionStatus };

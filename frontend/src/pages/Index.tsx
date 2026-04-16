@@ -27,13 +27,12 @@ const Index: React.FC = () => {
           </div>
           
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight mb-6 tracking-tight">
-            Stop Chasing <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-main">M-Pesa</span> Payments.<br />
-            Start Automating Them.
+            Add <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-main">M-Pesa Payments</span> to Any App or Platform.
           </h1>
           
           <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
-            FluxPay helps you collect recurring payments, track business revenue, and send automated receipts. 
-            No more Paybill stress. Perfect for gyms, property managers, and schools.
+            The Stripe for Kenya. Integrate powerful M-Pesa payments into your app, marketplace, or platform with simple API calls. 
+            Accept payments, send payouts, and manage transactions programmatically.
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-16">
@@ -84,33 +83,33 @@ const Index: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <FeatureCard 
               icon={<Clock className="text-main" />}
-              title="Automated Subscriptions"
-              desc="Set it and forget it. We'll prompt your customers automatically when their payment is due."
+              title="Recurring Payments"
+              desc="Automate subscriptions - daily, weekly, monthly, or quarterly. Let us handle the billing."
             />
             <FeatureCard 
               icon={<Smartphone className="text-secondary" />}
-              title="One-Tap STK Push"
-              desc="No more manual Paybill typing. Customers pay by simply entering their PIN on a popup."
+              title="STK Push API"
+              desc="Initiate instant M-Pesa payments with a simple API call. Customers confirm with their PIN."
             />
             <FeatureCard 
               icon={<Receipt className="text-accent" />}
-              title="Branded Receipts"
-              desc="Every successful payment automatically generates a professional PDF receipt for your client."
+              title="Webhooks"
+              desc="Get real-time payment notifications delivered to your server. Never miss a transaction."
             />
             <FeatureCard 
               icon={<BarChart3 className="text-main" />}
-              title="Revenue Tracking"
-              desc="See exactly how much you've made today, this month, and this year at a single glance."
+              title="Payment Status API"
+              desc="Query transaction status anytime. Built-in reconciliation and error handling."
             />
             <FeatureCard 
               icon={<ShieldCheck className="text-secondary" />}
-              title="Verified Transactions"
-              desc="Every payment is verified directly with M-Pesa. No more 'fake' text messages."
+              title="B2C Disbursements"
+              desc="Send payments to your customers. Payout salaries, refunds, or rewards programmatically."
             />
             <FeatureCard 
               icon={<Zap className="text-accent" />}
-              title="Fast Setup"
-              desc="Create your account, add your plans, and start collecting payments in less than 5 minutes."
+              title="Account Balance"
+              desc="Check your M-Pesa shortcode balance in real-time. Know your available funds instantly."
             />
           </div>
         </div>
@@ -179,13 +178,14 @@ const Index: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-transparent"></div>
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">Ready to focus on your business?</h2>
+            <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">Ready to add payments to your app?</h2>
             <p className="text-xl text-blue-100 mb-10 leading-relaxed">
-              Join dozens of Kenyan entrepreneurs who have recovered 20+ hours every month by automating their payments.
+              Join Kenyan businesses using FluxPay to power their payment infrastructure. 
+              Simple APIs, detailed docs, and expert support.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link to="/signup" className="px-10 py-4 text-lg font-bold text-main bg-white rounded-xl shadow-2xl hover:bg-gray-100 transition-all active:scale-95">
-                Create My Account
+                Start integrating
               </Link>
               <Link to="/pricing" className="px-10 py-4 text-lg font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all border border-blue-400">
                 Check Pricing

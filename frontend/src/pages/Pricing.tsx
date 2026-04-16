@@ -13,33 +13,37 @@ const Pricing: React.FC = () => {
 
   const plans = [
     {
-      name: 'Free',
-      price: 'KES 0',
-      features: ['Up to 10 Customers', 'Instant STK Checkout', 'Basic Analytics'],
-      cta: 'Select Plan',
-      ariaLabel: 'Select the Free plan'
-    },
-    {
       name: 'Starter',
-      price: 'KES 999',
-      features: ['Up to 100 Customers', 'Recurring Subscriptions', 'Automated Reminders', 'Standard Analytics'],
+      price: 'KES 1,499',
+      features: ['Up to 100 Customers', 'API Access', 'One Business', 'Email Support'],
       cta: 'Select Plan',
-      ariaLabel: 'Select the Starter plan'
+      ariaLabel: 'Select the Starter plan',
+      description: 'Perfect for small businesses'
     },
     {
       name: 'Growth',
-      price: 'KES 2,499',
-      features: ['Up to 1,000 Customers', 'All Starter Features', 'Advanced Analytics', 'WhatsApp Integration'],
+      price: 'KES 4,999',
+      features: ['Up to 1,000 Customers', 'Webhooks & API', 'Advanced Analytics', 'B2C Disbursements', 'Priority Support'],
       cta: 'Select Plan',
       ariaLabel: 'Select the Growth plan',
-      popular: true
+      popular: true,
+      description: 'For growing businesses'
     },
     {
       name: 'Enterprise',
+      price: 'KES 14,999',
+      features: ['Unlimited Customers', 'Dedicated Account Manager', 'Custom Integrations', 'Unlimited Disbursements', 'Priority Support'],
+      cta: 'Select Plan',
+      ariaLabel: 'Select the Enterprise plan',
+      description: 'For scaling businesses'
+    },
+    {
+      name: 'Partner',
       price: 'Custom',
-      features: ['Unlimited Customers', 'Dedicated Support', 'Custom Integrations', 'Volume-based pricing'],
+      features: ['Multi-business Management', 'White-label Options', 'Reseller Pricing', 'Dedicated M-Pesa Shortcode'],
       cta: 'Contact Sales',
-      ariaLabel: 'Contact sales for the Enterprise plan'
+      ariaLabel: 'Contact sales for the Partner plan',
+      description: 'For payment aggregators'
     }
   ];
 
@@ -72,10 +76,10 @@ const Pricing: React.FC = () => {
         <section className="bg-surface-bg py-16 md:py-24">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-4">
-              Automate <span className="text-transparent bg-clip-text bg-gradient-to-r from-main to-accent">M-Pesa Payments</span> & Subscriptions in Minutes
+              Accept <span className="text-transparent bg-clip-text bg-gradient-to-r from-main to-accent">M-Pesa Payments</span> in Your App or Website
             </h1>
             <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto">
-              No Paybill. No Till. No Code. Start collecting recurring payments effortlessly.
+              The Stripe for Kenya. Integrate powerful M-Pesa payments into any business, app, or platform with simple API calls.
             </p>
           </div>
         </section>
@@ -84,10 +88,10 @@ const Pricing: React.FC = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-7xl mx-auto text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-extrabold text-white">
-                Choose the right plan for your business
+                Simple, transparent pricing
               </h2>
               <p className="text-lg text-gray-400 mt-4">
-                All plans include a 1.5% transaction fee.
+                No hidden fees. No setup costs. Just simple monthly subscriptions.
               </p>
             </div>
             
@@ -173,17 +177,21 @@ const Pricing: React.FC = () => {
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-3xl font-extrabold text-white">Trusted by leading Kenyan businesses</h2>
               <div className="mt-12 flex justify-center items-center space-x-8 md:space-x-12">
-                <p className="text-gray-400 font-semibold text-lg">LOGO</p>
-                <p className="text-gray-400 font-semibold text-lg">LOGO</p>
-                <p className="text-gray-400 font-semibold text-lg">LOGO</p>
-                <p className="text-gray-400 font-semibold text-lg">LOGO</p>
+                <img 
+                  src="/anything_logo.png" 
+                  alt="Anything" 
+                  className="h-12 md:h-16 object-contain filter brightness-0 invert opacity-70"
+                />
+                <div className="text-gray-400 font-bold text-xl">Your Business Here</div>
+                <div className="text-gray-400 font-bold text-xl">Your Business Here</div>
+                <div className="text-gray-400 font-bold text-xl">Your Business Here</div>
               </div>
               <div className="mt-12">
                 <blockquote className="text-xl italic text-gray-300">
-                  <p>"FluxPay has been a game-changer for our gym. We've automated over 90% of our membership collections and drastically reduced churn. The dashboard is a lifesaver."</p>
+                  <p>"Anything runs on FluxPay for all our Kenyan marketplace transactions. The API integration was seamless and our sellers get paid instantly via M-Pesa."</p>
                 </blockquote>
                 <cite className="mt-4 block font-semibold text-white">
-                  - Jane Doe, Founder of FlexFit Gym
+                  - Anything Marketplace
                 </cite>
               </div>
             </div>
@@ -198,20 +206,20 @@ const Pricing: React.FC = () => {
               </h2>
               <div className="divide-y divide-gray-700">
                 <FaqItem 
-                  question="Do I need a Paybill or Till number to use FluxPay?"
-                  answer="No, you don't! You can get started immediately using our shared virtual till number. This is perfect for freelancers, small businesses, and anyone who wants to start collecting payments without the hassle and cost of applying for their own Paybill."
+                  question="How do I integrate FluxPay into my app or website?"
+                  answer="Just sign up, get your API keys from the dashboard, and make a simple POST request to our payment endpoint. We provide SDKs, documentation, and sandbox testing. Typical integration takes less than 30 minutes."
                 />
                 <FaqItem 
-                  question="How is the 1.5% transaction fee applied?"
-                  answer="The 1.5% fee is charged on each successful transaction processed through your account. For example, if a customer pays you KES 1,000, the fee would be KES 15, and you would receive KES 985. There are no hidden fees or charges."
+                  question="Do I need my own Paybill or Till number?"
+                  answer="Not necessarily! You can start with our shared shortcode immediately. For higher volumes, you can upgrade to your own dedicated M-Pesa shortcode on the Enterprise plan."
                 />
                 <FaqItem 
-                  question="Can I switch between plans?"
-                  answer="Yes, you can upgrade or downgrade your plan at any time from your account settings. When you upgrade, the changes are applied immediately. When you downgrade, the changes will take effect at the end of your current billing cycle."
+                  question="What payment methods are supported?"
+                  answer="Currently M-Pesa STK Push (instant popup payments) and B2C disbursements (payouts to customers). We're working on adding Visa/MasterCard, PayPal, and bank transfers."
                 />
-                 <FaqItem 
-                  question="What happens if a subscription payment fails?"
-                  answer="FluxPay's Smart Retry system automatically retries failed payments at intelligent intervals. We also send automated, friendly reminders to your customers, helping you recover revenue that might otherwise be lost."
+                <FaqItem 
+                  question="How does webhook delivery work?"
+                  answer="When a payment succeeds or fails, FluxPay sends a webhook to your registered URL with the transaction details. You can configure multiple webhooks and we'll retry failed deliveries up to 3 times."
                 />
               </div>
             </div>

@@ -65,6 +65,7 @@ const config = {
     shortCode: process.env.SHORTCODE || '',
     passKey: process.env.PASSKEY || '',
     callbackUrl: process.env.CALLBACK_URL || '',
+    initiatorName: process.env.INITIATOR_NAME || 'testapi',
   },
 
 };

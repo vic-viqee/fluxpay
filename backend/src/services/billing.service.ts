@@ -7,6 +7,7 @@ import { initiateStkPush } from './mpesa.service';
 import logger from '../utils/logger';
 import moment from 'moment';
 import { calculateNextBillingDate } from '../utils/billing';
+import { sendPaymentFailureEmail, sendSubscriptionSuspendedEmail } from './notification.service';
 
 export const processDuePayments = async () => {
   logger.info('Running processDuePayments...');
@@ -78,11 +79,33 @@ export const processDuePayments = async () => {
       } catch (error: any) {
         logger.error(`Failed to initiate STK Push for subscription ${subscription._id}: ${error.message}`);
         
-        subscription.paymentFailureCount = (subscription.paymentFailureCount || 0) + 1;
+        const failureCount = (subscription.paymentFailureCount || 0) + 1;
+        subscription.paymentFailureCount = failureCount;
         
-        if (subscription.paymentFailureCount >= 3) {
+        if (failureCount >= 3) {
           subscription.status = 'FAILED';
           logger.warn(`Subscription ${subscription._id} marked as FAILED after 3 consecutive payment failures. Owner: ${owner?.email}`);
+          
+          if (owner?.email) {
+            await sendSubscriptionSuspendedEmail({
+              ownerEmail: owner.email,
+              businessName: owner?.businessName || 'FluxPay',
+              clientName: client?.name || 'Unknown',
+              phoneNumber: client?.phoneNumber || 'Unknown',
+              planName: plan?.name || 'Unknown',
+              amount: plan?.amountKes || 0,
+            });
+          }
+        } else if (owner?.email) {
+          await sendPaymentFailureEmail({
+            ownerEmail: owner.email,
+            businessName: owner?.businessName || 'FluxPay',
+            clientName: client?.name || 'Unknown',
+            phoneNumber: client?.phoneNumber || 'Unknown',
+            planName: plan?.name || 'Unknown',
+            amount: plan?.amountKes || 0,
+            failureCount: failureCount,
+          });
         }
         
         await subscription.save();

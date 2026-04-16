@@ -13,8 +13,13 @@ import settingsRoutes from './api/settings/settings.routes';
 import docsRoutes from './api/docs.routes';
 import userRoutes from './api/users/users.routes';
 import transactionRoutes from './api/transactions/transactions.routes';
-import plansRoutes from './api/plans/plans.routes'; // NEW IMPORT
-import clientsRoutes from './api/clients/clients.routes'; // NEW IMPORT
+import plansRoutes from './api/plans/plans.routes';
+import clientsRoutes from './api/clients/clients.routes';
+import apikeysRoutes from './api/apikeys/apikeys.routes';
+import thirdpartyRoutes from './api/thirdparty/thirdparty.routes';
+import invoicesRoutes from './api/invoices/invoices.routes';
+import mpesaRoutes from './api/mpesa/mpesa.routes';
+import disbursementRoutes from './api/disbursements/disbursements.routes';
 import connectDB from './config/db';
 import cron from 'node-cron'; // NEW IMPORT
 import { processDuePayments, processFailedTransactions } from './services/billing.service'; // NEW IMPORT
@@ -56,7 +61,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie', 'X-API-Key', 'X-API-Secret'],
 }));
 // --------------------------------
 
@@ -86,7 +91,12 @@ app.use('/api/docs', docsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/plans', plansRoutes);
-app.use('/api/clients', clientsRoutes); // NEW USAGE // NEW USAGE
+app.use('/api/clients', clientsRoutes);
+app.use('/api/apikeys', apikeysRoutes);
+app.use('/api/v1', thirdpartyRoutes);
+app.use('/api/invoices', invoicesRoutes);
+app.use('/api/mpesa', mpesaRoutes);
+app.use('/api/disbursements', disbursementRoutes);
 
 // Schedule daily tasks
 cron.schedule('0 0 * * *', () => { // Runs daily at midnight

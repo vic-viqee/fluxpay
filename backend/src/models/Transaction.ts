@@ -14,7 +14,7 @@ export interface ITransaction extends Document {
 }
 
 const TransactionSchema: Schema = new Schema({
-  subscriptionId: { type: Schema.Types.ObjectId, ref: 'Subscription', required: true },
+  subscriptionId: { type: Schema.Types.ObjectId, ref: 'Subscription' },
   ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   amountKes: { type: Number, required: true },
   status: { type: String, enum: ['PENDING', 'SUCCESS', 'FAILED'], default: 'PENDING' },
@@ -23,6 +23,9 @@ const TransactionSchema: Schema = new Schema({
   retryCount: { type: Number, default: 0 },
   transactionDate: { type: Date, default: Date.now },
 }, { timestamps: true });
+
+TransactionSchema.index({ ownerId: 1 });
+TransactionSchema.index({ darajaRequestId: 1 });
 
 export default mongoose.model<ITransaction>('Transaction', TransactionSchema);
 
