@@ -517,7 +517,7 @@ const Settings: React.FC = () => {
                           Key: {apiKey.key}
                         </code>
                         <button
-                          onClick={() => copyToClipboard(apiKey.key)}
+                          onClick={() => copyToClipboard(apiKey.key, apiKey.key)}
                           className="text-gray-400 hover:text-white"
                           title="Copy key"
                         >
