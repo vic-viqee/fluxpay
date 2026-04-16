@@ -72,6 +72,8 @@ const Settings: React.FC = () => {
   const [apiKeyError, setApiKeyError] = useState<string | null>(null);
   const [newKeyName, setNewKeyName] = useState('');
   const [creatingKey, setCreatingKey] = useState(false);
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState<{ key: string; secret: string; name: string } | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
     const storedTheme = (localStorage.getItem('themeMode') as ThemeMode) || 'dark';
@@ -120,7 +122,9 @@ const Settings: React.FC = () => {
     setApiKeyError(null);
     try {
       const response = await api.post('/apikeys', { name: newKeyName });
-      setApiKeys(prev => [response.data.data, ...prev]);
+      const newKey = response.data.data;
+      setApiKeys(prev => [newKey, ...prev]);
+      setNewlyCreatedKey({ key: newKey.key, secret: newKey.secret, name: newKey.name });
       setNewKeyName('');
     } catch (err: any) {
       console.error('Failed to create API key:', err);
@@ -140,8 +144,10 @@ const Settings: React.FC = () => {
     }
   };
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
+    setCopied(label);
+    setTimeout(() => setCopied(null), 2000);
   };
 
   const setField = (field: keyof SettingsModel, value: string) => {
@@ -441,6 +447,48 @@ const Settings: React.FC = () => {
                   {creatingKey ? 'Creating...' : 'Create Key'}
                 </button>
               </div>
+
+              {newlyCreatedKey && (
+                <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle2 size={18} className="text-green-400" />
+                    <span className="font-medium text-green-400">API Key Created Successfully</span>
+                  </div>
+                  <p className="text-sm text-gray-300 mb-4">
+                    Copy and save your secret now. It will not be shown again.
+                  </p>
+                  <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-3 py-2">
+                    <code className="flex-1 text-sm text-gray-300 font-mono truncate">
+                      Key: {newlyCreatedKey.key}
+                    </code>
+                    <button
+                      onClick={() => copyToClipboard(newlyCreatedKey.key, newlyCreatedKey.key)}
+                      className="text-gray-400 hover:text-white"
+                      title="Copy key"
+                    >
+                      {copied === newlyCreatedKey.key ? <CheckCircle2 size={16} className="text-green-400" /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-3 py-2 mt-2">
+                    <code className="flex-1 text-sm text-gray-300 font-mono truncate">
+                      Secret: {newlyCreatedKey.secret}
+                    </code>
+                    <button
+                      onClick={() => copyToClipboard(newlyCreatedKey.secret, 'secret')}
+                      className="text-gray-400 hover:text-white"
+                      title="Copy secret"
+                    >
+                      {copied === 'secret' ? <CheckCircle2 size={16} className="text-green-400" /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => setNewlyCreatedKey(null)}
+                    className="mt-4 text-sm text-gray-400 hover:text-white"
+                  >
+                    I've saved it • Don't show this again
+                  </button>
+                </div>
+              )}
 
               {apiKeysLoading ? (
                 <div className="text-center py-8 text-gray-400">Loading API keys...</div>
