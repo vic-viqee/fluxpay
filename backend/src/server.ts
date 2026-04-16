@@ -20,6 +20,7 @@ import thirdpartyRoutes from './api/thirdparty/thirdparty.routes';
 import invoicesRoutes from './api/invoices/invoices.routes';
 import mpesaRoutes from './api/mpesa/mpesa.routes';
 import disbursementRoutes from './api/disbursements/disbursements.routes';
+import adminRoutes from './api/admin/admin.routes';
 import connectDB from './config/db';
 import cron from 'node-cron'; // NEW IMPORT
 import { processDuePayments, processFailedTransactions } from './services/billing.service'; // NEW IMPORT
@@ -97,6 +98,7 @@ app.use('/api/v1', thirdpartyRoutes);
 app.use('/api/invoices', invoicesRoutes);
 app.use('/api/mpesa', mpesaRoutes);
 app.use('/api/disbursements', disbursementRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Schedule daily tasks
 cron.schedule('0 0 * * *', () => { // Runs daily at midnight

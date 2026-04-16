@@ -1,9 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { Shield, User, Layout, Moon, Sun, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Shield, User, Layout, Moon, Sun, CheckCircle2, AlertCircle, Key, Plus, Trash2, Copy } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light';
-type TabType = 'general' | 'security';
+type TabType = 'general' | 'security' | 'apiKeys';
+
+interface ApiKey {
+  _id: string;
+  key: string;
+  name: string;
+  isActive: boolean;
+  createdAt: string;
+  lastUsedAt?: string;
+}
 
 interface SettingsModel {
   username: string;
@@ -57,6 +66,12 @@ const Settings: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordSaving, setPasswordSaving] = useState(false);
 
+  // API Keys State
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [apiKeysLoading, setApiKeysLoading] = useState(false);
+  const [newKeyName, setNewKeyName] = useState('');
+  const [creatingKey, setCreatingKey] = useState(false);
+
   useEffect(() => {
     const storedTheme = (localStorage.getItem('themeMode') as ThemeMode) || 'dark';
     setTheme(storedTheme);
@@ -77,6 +92,52 @@ const Settings: React.FC = () => {
 
     fetchSettingsData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'apiKeys') {
+      fetchApiKeys();
+    }
+  }, [activeTab]);
+
+  const fetchApiKeys = async () => {
+    setApiKeysLoading(true);
+    try {
+      const response = await api.get('/apikeys');
+      setApiKeys(response.data.data || []);
+    } catch (err) {
+      console.error('Failed to fetch API keys:', err);
+    } finally {
+      setApiKeysLoading(false);
+    }
+  };
+
+  const handleCreateApiKey = async () => {
+    if (!newKeyName.trim()) return;
+    setCreatingKey(true);
+    try {
+      const response = await api.post('/apikeys', { name: newKeyName });
+      setApiKeys(prev => [response.data.data, ...prev]);
+      setNewKeyName('');
+    } catch (err) {
+      console.error('Failed to create API key:', err);
+    } finally {
+      setCreatingKey(false);
+    }
+  };
+
+  const handleDeleteApiKey = async (keyId: string) => {
+    if (!confirm('Are you sure you want to delete this API key?')) return;
+    try {
+      await api.delete(`/apikeys/${keyId}`);
+      setApiKeys(prev => prev.filter(k => k._id !== keyId));
+    } catch (err) {
+      console.error('Failed to delete API key:', err);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
 
   const setField = (field: keyof SettingsModel, value: string) => {
     setSettingsData((prev) => ({ ...prev, [field]: value }));
@@ -191,6 +252,12 @@ const Settings: React.FC = () => {
             onClick={() => setActiveTab('security')} 
             icon={<Shield size={18} />} 
             label="Security" 
+          />
+          <TabButton 
+            active={activeTab === 'apiKeys'} 
+            onClick={() => setActiveTab('apiKeys')} 
+            icon={<Key size={18} />} 
+            label="API Keys" 
           />
         </div>
 
@@ -333,6 +400,89 @@ const Settings: React.FC = () => {
                   {passwordSaving ? 'Updating...' : 'Update Password'}
                 </button>
               </form>
+            </div>
+          )}
+
+          {activeTab === 'apiKeys' && (
+            <div className="bg-surface-bg rounded-2xl border border-gray-800 p-6 md:p-8 shadow-sm">
+              <div className="mb-8">
+                <h2 className="text-xl font-bold text-white mb-2">API Keys</h2>
+                <p className="text-sm text-gray-400">
+                  Use these keys to integrate FluxPay Payment Gateway into your apps. 
+                  Keep your secret keys safe - never share them publicly.
+                </p>
+              </div>
+
+              <div className="flex gap-4 mb-8">
+                <input
+                  type="text"
+                  value={newKeyName}
+                  onChange={(e) => setNewKeyName(e.target.value)}
+                  placeholder="e.g., Production App, Test Environment"
+                  className="flex-1 bg-primary-bg border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-main/50 outline-none"
+                />
+                <button
+                  onClick={handleCreateApiKey}
+                  disabled={creatingKey || !newKeyName.trim()}
+                  className="px-6 py-2.5 bg-main hover:bg-blue-600 text-white rounded-xl font-medium flex items-center gap-2 disabled:opacity-50"
+                >
+                  <Plus size={18} />
+                  {creatingKey ? 'Creating...' : 'Create Key'}
+                </button>
+              </div>
+
+              {apiKeysLoading ? (
+                <div className="text-center py-8 text-gray-400">Loading API keys...</div>
+              ) : apiKeys.length === 0 ? (
+                <div className="text-center py-8 text-gray-400 bg-primary-bg rounded-xl">
+                  No API keys yet. Create one to get started.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {apiKeys.map((apiKey) => (
+                    <div key={apiKey._id} className="bg-primary-bg border border-gray-700 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h3 className="font-medium text-white">{apiKey.name}</h3>
+                          <p className="text-xs text-gray-400">
+                            Created {new Date(apiKey.createdAt).toLocaleDateString()}
+                            {apiKey.lastUsedAt && ` • Last used ${new Date(apiKey.lastUsedAt).toLocaleDateString()}`}
+                          </p>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${apiKey.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                          {apiKey.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-3 py-2">
+                        <code className="flex-1 text-sm text-gray-300 font-mono truncate">
+                          Key: {apiKey.key}
+                        </code>
+                        <button
+                          onClick={() => copyToClipboard(apiKey.key)}
+                          className="text-gray-400 hover:text-white"
+                          title="Copy key"
+                        >
+                          <Copy size={16} />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-3 py-2 mt-2">
+                        <code className="flex-1 text-sm text-gray-300 font-mono">
+                          Secret: {'•'.repeat(32)}
+                        </code>
+                      </div>
+                      <div className="flex justify-end mt-3">
+                        <button
+                          onClick={() => handleDeleteApiKey(apiKey._id)}
+                          className="text-red-400 hover:text-red-300 text-sm flex items-center gap-1"
+                        >
+                          <Trash2 size={14} />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

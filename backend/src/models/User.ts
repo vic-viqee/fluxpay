@@ -3,19 +3,20 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IUser extends Document {
   username: string;
   email: string;
-  password?: string; // Optional because we don't want to return it in every query
+  password?: string;
   googleId?: string;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
   businessName?: string;
   businessType?: string;
   kraPin?: string;
-  businessTillOrPaybill?: string; // New field
-  businessPhoneNumber?: string; // New field - making it optional at model level for now, validation will be in controller
-  preferredPaymentMethod?: string; // New field
-  businessDescription?: string; // New field
-  logoUrl?: string; // New field for logo upload
+  businessTillOrPaybill?: string;
+  businessPhoneNumber?: string;
+  preferredPaymentMethod?: string;
+  businessDescription?: string;
+  logoUrl?: string;
   plan?: string;
+  role?: 'user' | 'admin';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +37,7 @@ const UserSchema: Schema = new Schema({
   businessDescription: { type: String, required: false },
   logoUrl: { type: String, required: false },
   plan: { type: String, required: false },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
 }, { timestamps: true });
 
 export default mongoose.model<IUser>('User', UserSchema);

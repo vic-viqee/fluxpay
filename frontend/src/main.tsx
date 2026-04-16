@@ -22,7 +22,8 @@ import Plans from './pages/Plans'; // NEW IMPORT
 import GoogleCallback from './pages/GoogleCallback';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import GoogleRegistrationCompletion from './pages/GoogleRegistrationCompletion'; // NEW IMPORT
+import GoogleRegistrationCompletion from './pages/GoogleRegistrationCompletion';
+import Admin from './pages/Admin'; // NEW IMPORT
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 
@@ -58,6 +59,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/plans" element={<Plans />} />
+              <Route path="/admin" element={<Admin />} />
             </Route>
           </Route>
 
