@@ -69,6 +69,7 @@ const Settings: React.FC = () => {
   // API Keys State
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [apiKeysLoading, setApiKeysLoading] = useState(false);
+  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
   const [newKeyName, setNewKeyName] = useState('');
   const [creatingKey, setCreatingKey] = useState(false);
 
@@ -101,11 +102,13 @@ const Settings: React.FC = () => {
 
   const fetchApiKeys = async () => {
     setApiKeysLoading(true);
+    setApiKeyError(null);
     try {
       const response = await api.get('/apikeys');
       setApiKeys(response.data.data || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch API keys:', err);
+      setApiKeyError(err.response?.data?.message || 'Failed to load API keys');
     } finally {
       setApiKeysLoading(false);
     }
@@ -114,12 +117,14 @@ const Settings: React.FC = () => {
   const handleCreateApiKey = async () => {
     if (!newKeyName.trim()) return;
     setCreatingKey(true);
+    setApiKeyError(null);
     try {
       const response = await api.post('/apikeys', { name: newKeyName });
       setApiKeys(prev => [response.data.data, ...prev]);
       setNewKeyName('');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create API key:', err);
+      setApiKeyError(err.response?.data?.message || 'Failed to create API key');
     } finally {
       setCreatingKey(false);
     }
@@ -405,6 +410,12 @@ const Settings: React.FC = () => {
 
           {activeTab === 'apiKeys' && (
             <div className="bg-surface-bg rounded-2xl border border-gray-800 p-6 md:p-8 shadow-sm">
+              {apiKeyError && (
+                <div className="mb-6 p-4 text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-xl">
+                  {apiKeyError}
+                </div>
+              )}
+              
               <div className="mb-8">
                 <h2 className="text-xl font-bold text-white mb-2">API Keys</h2>
                 <p className="text-sm text-gray-400">
