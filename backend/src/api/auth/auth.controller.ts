@@ -63,20 +63,22 @@ const generateRefreshToken = (user: IUser) =>
   });
 
 const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
   
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 1000, // 1 hour
+    sameSite: isProduction ? 'none' : 'lax',
+    maxAge: 60 * 60 * 1000,
+    path: '/',
   });
   
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    sameSite: isProduction ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: '/',
   });
 };
 
