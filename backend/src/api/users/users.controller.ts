@@ -21,6 +21,7 @@ export const getMe = async (req: Request, res: Response, next: NextFunction) => 
       _id: user._id,
       username: user.username,
       email: user.email,
+      role: user.role,
       businessName: user.businessName,
       businessType: user.businessType,
       kraPin: user.kraPin,
