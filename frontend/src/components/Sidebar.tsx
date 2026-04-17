@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Users,
   History, PieChart, Settings, 
-  ChevronRight, Package
+  ChevronRight, Package, Key, Webhook
 } from 'lucide-react';
 
 interface UserProfile {
@@ -13,6 +13,7 @@ interface UserProfile {
   email: string;
   createdAt: string;
   has_received_payment?: boolean;
+  serviceType?: 'subscription' | 'gateway' | 'both';
 }
 
 interface SidebarProps {
@@ -27,11 +28,24 @@ interface NavLinkProps {
   icon: React.ReactNode;
   disabled?: boolean;
   onClick: () => void;
+  tab?: string;
 }
 
-const NavLink: React.FC<NavLinkProps> = ({ to, label, icon, disabled, onClick }) => {
+const NavLink: React.FC<NavLinkProps> = ({ to, label, icon, disabled, onClick, tab }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (disabled) {
+      e.preventDefault();
+      return;
+    }
+    if (tab === 'apiKeys') {
+      window.location.href = '/settings?tab=apiKeys';
+      return;
+    }
+    onClick();
+  };
 
   return (
     <li title={disabled ? "Unlock this feature by receiving your first payment." : ""}>
@@ -42,7 +56,7 @@ const NavLink: React.FC<NavLinkProps> = ({ to, label, icon, disabled, onClick })
           ? 'bg-main text-white shadow-lg shadow-main/20' 
           : 'text-gray-400 hover:bg-surface-bg hover:text-white'
         } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-        onClick={disabled ? (e) => e.preventDefault() : onClick}
+        onClick={handleClick}
       >
         <div className="flex items-center gap-3">
           <span className={`${isActive ? 'text-white' : 'text-gray-500 group-hover:text-main'} transition-colors`}>
@@ -82,10 +96,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, user }) => {
           <div className="mb-8 p-4 bg-surface-bg rounded-2xl border border-gray-800">
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Business</p>
             <p className="text-sm font-bold text-white truncate">{user.businessName || user.username}</p>
-            <div className="mt-3 flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${user.has_received_payment ? 'bg-secondary' : 'bg-yellow-500'}`} />
-              <span className="text-[10px] text-gray-400 font-medium">
-                {user.has_received_payment ? 'Active Account' : 'Pending Activation'}
+            <div className="mt-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${user.has_received_payment ? 'bg-secondary' : 'bg-yellow-500'}`} />
+                <span className="text-[10px] text-gray-400 font-medium">
+                  {user.has_received_payment ? 'Active Account' : 'Pending Activation'}
+                </span>
+              </div>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-400">
+                {user.serviceType === 'both' ? 'All' : user.serviceType === 'subscription' ? 'Billing' : user.serviceType === 'gateway' ? 'Gateway' : 'All'}
               </span>
             </div>
           </div>
@@ -96,10 +115,24 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, user }) => {
           <p className="px-4 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-4">Main Menu</p>
           <ul className="space-y-1">
             <NavLink to="/dashboard" label="Overview" icon={<LayoutDashboard size={20} />} onClick={toggleSidebar} />
-            <NavLink to="/customers" label="Customers" icon={<Users size={20} />} onClick={toggleSidebar} />
-            <NavLink to="/subscriptions" label="Subscriptions" icon={<Package size={20} />} onClick={toggleSidebar} />
-            <NavLink to="/payments" label="Payments" icon={<History size={20} />} onClick={toggleSidebar} />
-            <NavLink to="/analytics" label="Analytics" icon={<PieChart size={20} />} onClick={toggleSidebar} />
+            
+            {(user?.serviceType === 'subscription' || user?.serviceType === 'both') && (
+              <>
+                <NavLink to="/customers" label="Customers" icon={<Users size={20} />} onClick={toggleSidebar} />
+                <NavLink to="/subscriptions" label="Subscriptions" icon={<Package size={20} />} onClick={toggleSidebar} />
+              </>
+            )}
+            
+            {(user?.serviceType === 'gateway' || user?.serviceType === 'both') && (
+              <>
+                <NavLink to="/payments" label="Transactions" icon={<History size={20} />} onClick={toggleSidebar} />
+                <NavLink to="/settings" label="API Keys" icon={<Key size={20} />} onClick={toggleSidebar} tab="apiKeys" />
+              </>
+            )}
+            
+            {(user?.serviceType === 'subscription' || user?.serviceType === 'gateway' || user?.serviceType === 'both') && (
+              <NavLink to="/analytics" label="Analytics" icon={<PieChart size={20} />} onClick={toggleSidebar} />
+            )}
           </ul>
 
           <p className="px-4 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mt-8 mb-4">Account</p>
