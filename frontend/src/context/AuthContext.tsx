@@ -18,6 +18,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<IUser | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   const logout = useCallback(() => {
     setUser(null);
@@ -26,29 +27,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('refreshToken');
   }, []);
 
-  const refreshAuth = useCallback(async () => {
+  const refreshAuth = useCallback(async (skipInitialFlag = false) => {
     try {
       const response = await api.get('/users/me');
       const userData = response.data;
       setUser(userData);
       setIsAdmin(userData.role === 'admin');
-    } catch (err) {
+      if (!skipInitialFlag) {
+        setInitialCheckDone(true);
+      }
+    } catch (err: any) {
       console.error('Failed to fetch user data:', err);
-      setUser(null);
-      setIsAdmin(false);
+      // Don't clear user on error - keep current state
+      if (err.response?.status === 401) {
+        // Only logout if we've checked before and got 401 (session expired)
+        if (initialCheckDone) {
+          logout();
+        }
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [initialCheckDone, logout]);
 
   const login = useCallback(async () => {
     setLoading(true);
-    await refreshAuth();
+    await refreshAuth(true);
+    setInitialCheckDone(true);
   }, [refreshAuth]);
 
   useEffect(() => {
-    refreshAuth();
-  }, [refreshAuth]);
+    refreshAuth(true);
+    setInitialCheckDone(true);
+  }, []);
 
   const isAuthenticated = !!user;
 

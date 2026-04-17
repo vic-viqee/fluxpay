@@ -1,24 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import api, { googleAuthUrl } from '../services/api';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
   const navigate = useNavigate();
-  const { refreshAuth } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginLoading(true);
     try {
+      // Login - backend sets httpOnly cookies
       await api.post('/auth/login', { email, password });
       
-      // Wait for auth to be refreshed and get user data
-      await refreshAuth();
-      
-      // Get updated user from localStorage or re-fetch
+      // Immediately fetch user data with cookies
       const userResponse = await api.get('/users/me');
       const userData = userResponse.data;
       
@@ -30,6 +28,8 @@ const Login: React.FC = () => {
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'An error occurred during login.');
+    } finally {
+      setLoginLoading(false);
     }
   };
 
@@ -98,8 +98,8 @@ const Login: React.FC = () => {
             <a href="/forgot-password" className="text-sm text-main hover:underline">Forgot password?</a>
           </div>
 
-          <button type="submit" className="w-full px-4 py-2 text-sm font-medium text-white bg-main border border-transparent rounded-md shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-main">
-            Sign In
+          <button type="submit" disabled={loginLoading} className="w-full px-4 py-2 text-sm font-medium text-white bg-main border border-transparent rounded-md shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-main disabled:opacity-50">
+            {loginLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 

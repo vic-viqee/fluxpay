@@ -128,19 +128,22 @@ const Admin: React.FC = () => {
   const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
-    if (!authLoading && user) {
-      if (user.role === 'admin') {
-        setLoading(false);
-        fetchOverview();
-        fetchBusinesses();
-      }
-    } else if (!authLoading && !user) {
+    // Wait for auth to finish loading
+    if (authLoading) return;
+    
+    // Auth loaded - check user
+    if (user && user.role === 'admin') {
+      setLoading(false);
+      fetchOverview();
+      fetchBusinesses();
+    } else {
+      // Not admin or no user - will redirect via render
       setLoading(false);
     }
   }, [authLoading, user]);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || loading) return;
     
     switch (activeTab) {
       case 'transactions': fetchTransactions(); break;
@@ -150,7 +153,7 @@ const Admin: React.FC = () => {
       case 'limits': fetchPlanLimits(); break;
       case 'audit': fetchAuditLogs(); break;
     }
-  }, [activeTab, transactionStatus, subscriptionStatus, pagination.page, dateRange]);
+  }, [activeTab, transactionStatus, subscriptionStatus, pagination.page, dateRange, isAdmin, loading]);
 
   const fetchOverview = async () => {
     try {
