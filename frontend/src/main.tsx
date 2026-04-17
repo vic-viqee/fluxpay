@@ -67,9 +67,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/plans" element={<Plans />} />
-                <Route path="/admin" element={<Admin />} />
               </Route>
             </Route>
+
+            <Route path="/admin" element={<Admin />} />
 
           </Routes>
         </Suspense>

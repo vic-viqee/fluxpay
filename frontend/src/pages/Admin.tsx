@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import api from '../services/api';
 import { 
   Users, CreditCard, Activity, DollarSign, 
-  Package, Key, Webhook, Search, ChevronLeft, ChevronRight,
-  Menu, Bell, LogOut, X, Download, TrendingUp, Shield
+  Package, Key, Webhook, ChevronLeft, ChevronRight,
+  LogOut, X, TrendingUp, Shield, Menu, Search
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useAuth } from '../context/AuthContext';
 
 interface Overview {
   totalBusinesses: number;
@@ -31,32 +30,6 @@ interface Business {
   successfulTransactions: number;
   activeSubscriptions: number;
   activeApiKeys: number;
-}
-
-interface BusinessDetail {
-  business: {
-    _id: string;
-    businessName: string;
-    email: string;
-    businessPhoneNumber: string;
-    businessType: string;
-    plan: string;
-    serviceType: string;
-    createdAt: string;
-    transactionLimit: number;
-    currentMonthTransactions: number;
-  };
-  stats: {
-    totalRevenue: number;
-    transactions: { _id: string; count: number; total: number }[];
-    activeSubscriptions: number;
-    totalSubscriptions: number;
-    apiKeysCount: number;
-    webhooksCount: number;
-  };
-  recentSubscriptions: any[];
-  apiKeys: any[];
-  webhooks: any[];
 }
 
 interface Transaction {
@@ -121,7 +94,6 @@ interface AuditLog {
   action: string;
   resource: string;
   resourceId?: string;
-  details?: Record<string, any>;
   ipAddress?: string;
   createdAt: string;
 }
@@ -150,10 +122,7 @@ const Admin: React.FC = () => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('');
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedBusiness, setSelectedBusiness] = useState<BusinessDetail | null>(null);
-  const [businessPanelOpen, setBusinessPanelOpen] = useState(false);
-  const { user } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     checkAdminStatus();
@@ -170,24 +139,12 @@ const Admin: React.FC = () => {
     if (!isAdmin) return;
     
     switch (activeTab) {
-      case 'transactions':
-        fetchTransactions();
-        break;
-      case 'subscriptions':
-        fetchSubscriptions();
-        break;
-      case 'apiKeys':
-        fetchApiKeys();
-        break;
-      case 'webhooks':
-        fetchWebhooks();
-        break;
-      case 'limits':
-        fetchPlanLimits();
-        break;
-      case 'audit':
-        fetchAuditLogs();
-        break;
+      case 'transactions': fetchTransactions(); break;
+      case 'subscriptions': fetchSubscriptions(); break;
+      case 'apiKeys': fetchApiKeys(); break;
+      case 'webhooks': fetchWebhooks(); break;
+      case 'limits': fetchPlanLimits(); break;
+      case 'audit': fetchAuditLogs(); break;
     }
   }, [activeTab, transactionStatus, subscriptionStatus, pagination.page, dateRange]);
 
@@ -199,7 +156,7 @@ const Admin: React.FC = () => {
       } else {
         setIsAdmin(false);
       }
-    } catch (err) {
+    } catch {
       setIsAdmin(false);
     } finally {
       setLoading(false);
@@ -219,23 +176,9 @@ const Admin: React.FC = () => {
     try {
       const response = await api.get(`/admin/businesses?page=${page}&search=${searchTerm}`);
       setBusinesses(response.data.data);
-      setPagination({
-        page: response.data.page,
-        totalPages: response.data.totalPages,
-        total: response.data.total
-      });
+      setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
     } catch (err) {
       console.error('Failed to fetch businesses:', err);
-    }
-  };
-
-  const fetchBusinessDetail = async (id: string) => {
-    try {
-      const response = await api.get(`/admin/businesses/${id}`);
-      setSelectedBusiness(response.data);
-      setBusinessPanelOpen(true);
-    } catch (err) {
-      console.error('Failed to fetch business detail:', err);
     }
   };
 
@@ -243,13 +186,9 @@ const Admin: React.FC = () => {
     try {
       const statusParam = transactionStatus ? `&status=${transactionStatus}` : '';
       const dateParam = dateRange.start ? `&startDate=${dateRange.start}&endDate=${dateRange.end}` : '';
-      const response = await api.get(`/admin/transactions?page=${page}&limit=50${statusParam}${dateParam}`);
+      const response = await api.get(`/admin/transactions?page=${page}&limit=20${statusParam}${dateParam}`);
       setTransactions(response.data.data);
-      setPagination({
-        page: response.data.page,
-        totalPages: response.data.totalPages,
-        total: response.data.total
-      });
+      setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
     } catch (err) {
       console.error('Failed to fetch transactions:', err);
     }
@@ -258,14 +197,9 @@ const Admin: React.FC = () => {
   const fetchSubscriptions = async (page = pagination.page) => {
     try {
       const statusParam = subscriptionStatus ? `&status=${subscriptionStatus}` : '';
-      const dateParam = dateRange.start ? `&startDate=${dateRange.start}&endDate=${dateRange.end}` : '';
-      const response = await api.get(`/admin/subscriptions?page=${page}&limit=50${statusParam}${dateParam}`);
+      const response = await api.get(`/admin/subscriptions?page=${page}&limit=20${statusParam}`);
       setSubscriptions(response.data.data);
-      setPagination({
-        page: response.data.page,
-        totalPages: response.data.totalPages,
-        total: response.data.total
-      });
+      setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
     } catch (err) {
       console.error('Failed to fetch subscriptions:', err);
     }
@@ -273,13 +207,9 @@ const Admin: React.FC = () => {
 
   const fetchApiKeys = async (page = pagination.page) => {
     try {
-      const response = await api.get(`/admin/apikeys?page=${page}&limit=50`);
+      const response = await api.get(`/admin/apikeys?page=${page}&limit=20`);
       setApiKeys(response.data.data);
-      setPagination({
-        page: response.data.page,
-        totalPages: response.data.totalPages,
-        total: response.data.total
-      });
+      setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
     } catch (err) {
       console.error('Failed to fetch API keys:', err);
     }
@@ -287,13 +217,9 @@ const Admin: React.FC = () => {
 
   const fetchWebhooks = async (page = pagination.page) => {
     try {
-      const response = await api.get(`/admin/webhooks?page=${page}&limit=50`);
+      const response = await api.get(`/admin/webhooks?page=${page}&limit=20`);
       setWebhooks(response.data.data);
-      setPagination({
-        page: response.data.page,
-        totalPages: response.data.totalPages,
-        total: response.data.total
-      });
+      setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
     } catch (err) {
       console.error('Failed to fetch webhooks:', err);
     }
@@ -301,14 +227,10 @@ const Admin: React.FC = () => {
 
   const fetchPlanLimits = async (page = pagination.page) => {
     try {
-      const response = await api.get(`/admin/plan-limits?page=${page}&limit=50`);
+      const response = await api.get(`/admin/plan-limits?page=${page}&limit=20`);
       setPlanLimits(response.data.data);
       setPlanStats(response.data.planStats || []);
-      setPagination({
-        page: response.data.page,
-        totalPages: response.data.totalPages,
-        total: response.data.total
-      });
+      setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
     } catch (err) {
       console.error('Failed to fetch plan limits:', err);
     }
@@ -316,1015 +238,709 @@ const Admin: React.FC = () => {
 
   const fetchAuditLogs = async (page = pagination.page) => {
     try {
-      const response = await api.get(`/admin/audit-logs?page=${page}&limit=50`);
+      const response = await api.get(`/admin/audit-logs?page=${page}&limit=20`);
       setAuditLogs(response.data.data);
-      setPagination({
-        page: response.data.page,
-        totalPages: response.data.totalPages,
-        total: response.data.total
-      });
+      setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
     } catch (err) {
       console.error('Failed to fetch audit logs:', err);
     }
   };
 
-  const formatKES = (value: number) => {
-    return new Intl.NumberFormat('en-KE', {
-      style: 'currency',
-      currency: 'KES',
-      minimumFractionDigits: 0,
-    }).format(value);
+  const formatKES = (value: number) => `KES ${value.toLocaleString()}`;
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'SUCCESS': case 'ACTIVE': return 'bg-emerald-500/20 text-emerald-400';
+      case 'PENDING': case 'PENDING_ACTIVATION': return 'bg-yellow-500/20 text-yellow-400';
+      case 'FAILED': case 'CANCELLED': case 'EXPIRED': return 'bg-red-500/20 text-red-400';
+      default: return 'bg-gray-500/20 text-gray-400';
+    }
   };
 
-  const getStatusBadge = (status: string) => {
-    const styles: Record<string, string> = {
-      SUCCESS: 'bg-green-500/20 text-green-400',
-      PENDING: 'bg-yellow-500/20 text-yellow-400',
-      FAILED: 'bg-red-500/20 text-red-400',
-      ACTIVE: 'bg-green-500/20 text-green-400',
-      CANCELLED: 'bg-red-500/20 text-red-400',
-      EXPIRED: 'bg-gray-500/20 text-gray-400',
-      PAUSED: 'bg-yellow-500/20 text-yellow-400',
-      PENDING_ACTIVATION: 'bg-blue-500/20 text-blue-400',
-      ok: 'bg-green-500/20 text-green-400',
-      warning: 'bg-yellow-500/20 text-yellow-400',
-      blocked: 'bg-red-500/20 text-red-400',
-    };
-    return styles[status] || 'bg-gray-500/20 text-gray-400';
-  };
-
-  const exportToCSV = (data: any[], filename: string) => {
-    if (data.length === 0) return;
-    const headers = Object.keys(data[0]).filter(k => !k.includes('Id') && k !== '_id');
-    const rows = data.map(item => headers.map(h => {
-      const val = item[h];
-      if (typeof val === 'object' && val !== null) return JSON.stringify(val);
-      return val;
-    }));
-    const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v}"`).join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
+  const handleLogout = () => {
+    window.location.href = '/login';
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-primary-bg">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-main"></div>
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
 
-  if (!isAdmin) {
+  if (isAdmin === false) {
     return <Navigate to="/dashboard" />;
   }
 
-  return (
-    <div className="min-h-screen bg-primary-bg flex">
-      <div className={`fixed inset-y-0 left-0 w-64 bg-surface-bg border-r border-gray-800 transform transition-transform duration-200 z-50 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}>
-        <div className="p-6 border-b border-gray-800">
-          <Link to="/dashboard" className="text-2xl font-bold text-white">FluxPay</Link>
-          <p className="text-sm text-gray-400">Admin Dashboard</p>
-        </div>
-        <nav className="p-4 space-y-2">
-          {[
-            { id: 'overview', label: 'Overview', icon: <Activity size={18} /> },
-            { id: 'businesses', label: 'Businesses', icon: <Users size={18} /> },
-            { id: 'transactions', label: 'Transactions', icon: <CreditCard size={18} /> },
-            { id: 'subscriptions', label: 'Subscriptions', icon: <Package size={18} /> },
-            { id: 'limits', label: 'Plan Limits', icon: <TrendingUp size={18} /> },
-            { id: 'apiKeys', label: 'API Keys', icon: <Key size={18} /> },
-            { id: 'webhooks', label: 'Webhooks', icon: <Webhook size={18} /> },
-            { id: 'audit', label: 'Audit Trail', icon: <Shield size={18} /> },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                activeTab === tab.id ? 'bg-main text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-        <div className="absolute bottom-0 w-full p-4 border-t border-gray-800">
-          <Link to="/dashboard" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white transition-colors">
-            <LogOut size={18} />
-            Back to Dashboard
-          </Link>
-        </div>
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
       </div>
+    );
+  }
 
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
+  const navItems = [
+    { id: 'overview', label: 'Overview', icon: <Activity size={20} /> },
+    { id: 'businesses', label: 'Businesses', icon: <Users size={20} /> },
+    { id: 'transactions', label: 'Transactions', icon: <CreditCard size={20} /> },
+    { id: 'subscriptions', label: 'Subscriptions', icon: <Package size={20} /> },
+    { id: 'limits', label: 'Plan Limits', icon: <TrendingUp size={20} /> },
+    { id: 'apiKeys', label: 'API Keys', icon: <Key size={20} /> },
+    { id: 'webhooks', label: 'Webhooks', icon: <Webhook size={20} /> },
+    { id: 'audit', label: 'Audit Trail', icon: <Shield size={20} /> },
+  ];
 
-      <div className="flex-1 flex flex-col">
-        <div className="bg-surface-bg border-b border-gray-800 p-4 flex items-center justify-between">
-          <button className="md:hidden p-2 text-gray-400" onClick={() => setSidebarOpen(true)}>
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+      {/* Mobile Header */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 z-50">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setMobileMenuOpen(true)} className="p-2 hover:bg-slate-800 rounded-lg">
             <Menu size={24} />
           </button>
-          <div className="flex items-center gap-4">
-            <button className="p-2 text-gray-400 hover:text-white">
-              <Bell size={20} />
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-main rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-bold">A</span>
-              </div>
-              <span className="text-white text-sm">{user?.businessName || 'Admin'}</span>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <span className="font-bold text-white text-sm">F</span>
             </div>
+            <span className="font-bold text-white">FluxPay Admin</span>
           </div>
         </div>
+        <button onClick={handleLogout} className="p-2 hover:bg-slate-800 rounded-lg">
+          <LogOut size={20} />
+        </button>
+      </header>
 
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="max-w-7xl mx-auto">
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileMenuOpen(false)} />
+          <div className="absolute left-0 top-0 bottom-0 w-64 bg-slate-900 p-4">
             <div className="flex items-center justify-between mb-8">
-              <div>
-                <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-                <p className="text-gray-400 mt-1">Manage FluxPay platform</p>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                  <span className="font-bold text-white text-sm">F</span>
+                </div>
+                <span className="font-bold text-white">FluxPay</span>
               </div>
-            </div>
-
-            <div className="flex gap-2 mb-6 border-b border-gray-800 pb-2 overflow-x-auto">
-              {[
-                { id: 'overview', label: 'Overview', icon: <Activity size={16} /> },
-                { id: 'businesses', label: 'Businesses', icon: <Users size={16} /> },
-                { id: 'transactions', label: 'Transactions', icon: <CreditCard size={16} /> },
-                { id: 'subscriptions', label: 'Subscriptions', icon: <Package size={16} /> },
-                { id: 'limits', label: 'Plan Limits', icon: <TrendingUp size={16} /> },
-                { id: 'apiKeys', label: 'API Keys', icon: <Key size={16} /> },
-                { id: 'webhooks', label: 'Webhooks', icon: <Webhook size={16} /> },
-                { id: 'audit', label: 'Audit', icon: <Shield size={16} /> },
-              ].map((tab) => (
-                <TabButton 
-                  key={tab.id}
-                  active={activeTab === tab.id} 
-                  onClick={() => setActiveTab(tab.id)} 
-                  icon={tab.icon} 
-                  label={tab.label} 
-                />
-              ))}
-            </div>
-
-            {activeTab === 'overview' && overview && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <StatCard 
-                    title="Total Businesses" 
-                    value={overview.totalBusinesses.toString()} 
-                    icon={<Users className="text-main" />}
-                  />
-                  <StatCard 
-                    title="Active Businesses" 
-                    value={overview.activeBusinesses.toString()} 
-                    icon={<Activity className="text-secondary" />}
-                  />
-                  <StatCard 
-                    title="Total Revenue" 
-                    value={formatKES(overview.totalRevenue)} 
-                    icon={<DollarSign className="text-green-500" />}
-                  />
-                  <StatCard 
-                    title="Active Subscriptions" 
-                    value={overview.subscriptions.active.toString()} 
-                    icon={<Package className="text-accent" />}
-                  />
-                </div>
-
-                {overview.monthlyRevenue.length > 0 && (
-                  <div className="bg-surface-bg rounded-2xl border border-gray-800 p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                      <TrendingUp size={18} className="text-secondary" />
-                      Revenue Trend (Last 12 Months)
-                    </h3>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={overview.monthlyRevenue}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                          <XAxis 
-                            dataKey="month" 
-                            stroke="#9CA3AF" 
-                            fontSize={12}
-                            tickFormatter={(value) => {
-                              const [year, month] = value.split('-');
-                              const date = new Date(parseInt(year), parseInt(month) - 1);
-                              return date.toLocaleDateString('en-US', { month: 'short' });
-                            }}
-                          />
-                          <YAxis 
-                            stroke="#9CA3AF" 
-                            fontSize={12}
-                            tickFormatter={(value) => `KES ${(value / 1000).toFixed(0)}k`}
-                          />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: '#1F2937', 
-                              border: '1px solid #374151',
-                              borderRadius: '8px',
-                              color: '#fff'
-                            }}
-                            formatter={(value) => [formatKES(Number(value)), 'Revenue']}
-                            labelFormatter={(label) => {
-                              const [year, month] = String(label).split('-');
-                              const date = new Date(parseInt(year), parseInt(month) - 1);
-                              return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                            }}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="revenue" 
-                            stroke="#14B8A6" 
-                            strokeWidth={2}
-                            dot={{ fill: '#14B8A6', strokeWidth: 2 }}
-                            activeDot={{ r: 6, fill: '#14B8A6' }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-surface-bg rounded-2xl border border-gray-800 p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Transaction Status</h3>
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Successful</span>
-                        <span className="text-green-400 font-medium">{overview.transactions.success}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Pending</span>
-                        <span className="text-yellow-400 font-medium">{overview.transactions.pending}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Failed</span>
-                        <span className="text-red-400 font-medium">{overview.transactions.failed}</span>
-                      </div>
-                      <div className="pt-4 border-t border-gray-800">
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Total Transactions</span>
-                          <span className="text-white font-bold">{overview.transactions.total}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-surface-bg rounded-2xl border border-gray-800 p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Subscription Status</h3>
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Active</span>
-                        <span className="text-green-400 font-medium">{overview.subscriptions.active}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Failed</span>
-                        <span className="text-red-400 font-medium">{overview.subscriptions.failed}</span>
-                      </div>
-                      <div className="pt-4 border-t border-gray-800">
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Total</span>
-                          <span className="text-white font-bold">{overview.subscriptions.total}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-surface-bg rounded-2xl border border-gray-800 p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">API Keys</h3>
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Active Keys</span>
-                        <span className="text-green-400 font-medium">{overview.apiKeys.active}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Total Keys</span>
-                        <span className="text-white font-medium">{overview.apiKeys.total}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-surface-bg rounded-2xl border border-gray-800 p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Webhooks</h3>
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Active Webhooks</span>
-                        <span className="text-green-400 font-medium">{overview.webhooks.active}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Total Webhooks</span>
-                        <span className="text-white font-medium">{overview.webhooks.total}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'businesses' && (
-              <div className="space-y-6">
-                <div className="flex gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                      type="text"
-                      placeholder="Search businesses..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && fetchBusinesses()}
-                      className="w-full bg-surface-bg border border-gray-800 rounded-xl pl-10 pr-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-main/50 outline-none"
-                    />
-                  </div>
-                  <button
-                    onClick={() => fetchBusinesses()}
-                    className="px-4 py-2 bg-main text-white rounded-xl hover:bg-blue-600"
-                  >
-                    Search
-                  </button>
-                </div>
-
-                <div className="bg-surface-bg rounded-2xl border border-gray-800 overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-800/50">
-                      <tr>
-                        <th className="text-left p-4 text-gray-400 font-medium">Business</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Plan</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Revenue</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Transactions</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">API Keys</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Joined</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {businesses.map((business) => (
-                        <tr 
-                          key={business._id} 
-                          className="border-t border-gray-800 hover:bg-gray-800/30 cursor-pointer"
-                          onClick={() => fetchBusinessDetail(business._id)}
-                        >
-                          <td className="p-4">
-                            <div>
-                              <p className="text-white font-medium">{business.businessName}</p>
-                              <p className="text-gray-400 text-sm">{business.email}</p>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              business.plan === 'Enterprise' ? 'bg-purple-500/20 text-purple-400' :
-                              business.plan === 'Growth' ? 'bg-blue-500/20 text-blue-400' :
-                              business.plan === 'Starter' ? 'bg-yellow-500/20 text-yellow-400' :
-                              'bg-gray-500/20 text-gray-400'
-                            }`}>
-                              {business.plan || 'Free'}
-                            </span>
-                          </td>
-                          <td className="p-4 text-white">{formatKES(business.totalRevenue)}</td>
-                          <td className="p-4 text-gray-300">{business.successfulTransactions}</td>
-                          <td className="p-4 text-gray-300">{business.activeApiKeys}</td>
-                          <td className="p-4 text-gray-400">
-                            {new Date(business.createdAt).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <Pagination
-                  pagination={pagination}
-                  onPrev={() => fetchBusinesses(pagination.page - 1)}
-                  onNext={() => fetchBusinesses(pagination.page + 1)}
-                  label="businesses"
-                />
-              </div>
-            )}
-
-            {activeTab === 'transactions' && (
-              <div className="space-y-6">
-                <div className="flex gap-4 items-center flex-wrap">
-                  <select
-                    value={transactionStatus}
-                    onChange={(e) => {
-                      setTransactionStatus(e.target.value);
-                      fetchTransactions(1);
-                    }}
-                    className="bg-surface-bg border border-gray-800 rounded-xl px-4 py-2.5 text-white"
-                  >
-                    <option value="">All Status</option>
-                    <option value="SUCCESS">Success</option>
-                    <option value="PENDING">Pending</option>
-                    <option value="FAILED">Failed</option>
-                  </select>
-                  <input
-                    type="date"
-                    value={dateRange.start}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                    className="bg-surface-bg border border-gray-800 rounded-xl px-4 py-2.5 text-white"
-                    placeholder="Start date"
-                  />
-                  <input
-                    type="date"
-                    value={dateRange.end}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                    className="bg-surface-bg border border-gray-800 rounded-xl px-4 py-2.5 text-white"
-                    placeholder="End date"
-                  />
-                  <button
-                    onClick={() => fetchTransactions(1)}
-                    className="px-4 py-2 bg-main text-white rounded-xl hover:bg-blue-600"
-                  >
-                    Apply Filter
-                  </button>
-                  <button
-                    onClick={() => exportToCSV(transactions, 'transactions')}
-                    className="flex items-center gap-2 px-4 py-2 bg-surface-bg border border-gray-800 rounded-xl text-white hover:bg-gray-800"
-                  >
-                    <Download size={16} /> Export CSV
-                  </button>
-                </div>
-
-                <div className="bg-surface-bg rounded-2xl border border-gray-800 overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-800/50">
-                      <tr>
-                        <th className="text-left p-4 text-gray-400 font-medium">Business</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Amount</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Status</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Receipt</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.map((tx) => (
-                        <tr key={tx._id} className="border-t border-gray-800 hover:bg-gray-800/30">
-                          <td className="p-4">
-                            <div>
-                              <p className="text-white font-medium">{tx.ownerId?.businessName || 'N/A'}</p>
-                              <p className="text-gray-400 text-sm">{tx.ownerId?.email}</p>
-                            </div>
-                          </td>
-                          <td className="p-4 text-white font-medium">{formatKES(tx.amountKes)}</td>
-                          <td className="p-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(tx.status)}`}>
-                              {tx.status}
-                            </span>
-                          </td>
-                          <td className="p-4 text-gray-400">{tx.mpesaReceiptNo || 'N/A'}</td>
-                          <td className="p-4 text-gray-400">
-                            {new Date(tx.transactionDate).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <Pagination
-                  pagination={pagination}
-                  onPrev={() => fetchTransactions(pagination.page - 1)}
-                  onNext={() => fetchTransactions(pagination.page + 1)}
-                  label="transactions"
-                />
-              </div>
-            )}
-
-            {activeTab === 'subscriptions' && (
-              <div className="space-y-6">
-                <div className="flex gap-4 items-center flex-wrap">
-                  <select
-                    value={subscriptionStatus}
-                    onChange={(e) => {
-                      setSubscriptionStatus(e.target.value);
-                      fetchSubscriptions(1);
-                    }}
-                    className="bg-surface-bg border border-gray-800 rounded-xl px-4 py-2.5 text-white"
-                  >
-                    <option value="">All Status</option>
-                    <option value="ACTIVE">Active</option>
-                    <option value="PENDING_ACTIVATION">Pending</option>
-                    <option value="CANCELLED">Cancelled</option>
-                    <option value="EXPIRED">Expired</option>
-                    <option value="FAILED">Failed</option>
-                  </select>
-                  <input
-                    type="date"
-                    value={dateRange.start}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                    className="bg-surface-bg border border-gray-800 rounded-xl px-4 py-2.5 text-white"
-                    placeholder="Start date"
-                  />
-                  <input
-                    type="date"
-                    value={dateRange.end}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                    className="bg-surface-bg border border-gray-800 rounded-xl px-4 py-2.5 text-white"
-                    placeholder="End date"
-                  />
-                  <button
-                    onClick={() => fetchSubscriptions(1)}
-                    className="px-4 py-2 bg-main text-white rounded-xl hover:bg-blue-600"
-                  >
-                    Apply Filter
-                  </button>
-                  <button
-                    onClick={() => exportToCSV(subscriptions, 'subscriptions')}
-                    className="flex items-center gap-2 px-4 py-2 bg-surface-bg border border-gray-800 rounded-xl text-white hover:bg-gray-800"
-                  >
-                    <Download size={16} /> Export CSV
-                  </button>
-                </div>
-
-                <div className="bg-surface-bg rounded-2xl border border-gray-800 overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-800/50">
-                      <tr>
-                        <th className="text-left p-4 text-gray-400 font-medium">Business</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Client</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Plan</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Status</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Next Billing</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {subscriptions.map((sub) => (
-                        <tr key={sub._id} className="border-t border-gray-800 hover:bg-gray-800/30">
-                          <td className="p-4">
-                            <div>
-                              <p className="text-white font-medium">{sub.ownerId?.businessName || 'N/A'}</p>
-                              <p className="text-gray-400 text-sm">{sub.ownerId?.email}</p>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div>
-                              <p className="text-white">{sub.clientId?.name || 'N/A'}</p>
-                              <p className="text-gray-400 text-sm">{sub.clientId?.phoneNumber}</p>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div>
-                              <p className="text-white">{sub.planId?.name || 'N/A'}</p>
-                              <p className="text-gray-400 text-sm">{formatKES(sub.planId?.amountKes || 0)}</p>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(sub.status)}`}>
-                              {sub.status}
-                            </span>
-                          </td>
-                          <td className="p-4 text-gray-400">
-                            {sub.nextBillingDate ? new Date(sub.nextBillingDate).toLocaleDateString() : 'N/A'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <Pagination
-                  pagination={pagination}
-                  onPrev={() => fetchSubscriptions(pagination.page - 1)}
-                  onNext={() => fetchSubscriptions(pagination.page + 1)}
-                  label="subscriptions"
-                />
-              </div>
-            )}
-
-            {activeTab === 'limits' && (
-              <div className="space-y-6">
-                <div className="flex gap-4 items-center">
-                  <button
-                    onClick={() => exportToCSV(planLimits, 'plan_limits')}
-                    className="flex items-center gap-2 px-4 py-2 bg-surface-bg border border-gray-800 rounded-xl text-white hover:bg-gray-800"
-                  >
-                    <Download size={16} /> Export CSV
-                  </button>
-                </div>
-
-                {planStats.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    {planStats.map((stat) => (
-                      <div key={stat.plan} className="bg-surface-bg rounded-2xl border border-gray-800 p-6">
-                        <p className="text-gray-400 text-sm">{stat.plan || 'Free'}</p>
-                        <p className="text-2xl font-bold text-white mt-2">{stat.businesses} businesses</p>
-                        <p className="text-gray-500 text-sm mt-1">{stat.totalTransactions} transactions</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="bg-surface-bg rounded-2xl border border-gray-800 overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-800/50">
-                      <tr>
-                        <th className="text-left p-4 text-gray-400 font-medium">Business</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Plan</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Usage</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Status</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Reset Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {planLimits.map((limit) => (
-                        <tr key={limit._id} className="border-t border-gray-800 hover:bg-gray-800/30">
-                          <td className="p-4">
-                            <div>
-                              <p className="text-white font-medium">{limit.businessName}</p>
-                              <p className="text-gray-400 text-sm">{limit.email}</p>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              limit.plan === 'Enterprise' ? 'bg-purple-500/20 text-purple-400' :
-                              limit.plan === 'Growth' ? 'bg-blue-500/20 text-blue-400' :
-                              limit.plan === 'Starter' ? 'bg-yellow-500/20 text-yellow-400' :
-                              'bg-gray-500/20 text-gray-400'
-                            }`}>
-                              {limit.plan || 'Free'}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <div className="w-32">
-                              <div className="flex justify-between text-xs mb-1">
-                                <span className="text-gray-400">{limit.used}</span>
-                                <span className="text-gray-400">{limit.limit === 'Unlimited' ? '∞' : limit.limit}</span>
-                              </div>
-                              <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                                <div 
-                                  className={`h-full transition-all ${
-                                    limit.status === 'blocked' ? 'bg-red-500' :
-                                    limit.status === 'warning' ? 'bg-yellow-500' : 'bg-green-500'
-                                  }`}
-                                  style={{ width: `${Math.min(limit.percentage, 100)}%` }}
-                                />
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(limit.status)}`}>
-                              {limit.status === 'ok' ? 'OK' : limit.status === 'warning' ? 'Warning' : 'Blocked'}
-                            </span>
-                          </td>
-                          <td className="p-4 text-gray-400">
-                            {new Date(limit.resetAt).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <Pagination
-                  pagination={pagination}
-                  onPrev={() => fetchPlanLimits(pagination.page - 1)}
-                  onNext={() => fetchPlanLimits(pagination.page + 1)}
-                  label="businesses"
-                />
-              </div>
-            )}
-
-            {activeTab === 'apiKeys' && (
-              <div className="space-y-6">
-                <div className="bg-surface-bg rounded-2xl border border-gray-800 overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-800/50">
-                      <tr>
-                        <th className="text-left p-4 text-gray-400 font-medium">Key Name</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Key ID</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Business</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Status</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Last Used</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Created</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {apiKeys.map((key) => (
-                        <tr key={key._id} className="border-t border-gray-800 hover:bg-gray-800/30">
-                          <td className="p-4 text-white font-medium">{key.name}</td>
-                          <td className="p-4">
-                            <code className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">{key.key}</code>
-                          </td>
-                          <td className="p-4">
-                            <div>
-                              <p className="text-white">{key.ownerId?.businessName || 'N/A'}</p>
-                              <p className="text-gray-400 text-sm">{key.ownerId?.email}</p>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${key.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                              {key.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                          </td>
-                          <td className="p-4 text-gray-400">
-                            {key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleString() : 'Never'}
-                          </td>
-                          <td className="p-4 text-gray-400">
-                            {new Date(key.createdAt).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <Pagination
-                  pagination={pagination}
-                  onPrev={() => fetchApiKeys(pagination.page - 1)}
-                  onNext={() => fetchApiKeys(pagination.page + 1)}
-                  label="API keys"
-                />
-              </div>
-            )}
-
-            {activeTab === 'webhooks' && (
-              <div className="space-y-6">
-                <div className="bg-surface-bg rounded-2xl border border-gray-800 overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-800/50">
-                      <tr>
-                        <th className="text-left p-4 text-gray-400 font-medium">Name</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">URL</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Events</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Business</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Status</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Failures</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {webhooks.map((wh) => (
-                        <tr key={wh._id} className="border-t border-gray-800 hover:bg-gray-800/30">
-                          <td className="p-4 text-white font-medium">{wh.name}</td>
-                          <td className="p-4">
-                            <span className="text-xs text-gray-400 truncate max-w-[200px] block">{wh.url}</span>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex flex-wrap gap-1">
-                              {wh.events.map((event) => (
-                                <span key={event} className="px-2 py-0.5 bg-gray-700 text-gray-300 text-xs rounded">
-                                  {event}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div>
-                              <p className="text-white">{wh.ownerId?.businessName || 'N/A'}</p>
-                              <p className="text-gray-400 text-sm">{wh.ownerId?.email}</p>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${wh.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                              {wh.isActive ? 'Active' : 'Disabled'}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <span className={`font-medium ${wh.failureCount > 0 ? 'text-red-400' : 'text-gray-400'}`}>
-                              {wh.failureCount}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <Pagination
-                  pagination={pagination}
-                  onPrev={() => fetchWebhooks(pagination.page - 1)}
-                  onNext={() => fetchWebhooks(pagination.page + 1)}
-                  label="webhooks"
-                />
-              </div>
-            )}
-
-            {activeTab === 'audit' && (
-              <div className="space-y-6">
-                <div className="bg-surface-bg rounded-2xl border border-gray-800 overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-800/50">
-                      <tr>
-                        <th className="text-left p-4 text-gray-400 font-medium">Timestamp</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Admin</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Action</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">Resource</th>
-                        <th className="text-left p-4 text-gray-400 font-medium">IP Address</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {auditLogs.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="p-8 text-center text-gray-500">
-                            No audit logs yet
-                          </td>
-                        </tr>
-                      ) : (
-                        auditLogs.map((log) => (
-                          <tr key={log._id} className="border-t border-gray-800 hover:bg-gray-800/30">
-                            <td className="p-4 text-gray-400 text-sm">
-                              {new Date(log.createdAt).toLocaleString()}
-                            </td>
-                            <td className="p-4">
-                              <div>
-                                <p className="text-white text-sm">{log.adminId?.businessName || 'Admin'}</p>
-                                <p className="text-gray-500 text-xs">{log.adminId?.email}</p>
-                              </div>
-                            </td>
-                            <td className="p-4">
-                              <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded font-medium">
-                                {log.action.replace(/_/g, ' ')}
-                              </span>
-                            </td>
-                            <td className="p-4 text-gray-300 text-sm">{log.resource}</td>
-                            <td className="p-4 text-gray-500 text-xs">{log.ipAddress || 'N/A'}</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                <Pagination
-                  pagination={pagination}
-                  onPrev={() => fetchAuditLogs(pagination.page - 1)}
-                  onNext={() => fetchAuditLogs(pagination.page + 1)}
-                  label="audit logs"
-                />
-              </div>
-            )}
-          </div>
-        </main>
-      </div>
-
-      {businessPanelOpen && selectedBusiness && (
-        <>
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setBusinessPanelOpen(false)} />
-          <div className="fixed right-0 top-0 h-full w-full md:w-[500px] bg-surface-bg border-l border-gray-800 z-50 overflow-y-auto">
-            <div className="p-6 border-b border-gray-800 flex items-center justify-between sticky top-0 bg-surface-bg">
-              <h2 className="text-xl font-bold text-white">Business Details</h2>
-              <button onClick={() => setBusinessPanelOpen(false)} className="p-2 text-gray-400 hover:text-white">
+              <button onClick={() => setMobileMenuOpen(false)} className="p-2 hover:bg-slate-800 rounded-lg">
                 <X size={20} />
               </button>
             </div>
-            
-            <div className="p-6 space-y-6">
-              <div className="bg-primary-bg rounded-xl p-4">
-                <h3 className="text-sm font-bold text-gray-400 uppercase mb-3">Business Info</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Name</span>
-                    <span className="text-white">{selectedBusiness.business.businessName}</span>
+            <nav className="space-y-1">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    activeTab === item.id ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  {item.icon}
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              ))}
+            </nav>
+            <div className="absolute bottom-4 left-4 right-4">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-slate-800 transition-colors"
+              >
+                <LogOut size={20} />
+                <span className="font-medium">Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-slate-900 border-r border-slate-800">
+        <div className="p-6 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+              <span className="font-bold text-white text-lg">F</span>
+            </div>
+            <div>
+              <h1 className="font-bold text-white">FluxPay</h1>
+              <p className="text-xs text-slate-500">Admin Dashboard</p>
+            </div>
+          </div>
+        </div>
+        
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                activeTab === item.id ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              {item.icon}
+              <span className="font-medium">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-slate-800">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-slate-800 transition-colors"
+          >
+            <LogOut size={20} />
+            <span className="font-medium">Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
+        <div className="p-4 lg:p-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-2xl lg:text-3xl font-bold text-white capitalize">{activeTab.replace('_', ' ')}</h1>
+            <p className="text-slate-400 mt-1">Manage your FluxPay platform</p>
+          </div>
+
+          {/* Overview Tab */}
+          {activeTab === 'overview' && overview && (
+            <div className="space-y-6">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-indigo-500/20 rounded-xl">
+                      <Users size={24} className="text-indigo-400" />
+                    </div>
+                    <span className="text-xs text-emerald-400 flex items-center gap-1">
+                      <TrendingUp size={12} /> +12%
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Email</span>
-                    <span className="text-white">{selectedBusiness.business.email}</span>
+                  <h3 className="text-3xl font-bold text-white">{overview.totalBusinesses}</h3>
+                  <p className="text-slate-400 text-sm mt-1">Total Businesses</p>
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-emerald-500/20 rounded-xl">
+                      <Activity size={24} className="text-emerald-400" />
+                    </div>
+                    <span className="text-xs text-emerald-400 flex items-center gap-1">
+                      <TrendingUp size={12} /> Active
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Phone</span>
-                    <span className="text-white">{selectedBusiness.business.businessPhoneNumber || 'N/A'}</span>
+                  <h3 className="text-3xl font-bold text-white">{overview.activeBusinesses}</h3>
+                  <p className="text-slate-400 text-sm mt-1">Active Today</p>
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-yellow-500/20 rounded-xl">
+                      <DollarSign size={24} className="text-yellow-400" />
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Type</span>
-                    <span className="text-white">{selectedBusiness.business.businessType || 'N/A'}</span>
+                  <h3 className="text-3xl font-bold text-white">{formatKES(overview.totalRevenue)}</h3>
+                  <p className="text-slate-400 text-sm mt-1">Total Revenue</p>
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-purple-500/20 rounded-xl">
+                      <Package size={24} className="text-purple-400" />
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Service Type</span>
-                    <span className="text-white">{selectedBusiness.business.serviceType || 'both'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Joined</span>
-                    <span className="text-white">{new Date(selectedBusiness.business.createdAt).toLocaleDateString()}</span>
-                  </div>
+                  <h3 className="text-3xl font-bold text-white">{overview.subscriptions.active}</h3>
+                  <p className="text-slate-400 text-sm mt-1">Active Subscriptions</p>
                 </div>
               </div>
 
-              <div className="bg-primary-bg rounded-xl p-4">
-                <h3 className="text-sm font-bold text-gray-400 uppercase mb-3">Subscription Plan</h3>
-                <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    selectedBusiness.business.plan === 'Enterprise' ? 'bg-purple-500/20 text-purple-400' :
-                    selectedBusiness.business.plan === 'Growth' ? 'bg-blue-500/20 text-blue-400' :
-                    selectedBusiness.business.plan === 'Starter' ? 'bg-yellow-500/20 text-yellow-400' :
-                    'bg-gray-500/20 text-gray-400'
-                  }`}>
-                    {selectedBusiness.business.plan || 'Free'}
-                  </span>
-                </div>
-                <div className="mt-4">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-400">Monthly Usage</span>
-                    <span className="text-white">{selectedBusiness.business.currentMonthTransactions} / {selectedBusiness.business.transactionLimit || '∞'}</span>
-                  </div>
-                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-main"
-                      style={{ width: `${Math.min((selectedBusiness.business.currentMonthTransactions / (selectedBusiness.business.transactionLimit || 100)) * 100, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-primary-bg rounded-xl p-4">
-                <h3 className="text-sm font-bold text-gray-400 uppercase mb-3">Statistics</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-2xl font-bold text-white">{formatKES(selectedBusiness.stats.totalRevenue)}</p>
-                    <p className="text-xs text-gray-400">Total Revenue</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-white">{selectedBusiness.stats.totalSubscriptions}</p>
-                    <p className="text-xs text-gray-400">Total Subscriptions</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-green-400">{selectedBusiness.stats.activeSubscriptions}</p>
-                    <p className="text-xs text-gray-400">Active</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-white">{selectedBusiness.stats.apiKeysCount}</p>
-                    <p className="text-xs text-gray-400">API Keys</p>
-                  </div>
-                </div>
-              </div>
-
-              {selectedBusiness.stats.transactions.length > 0 && (
-                <div className="bg-primary-bg rounded-xl p-4">
-                  <h3 className="text-sm font-bold text-gray-400 uppercase mb-3">Transaction Breakdown</h3>
-                  <div className="space-y-2">
-                    {selectedBusiness.stats.transactions.map((t: any) => (
-                      <div key={t._id} className="flex justify-between items-center">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusBadge(t._id)}`}>{t._id}</span>
-                        <span className="text-white">{t.count} ({formatKES(t.total)})</span>
-                      </div>
-                    ))}
+              {/* Revenue Chart */}
+              {overview.monthlyRevenue.length > 0 && (
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-white mb-6">Revenue Trend</h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={overview.monthlyRevenue}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                        <XAxis dataKey="month" stroke="#94a3b8" fontSize={12}
+                          tickFormatter={(v) => {
+                            const [y, m] = v.split('-');
+                            return new Date(parseInt(y), parseInt(m)-1).toLocaleDateString('en', { month: 'short' });
+                          }}
+                        />
+                        <YAxis stroke="#94a3b8" fontSize={12}
+                          tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`}
+                        />
+                        <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                          formatter={(value) => [formatKES(Number(value)), 'Revenue']}
+                        />
+                        <Line type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2} dot={{ fill: '#6366f1' }} />
+                      </LineChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
               )}
+
+              {/* Status Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                  <h3 className="text-sm font-medium text-slate-400 mb-4">Transactions</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-emerald-400">Success</span>
+                      <span className="font-bold text-white">{overview.transactions.success}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-yellow-400">Pending</span>
+                      <span className="font-bold text-white">{overview.transactions.pending}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-red-400">Failed</span>
+                      <span className="font-bold text-white">{overview.transactions.failed}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                  <h3 className="text-sm font-medium text-slate-400 mb-4">Subscriptions</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-emerald-400">Active</span>
+                      <span className="font-bold text-white">{overview.subscriptions.active}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Total</span>
+                      <span className="font-bold text-white">{overview.subscriptions.total}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-yellow-400">Paused</span>
+                      <span className="font-bold text-white">{overview.subscriptions.paused}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                  <h3 className="text-sm font-medium text-slate-400 mb-4">Platform Stats</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">API Keys</span>
+                      <span className="font-bold text-white">{overview.apiKeys.active} / {overview.apiKeys.total}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Webhooks</span>
+                      <span className="font-bold text-white">{overview.webhooks.active} / {overview.webhooks.total}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </>
-      )}
+          )}
+
+          {/* Businesses Tab */}
+          {activeTab === 'businesses' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                  <input
+                    type="text"
+                    placeholder="Search businesses..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && fetchBusinesses(1)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <button onClick={() => fetchBusinesses(1)} className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium">
+                  Search
+                </button>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-800/50">
+                      <tr>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Business</th>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase hidden md:table-cell">Plan</th>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Revenue</th>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase hidden sm:table-cell">Transactions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {businesses.map((biz) => (
+                        <tr key={biz._id} className="hover:bg-slate-800/50 transition-colors">
+                          <td className="p-4">
+                            <div>
+                              <p className="font-medium text-white">{biz.businessName}</p>
+                              <p className="text-sm text-slate-500">{biz.email}</p>
+                            </div>
+                          </td>
+                          <td className="p-4 hidden md:table-cell">
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              biz.plan === 'Enterprise' ? 'bg-purple-500/20 text-purple-400' :
+                              biz.plan === 'Growth' ? 'bg-blue-500/20 text-blue-400' :
+                              'bg-slate-700 text-slate-400'
+                            }`}>{biz.plan || 'Free'}</span>
+                          </td>
+                          <td className="p-4 font-medium text-white">{formatKES(biz.totalRevenue)}</td>
+                          <td className="p-4 text-slate-400 hidden sm:table-cell">{biz.successfulTransactions}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <AdminPagination pagination={pagination} activeTab={activeTab} fetchHandlers={{ businesses: fetchBusinesses, transactions: fetchTransactions, subscriptions: fetchSubscriptions, apiKeys: fetchApiKeys, webhooks: fetchWebhooks, limits: fetchPlanLimits, audit: fetchAuditLogs }} />
+            </div>
+          )}
+
+          {/* Transactions Tab */}
+          {activeTab === 'transactions' && (
+            <div className="space-y-6">
+              <div className="flex flex-wrap gap-4">
+                <select
+                  value={transactionStatus}
+                  onChange={(e) => { setTransactionStatus(e.target.value); fetchTransactions(1); }}
+                  className="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">All Status</option>
+                  <option value="SUCCESS">Success</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="FAILED">Failed</option>
+                </select>
+                <input type="date" value={dateRange.start}
+                  onChange={(e) => setDateRange(p => ({ ...p, start: e.target.value }))}
+                  className="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <input type="date" value={dateRange.end}
+                  onChange={(e) => setDateRange(p => ({ ...p, end: e.target.value }))}
+                  className="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button onClick={() => fetchTransactions(1)} className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium">
+                  Filter
+                </button>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-800/50">
+                      <tr>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Business</th>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Amount</th>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Status</th>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase hidden sm:table-cell">Receipt</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {transactions.map((tx) => (
+                        <tr key={tx._id} className="hover:bg-slate-800/50 transition-colors">
+                          <td className="p-4">
+                            <p className="font-medium text-white">{tx.ownerId?.businessName || 'N/A'}</p>
+                            <p className="text-sm text-slate-500">{tx.ownerId?.email}</p>
+                          </td>
+                          <td className="p-4 font-medium text-white">{formatKES(tx.amountKes)}</td>
+                          <td className="p-4">
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(tx.status)}`}>
+                              {tx.status}
+                            </span>
+                          </td>
+                          <td className="p-4 text-slate-400 hidden sm:table-cell">{tx.mpesaReceiptNo || 'N/A'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <AdminPagination pagination={pagination} activeTab={activeTab} fetchHandlers={{ businesses: fetchBusinesses, transactions: fetchTransactions, subscriptions: fetchSubscriptions, apiKeys: fetchApiKeys, webhooks: fetchWebhooks, limits: fetchPlanLimits, audit: fetchAuditLogs }} />
+            </div>
+          )}
+
+          {/* Subscriptions Tab */}
+          {activeTab === 'subscriptions' && (
+            <div className="space-y-6">
+              <div className="flex flex-wrap gap-4">
+                <select
+                  value={subscriptionStatus}
+                  onChange={(e) => { setSubscriptionStatus(e.target.value); fetchSubscriptions(1); }}
+                  className="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">All Status</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="PENDING_ACTIVATION">Pending</option>
+                  <option value="CANCELLED">Cancelled</option>
+                  <option value="EXPIRED">Expired</option>
+                </select>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-800/50">
+                      <tr>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Business</th>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase hidden md:table-cell">Client</th>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Plan</th>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {subscriptions.map((sub) => (
+                        <tr key={sub._id} className="hover:bg-slate-800/50 transition-colors">
+                          <td className="p-4">
+                            <p className="font-medium text-white">{sub.ownerId?.businessName || 'N/A'}</p>
+                            <p className="text-sm text-slate-500">{sub.ownerId?.email}</p>
+                          </td>
+                          <td className="p-4 hidden md:table-cell">
+                            <p className="text-white">{sub.clientId?.name || 'N/A'}</p>
+                            <p className="text-sm text-slate-500">{sub.clientId?.phoneNumber}</p>
+                          </td>
+                          <td className="p-4">
+                            <p className="text-white">{sub.planId?.name || 'N/A'}</p>
+                            <p className="text-sm text-slate-500">{formatKES(sub.planId?.amountKes || 0)}</p>
+                          </td>
+                          <td className="p-4">
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(sub.status)}`}>
+                              {sub.status.replace('_', ' ')}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <AdminPagination pagination={pagination} activeTab={activeTab} fetchHandlers={{ businesses: fetchBusinesses, transactions: fetchTransactions, subscriptions: fetchSubscriptions, apiKeys: fetchApiKeys, webhooks: fetchWebhooks, limits: fetchPlanLimits, audit: fetchAuditLogs }} />
+            </div>
+          )}
+
+          {/* Plan Limits Tab */}
+          {activeTab === 'limits' && (
+            <div className="space-y-6">
+              {planStats.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {planStats.map((stat) => (
+                    <div key={stat.plan} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                      <p className="text-sm text-slate-400">{stat.plan || 'Free'}</p>
+                      <p className="text-2xl font-bold text-white mt-1">{stat.businesses}</p>
+                      <p className="text-xs text-slate-500">{stat.totalTransactions} txns</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-800/50">
+                      <tr>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Business</th>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase hidden sm:table-cell">Plan</th>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Usage</th>
+                        <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {planLimits.map((limit) => (
+                        <tr key={limit._id} className="hover:bg-slate-800/50 transition-colors">
+                          <td className="p-4">
+                            <p className="font-medium text-white">{limit.businessName}</p>
+                            <p className="text-sm text-slate-500">{limit.email}</p>
+                          </td>
+                          <td className="p-4 hidden sm:table-cell">
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              limit.plan === 'Enterprise' ? 'bg-purple-500/20 text-purple-400' :
+                              limit.plan === 'Growth' ? 'bg-blue-500/20 text-blue-400' :
+                              'bg-slate-700 text-slate-400'
+                            }`}>{limit.plan || 'Free'}</span>
+                          </td>
+                          <td className="p-4">
+                            <div className="w-24">
+                              <div className="flex justify-between text-xs mb-1">
+                                <span className="text-slate-400">{limit.used}</span>
+                                <span className="text-slate-400">{limit.limit === 'Unlimited' ? '∞' : limit.limit}</span>
+                              </div>
+                              <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div className={`h-full ${
+                                  limit.status === 'blocked' ? 'bg-red-500' :
+                                  limit.status === 'warning' ? 'bg-yellow-500' : 'bg-emerald-500'
+                                }`} style={{ width: `${Math.min(limit.percentage, 100)}%` }} />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(limit.status)}`}>
+                              {limit.status === 'ok' ? 'OK' : limit.status === 'warning' ? 'Warning' : 'Blocked'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <AdminPagination pagination={pagination} activeTab={activeTab} fetchHandlers={{ businesses: fetchBusinesses, transactions: fetchTransactions, subscriptions: fetchSubscriptions, apiKeys: fetchApiKeys, webhooks: fetchWebhooks, limits: fetchPlanLimits, audit: fetchAuditLogs }} />
+            </div>
+          )}
+
+          {/* API Keys Tab */}
+          {activeTab === 'apiKeys' && (
+            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-800/50">
+                    <tr>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Name</th>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase hidden md:table-cell">Business</th>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Status</th>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase hidden sm:table-cell">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {apiKeys.map((key) => (
+                      <tr key={key._id} className="hover:bg-slate-800/50 transition-colors">
+                        <td className="p-4">
+                          <p className="font-medium text-white">{key.name}</p>
+                          <code className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded">{key.key}</code>
+                        </td>
+                        <td className="p-4 hidden md:table-cell">
+                          <p className="text-white">{key.ownerId?.businessName || 'N/A'}</p>
+                          <p className="text-sm text-slate-500">{key.ownerId?.email}</p>
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${key.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                            {key.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="p-4 text-slate-400 hidden sm:table-cell">
+                          {new Date(key.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <AdminPagination pagination={pagination} activeTab={activeTab} fetchHandlers={{ businesses: fetchBusinesses, transactions: fetchTransactions, subscriptions: fetchSubscriptions, apiKeys: fetchApiKeys, webhooks: fetchWebhooks, limits: fetchPlanLimits, audit: fetchAuditLogs }} />
+            </div>
+          )}
+
+          {/* Webhooks Tab */}
+          {activeTab === 'webhooks' && (
+            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-800/50">
+                    <tr>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Name</th>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase hidden lg:table-cell">URL</th>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Status</th>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Failures</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {webhooks.map((wh) => (
+                      <tr key={wh._id} className="hover:bg-slate-800/50 transition-colors">
+                        <td className="p-4">
+                          <p className="font-medium text-white">{wh.name}</p>
+                          <p className="text-sm text-slate-500">{wh.ownerId?.businessName}</p>
+                        </td>
+                        <td className="p-4 text-slate-400 text-sm max-w-xs truncate hidden lg:table-cell">{wh.url}</td>
+                        <td className="p-4">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${wh.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                            {wh.isActive ? 'Active' : 'Disabled'}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className={wh.failureCount > 0 ? 'text-red-400' : 'text-slate-400'}>
+                            {wh.failureCount}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <AdminPagination pagination={pagination} activeTab={activeTab} fetchHandlers={{ businesses: fetchBusinesses, transactions: fetchTransactions, subscriptions: fetchSubscriptions, apiKeys: fetchApiKeys, webhooks: fetchWebhooks, limits: fetchPlanLimits, audit: fetchAuditLogs }} />
+            </div>
+          )}
+
+          {/* Audit Tab */}
+          {activeTab === 'audit' && (
+            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-800/50">
+                    <tr>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Time</th>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase">Action</th>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase hidden sm:table-cell">Resource</th>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-400 uppercase hidden md:table-cell">IP</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {auditLogs.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="p-8 text-center text-slate-500">No audit logs yet</td>
+                      </tr>
+                    ) : (
+                      auditLogs.map((log) => (
+                        <tr key={log._id} className="hover:bg-slate-800/50 transition-colors">
+                          <td className="p-4 text-slate-400 text-sm">
+                            {new Date(log.createdAt).toLocaleString()}
+                          </td>
+                          <td className="p-4">
+                            <span className="px-2 py-1 bg-indigo-500/20 text-indigo-400 rounded text-xs font-medium">
+                              {log.action.replace(/_/g, ' ')}
+                            </span>
+                          </td>
+                          <td className="p-4 text-slate-400 hidden sm:table-cell">{log.resource}</td>
+                          <td className="p-4 text-slate-500 text-xs hidden md:table-cell">{log.ipAddress || 'N/A'}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <AdminPagination pagination={pagination} activeTab={activeTab} fetchHandlers={{ businesses: fetchBusinesses, transactions: fetchTransactions, subscriptions: fetchSubscriptions, apiKeys: fetchApiKeys, webhooks: fetchWebhooks, limits: fetchPlanLimits, audit: fetchAuditLogs }} />
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 };
 
-function StatCard({ title, value, icon }: { title: string; value: string; icon: React.ReactNode }) {
+const AdminPagination: React.FC<{ pagination: PaginationState; activeTab: string; fetchHandlers: Record<string, (page: number) => void> }> = ({ pagination, activeTab, fetchHandlers }) => {
+  const handlePrev = () => fetchHandlers[activeTab]?.(pagination.page - 1);
+  const handleNext = () => fetchHandlers[activeTab]?.(pagination.page + 1);
+  
   return (
-    <div className="bg-surface-bg rounded-2xl border border-gray-800 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-gray-400 text-sm">{title}</span>
-        <div className="p-2 bg-gray-800 rounded-lg">{icon}</div>
-      </div>
-      <p className="text-3xl font-bold text-white">{value}</p>
-    </div>
-  );
-}
-
-function TabButton({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-        active ? 'bg-main text-white' : 'text-gray-400 hover:text-white hover:bg-surface-bg'
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
-  );
-}
-
-function Pagination({ pagination, onPrev, onNext, label }: { pagination: PaginationState; onPrev: () => void; onNext: () => void; label: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <p className="text-gray-400">
-        Showing {pagination.total > 0 ? (pagination.page - 1) * 50 + 1 : 0} - {Math.min(pagination.page * 50, pagination.total)} of {pagination.total} {label}
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
+      <p className="text-slate-400 text-sm">
+        Showing {Math.min((pagination.page - 1) * 20 + 1, pagination.total)} - {Math.min(pagination.page * 20, pagination.total)} of {pagination.total}
       </p>
       <div className="flex gap-2">
-        <button
-          onClick={onPrev}
-          disabled={pagination.page === 1}
-          className="p-2 bg-surface-bg border border-gray-800 rounded-lg text-gray-400 hover:text-white disabled:opacity-50"
-        >
+        <button onClick={handlePrev} disabled={pagination.page === 1}
+          className="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg">
           <ChevronLeft size={18} />
         </button>
-        <span className="p-2 text-gray-400">
-          Page {pagination.page} of {pagination.totalPages || 1}
+        <span className="px-4 py-2 bg-slate-800 rounded-lg text-sm">
+          {pagination.page} / {pagination.totalPages || 1}
         </span>
-        <button
-          onClick={onNext}
-          disabled={pagination.page >= pagination.totalPages}
-          className="p-2 bg-surface-bg border border-gray-800 rounded-lg text-gray-400 hover:text-white disabled:opacity-50"
-        >
+        <button onClick={handleNext} disabled={pagination.page >= pagination.totalPages}
+          className="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg">
           <ChevronRight size={18} />
         </button>
       </div>
     </div>
   );
-}
+};
 
 export default Admin;
