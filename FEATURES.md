@@ -35,6 +35,26 @@ Prioritized based on competitor analysis and market differentiation.
 - **CSV Export**: Added to all admin tables
 - **Files**: `frontend/src/pages/Admin.tsx`
 
+### Revenue Chart
+- **Status**: ✅ BUILT
+- **Description**: Line chart showing monthly revenue trend for last 12 months
+- **Technology**: Recharts
+- **Files**: `frontend/src/pages/Admin.tsx` - Overview tab
+
+### Audit Trail
+- **Status**: ✅ BUILT
+- **Description**: Tracks admin actions for compliance (views, queries, exports)
+- **Features**:
+  - Logs admin ID, action, resource, IP address, timestamp
+  - New `AuditLog` model with indexes
+  - Dedicated Audit tab in admin panel
+- **Files**:
+  - `backend/src/models/AuditLog.ts` - NEW: Audit log model
+  - `backend/src/services/audit.service.ts` - NEW: Audit logging service
+  - `backend/src/api/admin/admin.controller.ts` - Audit logging + endpoint
+  - `backend/src/api/admin/admin.routes.ts` - Audit logs route
+  - `frontend/src/pages/Admin.tsx` - Audit tab
+
 ---
 
 ## Security & Quality Updates (2026-04-17)

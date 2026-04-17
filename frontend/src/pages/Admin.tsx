@@ -4,8 +4,9 @@ import api from '../services/api';
 import { 
   Users, CreditCard, Activity, DollarSign, 
   Package, Key, Webhook, Search, ChevronLeft, ChevronRight,
-  Menu, Bell, LogOut, X, Download, TrendingUp
+  Menu, Bell, LogOut, X, Download, TrendingUp, Shield
 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../context/AuthContext';
 
 interface Overview {
@@ -114,6 +115,17 @@ interface PlanLimit {
   createdAt: string;
 }
 
+interface AuditLog {
+  _id: string;
+  adminId: { businessName: string; email: string };
+  action: string;
+  resource: string;
+  resourceId?: string;
+  details?: Record<string, any>;
+  ipAddress?: string;
+  createdAt: string;
+}
+
 interface PaginationState {
   page: number;
   totalPages: number;
@@ -130,6 +142,7 @@ const Admin: React.FC = () => {
   const [webhooks, setWebhooks] = useState<WebhookRecord[]>([]);
   const [planLimits, setPlanLimits] = useState<PlanLimit[]>([]);
   const [planStats, setPlanStats] = useState<{ plan: string; businesses: number; totalTransactions: number }[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [pagination, setPagination] = useState<PaginationState>({ page: 1, totalPages: 1, total: 0 });
   const [searchTerm, setSearchTerm] = useState('');
@@ -171,6 +184,9 @@ const Admin: React.FC = () => {
         break;
       case 'limits':
         fetchPlanLimits();
+        break;
+      case 'audit':
+        fetchAuditLogs();
         break;
     }
   }, [activeTab, transactionStatus, subscriptionStatus, pagination.page, dateRange]);
@@ -298,6 +314,20 @@ const Admin: React.FC = () => {
     }
   };
 
+  const fetchAuditLogs = async (page = pagination.page) => {
+    try {
+      const response = await api.get(`/admin/audit-logs?page=${page}&limit=50`);
+      setAuditLogs(response.data.data);
+      setPagination({
+        page: response.data.page,
+        totalPages: response.data.totalPages,
+        total: response.data.total
+      });
+    } catch (err) {
+      console.error('Failed to fetch audit logs:', err);
+    }
+  };
+
   const formatKES = (value: number) => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
@@ -368,6 +398,7 @@ const Admin: React.FC = () => {
             { id: 'limits', label: 'Plan Limits', icon: <TrendingUp size={18} /> },
             { id: 'apiKeys', label: 'API Keys', icon: <Key size={18} /> },
             { id: 'webhooks', label: 'Webhooks', icon: <Webhook size={18} /> },
+            { id: 'audit', label: 'Audit Trail', icon: <Shield size={18} /> },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -429,6 +460,7 @@ const Admin: React.FC = () => {
                 { id: 'limits', label: 'Plan Limits', icon: <TrendingUp size={16} /> },
                 { id: 'apiKeys', label: 'API Keys', icon: <Key size={16} /> },
                 { id: 'webhooks', label: 'Webhooks', icon: <Webhook size={16} /> },
+                { id: 'audit', label: 'Audit', icon: <Shield size={16} /> },
               ].map((tab) => (
                 <TabButton 
                   key={tab.id}
@@ -464,6 +496,59 @@ const Admin: React.FC = () => {
                     icon={<Package className="text-accent" />}
                   />
                 </div>
+
+                {overview.monthlyRevenue.length > 0 && (
+                  <div className="bg-surface-bg rounded-2xl border border-gray-800 p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                      <TrendingUp size={18} className="text-secondary" />
+                      Revenue Trend (Last 12 Months)
+                    </h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={overview.monthlyRevenue}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                          <XAxis 
+                            dataKey="month" 
+                            stroke="#9CA3AF" 
+                            fontSize={12}
+                            tickFormatter={(value) => {
+                              const [year, month] = value.split('-');
+                              const date = new Date(parseInt(year), parseInt(month) - 1);
+                              return date.toLocaleDateString('en-US', { month: 'short' });
+                            }}
+                          />
+                          <YAxis 
+                            stroke="#9CA3AF" 
+                            fontSize={12}
+                            tickFormatter={(value) => `KES ${(value / 1000).toFixed(0)}k`}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: '#1F2937', 
+                              border: '1px solid #374151',
+                              borderRadius: '8px',
+                              color: '#fff'
+                            }}
+                            formatter={(value) => [formatKES(Number(value)), 'Revenue']}
+                            labelFormatter={(label) => {
+                              const [year, month] = String(label).split('-');
+                              const date = new Date(parseInt(year), parseInt(month) - 1);
+                              return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                            }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="revenue" 
+                            stroke="#14B8A6" 
+                            strokeWidth={2}
+                            dot={{ fill: '#14B8A6', strokeWidth: 2 }}
+                            activeDot={{ r: 6, fill: '#14B8A6' }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-surface-bg rounded-2xl border border-gray-800 p-6">
@@ -1014,6 +1099,61 @@ const Admin: React.FC = () => {
                   onPrev={() => fetchWebhooks(pagination.page - 1)}
                   onNext={() => fetchWebhooks(pagination.page + 1)}
                   label="webhooks"
+                />
+              </div>
+            )}
+
+            {activeTab === 'audit' && (
+              <div className="space-y-6">
+                <div className="bg-surface-bg rounded-2xl border border-gray-800 overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-gray-800/50">
+                      <tr>
+                        <th className="text-left p-4 text-gray-400 font-medium">Timestamp</th>
+                        <th className="text-left p-4 text-gray-400 font-medium">Admin</th>
+                        <th className="text-left p-4 text-gray-400 font-medium">Action</th>
+                        <th className="text-left p-4 text-gray-400 font-medium">Resource</th>
+                        <th className="text-left p-4 text-gray-400 font-medium">IP Address</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {auditLogs.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="p-8 text-center text-gray-500">
+                            No audit logs yet
+                          </td>
+                        </tr>
+                      ) : (
+                        auditLogs.map((log) => (
+                          <tr key={log._id} className="border-t border-gray-800 hover:bg-gray-800/30">
+                            <td className="p-4 text-gray-400 text-sm">
+                              {new Date(log.createdAt).toLocaleString()}
+                            </td>
+                            <td className="p-4">
+                              <div>
+                                <p className="text-white text-sm">{log.adminId?.businessName || 'Admin'}</p>
+                                <p className="text-gray-500 text-xs">{log.adminId?.email}</p>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded font-medium">
+                                {log.action.replace(/_/g, ' ')}
+                              </span>
+                            </td>
+                            <td className="p-4 text-gray-300 text-sm">{log.resource}</td>
+                            <td className="p-4 text-gray-500 text-xs">{log.ipAddress || 'N/A'}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <Pagination
+                  pagination={pagination}
+                  onPrev={() => fetchAuditLogs(pagination.page - 1)}
+                  onNext={() => fetchAuditLogs(pagination.page + 1)}
+                  label="audit logs"
                 />
               </div>
             )}

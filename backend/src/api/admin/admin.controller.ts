@@ -4,8 +4,10 @@ import Transaction from '../../models/Transaction';
 import Subscription from '../../models/Subscription';
 import ApiKey from '../../models/ApiKey';
 import Webhook from '../../models/Webhook';
+import AuditLog from '../../models/AuditLog';
 import mongoose from 'mongoose';
 import { PLAN_LIMITS } from '../../services/transactionLimit.service';
+import { logAdminAction, AuditAction, AuditResource } from '../../services/audit.service';
 
 export const getOverview = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -69,6 +71,11 @@ export const getOverview = async (req: Request, res: Response, next: NextFunctio
     };
 
     const activeBusinessesCount = activeBusinesses.length;
+
+    const adminId = (req.user as any)?._id;
+    if (adminId) {
+      await logAdminAction(adminId.toString(), 'VIEW_OVERVIEW', 'admin', req);
+    }
 
     res.status(200).json({
       totalBusinesses,
@@ -393,6 +400,11 @@ export const getPlanLimits = async (req: Request, res: Response, next: NextFunct
       }}
     ]);
 
+    const adminId = (req.user as any)?._id;
+    if (adminId) {
+      await logAdminAction(adminId.toString(), 'VIEW_PLAN_LIMITS', 'plan_limits', req);
+    }
+
     res.status(200).json({
       data: planLimitsData,
       total,
@@ -404,6 +416,36 @@ export const getPlanLimits = async (req: Request, res: Response, next: NextFunct
         totalTransactions: p.totalTransactions
       })),
       availablePlans: PLAN_LIMITS
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAuditLogs = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { page = 1, limit = 50, action, resource, adminId } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const query: any = {};
+    if (action) query.action = action;
+    if (resource) query.resource = resource;
+    if (adminId) query.adminId = new mongoose.Types.ObjectId(adminId as string);
+
+    const [logs, total] = await Promise.all([
+      AuditLog.find(query)
+        .populate('adminId', 'businessName email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      AuditLog.countDocuments(query)
+    ]);
+
+    res.status(200).json({
+      data: logs,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / Number(limit))
     });
   } catch (error) {
     next(error);
