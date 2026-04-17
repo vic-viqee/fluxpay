@@ -28,7 +28,8 @@ api.interceptors.response.use(
       requestUrl.includes('/auth/login') ||
       requestUrl.includes('/auth/refresh-token') ||
       requestUrl.includes('/auth/signup') ||
-      requestUrl.includes('/auth/google/exchange-code');
+      requestUrl.includes('/auth/google/exchange-code') ||
+      requestUrl.includes('/users/me');
 
     if (status !== 401 || !originalRequest || originalRequest._retry || shouldSkipRefresh) {
       return Promise.reject(error);

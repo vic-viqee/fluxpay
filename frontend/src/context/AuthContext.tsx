@@ -9,6 +9,7 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   refreshAuth: () => Promise<void>;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<IUser | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const logout = useCallback(() => {
     setUser(null);
@@ -32,11 +34,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAdmin(userData.role === 'admin');
     } catch (err) {
       console.error('Failed to fetch user data:', err);
-      logout();
+      setUser(null);
+      setIsAdmin(false);
+    } finally {
+      setLoading(false);
     }
-  }, [logout]);
+  }, []);
 
   const login = useCallback(async () => {
+    setLoading(true);
     await refreshAuth();
   }, [refreshAuth]);
 
@@ -47,7 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, login, logout, isAuthenticated, refreshAuth }}>
+    <AuthContext.Provider value={{ user, isAdmin, login, logout, isAuthenticated, refreshAuth, loading }}>
       {children}
     </AuthContext.Provider>
   );
