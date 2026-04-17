@@ -60,10 +60,17 @@ const getAllowedOrigins = (): string[] => {
 };
 
 const allowedOrigins = getAllowedOrigins();
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
 
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
+    
+    if (isProduction) {
+      if (origin.startsWith('https://') && (origin.includes('render.com') || origin.includes('localhost'))) {
+        return callback(null, true);
+      }
+    }
     
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
