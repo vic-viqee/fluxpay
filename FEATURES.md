@@ -2,6 +2,30 @@
 
 Prioritized based on competitor analysis and market differentiation.
 
+---
+
+## Recently Implemented: Plan-Based UI
+
+### Service Type Selection
+- **Status**: ✅ BUILT (2026-04-17)
+- **Description**: Users can select which FluxPay service they want to use, and the UI adapts accordingly
+- **Files**:
+  - `backend/src/models/User.ts` - Added `serviceType` field (subscription/gateway/both)
+  - `backend/src/api/settings/settings.controller.ts` - Added serviceType to settings endpoints
+  - `frontend/src/pages/Settings.tsx` - Added service type selector UI
+  - `frontend/src/components/Sidebar.tsx` - Conditional navigation based on serviceType
+  - `frontend/src/context/AuthContext.tsx` - Added isAdmin state
+  - `frontend/src/pages/Login.tsx` - Admin redirect to /admin
+  - `frontend/src/pages/Admin.tsx` - Fixed endpoint check
+- **Behavior**:
+  | Service Type | Shows in Sidebar |
+  |--------------|-----------------|
+  | subscription | Customers, Subscriptions, Analytics |
+  | gateway | Transactions, API Keys, Analytics |
+  | both | All features |
+
+---
+
 ## Phase 1: Revenue Protection (Critical)
 
 ### 1. Quarterly Billing Cycle
