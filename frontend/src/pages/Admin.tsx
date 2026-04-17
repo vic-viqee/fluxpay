@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { 
   Users, CreditCard, Activity, DollarSign, 
   Package, Key, Webhook, ChevronLeft, ChevronRight,
@@ -105,6 +106,7 @@ interface PaginationState {
 }
 
 const Admin: React.FC = () => {
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -121,19 +123,21 @@ const Admin: React.FC = () => {
   const [transactionStatus, setTransactionStatus] = useState<string>('');
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('');
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    checkAdminStatus();
-  }, []);
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
-    if (isAdmin) {
-      fetchOverview();
-      fetchBusinesses();
+    if (!authLoading && user) {
+      if (user.role === 'admin') {
+        setLoading(false);
+        fetchOverview();
+        fetchBusinesses();
+      }
+    } else if (!authLoading && !user) {
+      setLoading(false);
     }
-  }, [isAdmin]);
+  }, [authLoading, user]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -147,21 +151,6 @@ const Admin: React.FC = () => {
       case 'audit': fetchAuditLogs(); break;
     }
   }, [activeTab, transactionStatus, subscriptionStatus, pagination.page, dateRange]);
-
-  const checkAdminStatus = async () => {
-    try {
-      const response = await api.get('/users/me');
-      if (response.data.role === 'admin') {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
-    } catch {
-      setIsAdmin(false);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchOverview = async () => {
     try {
@@ -261,7 +250,8 @@ const Admin: React.FC = () => {
     window.location.href = '/login';
   };
 
-  if (loading) {
+  // Show loading while checking auth
+  if (authLoading || (loading && !user)) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
@@ -269,16 +259,14 @@ const Admin: React.FC = () => {
     );
   }
 
-  if (isAdmin === false) {
-    return <Navigate to="/dashboard" />;
+  // If not logged in, redirect to login
+  if (!user) {
+    return <Navigate to="/login" />;
   }
 
+  // If logged in but not admin, redirect to dashboard
   if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
-    );
+    return <Navigate to="/dashboard" />;
   }
 
   const navItems = [

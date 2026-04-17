@@ -8,7 +8,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { refreshAuth } = useAuth();
+  const { refreshAuth, user } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,7 +16,12 @@ const Login: React.FC = () => {
       await api.post('/auth/login', { email, password });
       
       await refreshAuth();
-      navigate('/dashboard', { replace: true });
+      // Redirect admins to admin page, others to dashboard
+      if (user?.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'An error occurred during login.');
     }
