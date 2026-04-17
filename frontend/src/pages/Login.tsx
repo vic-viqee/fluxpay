@@ -17,12 +17,15 @@ const Login: React.FC = () => {
       if (response.data.token) {
         login(response.data.token, response.data.refreshToken);
         
-        // Check if user is admin and redirect accordingly
+        // Check if user is admin by fetching user data
         const userResponse = await api.get('/users/me');
-        if (userResponse.data.role === 'admin') {
-          navigate('/admin');
+        const userRole = userResponse.data.role;
+        
+        // Redirect based on role
+        if (userRole === 'admin') {
+          navigate('/admin', { replace: true });
         } else {
-          navigate('/dashboard');
+          navigate('/dashboard', { replace: true });
         }
       }
     } catch (err: any) {

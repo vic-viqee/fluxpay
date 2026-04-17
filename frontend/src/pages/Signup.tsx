@@ -68,7 +68,17 @@ const Signup: React.FC = () => {
       // AUTO-LOGIN Logic
       if (response.data.token && response.data.refreshToken) {
         authLogin(response.data.token, response.data.refreshToken);
-        navigate('/dashboard');
+        // Check role and redirect
+        try {
+          const userResponse = await api.get('/users/me');
+          if (userResponse.data.role === 'admin') {
+            navigate('/admin');
+          } else {
+            navigate('/dashboard');
+          }
+        } catch {
+          navigate('/dashboard');
+        }
       } else {
         navigate('/login', { state: { message: 'Registration successful. Please log in.' } });
       }

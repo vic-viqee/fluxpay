@@ -22,7 +22,17 @@ const GoogleCallback: React.FC = () => {
 
       if (token) {
         login(token);
-        navigate('/dashboard');
+        // Check role and redirect
+        try {
+          const userResponse = await api.get('/users/me');
+          if (userResponse.data.role === 'admin') {
+            navigate('/admin');
+          } else {
+            navigate('/dashboard');
+          }
+        } catch {
+          navigate('/dashboard');
+        }
         return;
       }
 
@@ -36,7 +46,17 @@ const GoogleCallback: React.FC = () => {
         
         if (response.data.token) {
           login(response.data.token, response.data.refreshToken);
-          navigate('/dashboard');
+          // Check role and redirect
+          try {
+            const userResponse = await api.get('/users/me');
+            if (userResponse.data.role === 'admin') {
+              navigate('/admin');
+            } else {
+              navigate('/dashboard');
+            }
+          } catch {
+            navigate('/dashboard');
+          }
         } else {
           navigate('/dashboard');
         }
