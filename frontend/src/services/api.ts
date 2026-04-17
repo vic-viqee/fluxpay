@@ -15,6 +15,18 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Request interceptor to add Authorization header from localStorage
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
 api.interceptors.response.use(
@@ -28,8 +40,7 @@ api.interceptors.response.use(
       requestUrl.includes('/auth/login') ||
       requestUrl.includes('/auth/refresh-token') ||
       requestUrl.includes('/auth/signup') ||
-      requestUrl.includes('/auth/google/exchange-code') ||
-      requestUrl.includes('/users/me');
+      requestUrl.includes('/auth/google/exchange-code');
 
     if (status !== 401 || !originalRequest || originalRequest._retry || shouldSkipRefresh) {
       return Promise.reject(error);
@@ -45,6 +56,7 @@ api.interceptors.response.use(
       );
       const newAccessToken = refreshResponse.data?.token;
       if (newAccessToken) {
+        localStorage.setItem('token', newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
       }
       return api(originalRequest);

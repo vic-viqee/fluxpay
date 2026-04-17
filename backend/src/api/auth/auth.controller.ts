@@ -71,6 +71,7 @@ const setAuthCookies = (res: Response, accessToken: string, refreshToken: string
     sameSite: isProduction ? 'none' : 'lax',
     maxAge: 60 * 60 * 1000,
     path: '/',
+    domain: isProduction ? '.onrender.com' : undefined,
   });
   
   res.cookie('refreshToken', refreshToken, {
@@ -79,6 +80,7 @@ const setAuthCookies = (res: Response, accessToken: string, refreshToken: string
     sameSite: isProduction ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: '/',
+    domain: isProduction ? '.onrender.com' : undefined,
   });
 };
 

@@ -13,15 +13,17 @@ const Login: React.FC = () => {
     e.preventDefault();
     setLoginLoading(true);
     try {
-      // Login - backend sets httpOnly cookies
-      await api.post('/auth/login', { email, password });
+      // Login - backend sets httpOnly cookies and returns token
+      const loginResponse = await api.post('/auth/login', { email, password });
+      const { token, user: userData } = loginResponse.data;
       
-      // Immediately fetch user data with cookies
-      const userResponse = await api.get('/users/me');
-      const userData = userResponse.data;
+      // Store token in localStorage for API calls
+      if (token) {
+        localStorage.setItem('token', token);
+      }
       
       // Redirect based on role
-      if (userData.role === 'admin') {
+      if (userData?.role === 'admin') {
         navigate('/admin', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
