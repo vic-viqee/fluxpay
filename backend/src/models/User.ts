@@ -17,6 +17,7 @@ export interface IUser extends Document {
   logoUrl?: string;
   plan?: string;
   role?: 'user' | 'admin';
+  serviceType?: 'subscription' | 'gateway' | 'both';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,6 +39,7 @@ const UserSchema: Schema = new Schema({
   logoUrl: { type: String, required: false },
   plan: { type: String, required: false },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  serviceType: { type: String, enum: ['subscription', 'gateway', 'both'], default: 'both' },
 }, { timestamps: true });
 
 export default mongoose.model<IUser>('User', UserSchema);

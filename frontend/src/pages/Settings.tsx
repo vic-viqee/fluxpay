@@ -26,6 +26,7 @@ interface SettingsModel {
   businessDescription: string;
   logoUrl: string;
   plan: string;
+  serviceType: 'subscription' | 'gateway' | 'both';
 }
 
 const emptySettings: SettingsModel = {
@@ -40,6 +41,7 @@ const emptySettings: SettingsModel = {
   businessDescription: '',
   logoUrl: '',
   plan: '',
+  serviceType: 'both',
 };
 
 const applyTheme = (mode: ThemeMode) => {
@@ -177,6 +179,7 @@ const Settings: React.FC = () => {
       formData.append('preferredPaymentMethod', settingsData.preferredPaymentMethod);
       formData.append('businessDescription', settingsData.businessDescription);
       formData.append('plan', settingsData.plan);
+      formData.append('serviceType', settingsData.serviceType);
       if (logoFile) {
         formData.append('logo', logoFile);
       }
@@ -364,6 +367,32 @@ const Settings: React.FC = () => {
                     className="w-full bg-primary-bg border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-main/50 outline-none transition-all"
                     placeholder="Tell us a bit about what you do..."
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Service Type</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { value: 'subscription', label: 'Subscription Billing', icon: '🔄', desc: 'Recurring payments for SaaS, gyms, schools' },
+                      { value: 'gateway', label: 'Payment Gateway', icon: '💳', desc: 'M-Pesa payments for apps & marketplaces' },
+                      { value: 'both', label: 'Both Services', icon: '✨', desc: 'Use both subscription & gateway features' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setField('serviceType', option.value as 'subscription' | 'gateway' | 'both')}
+                        className={`p-4 rounded-xl border text-left transition-all ${
+                          settingsData.serviceType === option.value
+                            ? 'border-main bg-main/10 ring-2 ring-main/30'
+                            : 'border-gray-700 hover:border-gray-600'
+                        }`}
+                      >
+                        <div className="text-2xl mb-1">{option.icon}</div>
+                        <div className="text-sm font-bold text-white">{option.label}</div>
+                        <div className="text-xs text-gray-400 mt-1">{option.desc}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="flex justify-end pt-4">

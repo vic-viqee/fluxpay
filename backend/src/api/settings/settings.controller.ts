@@ -41,6 +41,7 @@ export const getSettings = async (req: Request, res: Response, next: NextFunctio
       plan: user.plan || '',
       email: user.email,
       username: user.username || '',
+      serviceType: user.serviceType || 'both',
     });
   } catch (error) {
     next(error);
@@ -65,6 +66,7 @@ export const updateSettings = async (req: Request, res: Response, next: NextFunc
       'businessDescription',
       'logoUrl',
       'plan',
+      'serviceType',
     ] as const;
 
     const updatePayload: Record<string, unknown> = {};
@@ -105,6 +107,7 @@ export const updateSettings = async (req: Request, res: Response, next: NextFunc
         plan: updatedUser.plan || '',
         email: updatedUser.email,
         username: updatedUser.username || '',
+        serviceType: updatedUser.serviceType || 'both',
       },
     });
   } catch (error) {

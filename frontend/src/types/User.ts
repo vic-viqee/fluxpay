@@ -2,6 +2,8 @@ export interface IUser {
   _id: string;
   username: string;
   email: string;
+  role?: 'user' | 'admin';
+  serviceType?: 'subscription' | 'gateway' | 'both';
   businessName?: string;
   businessType?: string;
   kraPin?: string;
@@ -9,9 +11,9 @@ export interface IUser {
   businessPhoneNumber?: string;
   preferredPaymentMethod?: string;
   businessDescription?: string;
-  logoUrl?: string; // Add logoUrl
+  logoUrl?: string;
   plan?: string;
-  createdAt: string; // Dates are often strings when fetched from API
+  createdAt: string;
   updatedAt: string;
-  has_received_payment?: boolean; // From backend getMe
+  has_received_payment?: boolean;
 }
