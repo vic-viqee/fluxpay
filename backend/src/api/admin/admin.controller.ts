@@ -5,6 +5,7 @@ import Subscription from '../../models/Subscription';
 import ApiKey from '../../models/ApiKey';
 import Webhook from '../../models/Webhook';
 import mongoose from 'mongoose';
+import { PLAN_LIMITS } from '../../services/transactionLimit.service';
 
 export const getOverview = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -338,6 +339,71 @@ export const getAllWebhooks = async (req: Request, res: Response, next: NextFunc
       total,
       page: Number(page),
       totalPages: Math.ceil(total / Number(limit))
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPlanLimits = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { page = 1, limit = 50, plan } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const query: any = { role: { $ne: 'admin' } };
+    if (plan) {
+      query.plan = plan;
+    }
+
+    const [users, total] = await Promise.all([
+      User.find(query)
+        .select('businessName email plan transactionLimit currentMonthTransactions transactionCountResetAt createdAt')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      User.countDocuments(query)
+    ]);
+
+    const planLimitsData = users.map((user: any) => {
+      const limit = user.transactionLimit || PLAN_LIMITS[user.plan || 'free'] || PLAN_LIMITS.free;
+      const used = user.currentMonthTransactions;
+      const percentage = limit === Infinity ? 0 : Math.round((used / limit) * 100);
+      
+      return {
+        _id: user._id,
+        businessName: user.businessName,
+        email: user.email,
+        plan: user.plan || 'Free',
+        limit: limit === Infinity ? 'Unlimited' : limit,
+        used,
+        percentage,
+        remaining: limit === Infinity ? 'Unlimited' : Math.max(0, limit - used),
+        resetAt: user.transactionCountResetAt,
+        status: percentage >= 100 ? 'blocked' : percentage >= 80 ? 'warning' : 'ok',
+        createdAt: user.createdAt
+      };
+    });
+
+    const planStats = await User.aggregate([
+      { $match: { role: { $ne: 'admin' } } },
+      { $group: {
+        _id: { $ifNull: ['$plan', 'Free'] },
+        count: { $sum: 1 },
+        totalTransactions: { $sum: '$currentMonthTransactions' }
+      }}
+    ]);
+
+    res.status(200).json({
+      data: planLimitsData,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / Number(limit)),
+      planStats: planStats.map((p: any) => ({
+        plan: p._id,
+        businesses: p.count,
+        totalTransactions: p.totalTransactions
+      })),
+      availablePlans: PLAN_LIMITS
     });
   } catch (error) {
     next(error);

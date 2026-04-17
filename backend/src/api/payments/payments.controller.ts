@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import { initiateStkPush } from '../../services/mpesa.service';
+import { checkAndUpdateTransactionLimit, incrementTransactionCount } from '../../services/transactionLimit.service';
 import logger from '../../utils/logger';
 import User from '../../models/User';
 import Transaction from '../../models/Transaction';
@@ -43,16 +44,37 @@ export const initiatePayment = async (req: Request, res: Response, next: NextFun
       return res.status(400).json({ message: 'Amount, phone number, and subscription ID are required.' });
     }
 
-    // Validate phone number
-    const phoneValidation = isValidMpesaPhoneNumber(phone);
-    if (!phoneValidation.isValid) {
-      return res.status(400).json({ message: phoneValidation.message });
-    }
-
     const user = req.user as IUser;
     const ownerId = user?._id;
     if (!ownerId) {
       return res.status(401).json({ message: 'User not authenticated.' });
+    }
+
+    const limitCheck = await checkAndUpdateTransactionLimit(ownerId.toString());
+    
+    if (!limitCheck.allowed) {
+      return res.status(429).json({
+        message: 'Transaction limit reached',
+        code: limitCheck.reason,
+        limit: limitCheck.limit,
+        used: limitCheck.used,
+        upgradePlan: limitCheck.upgradePlan,
+        upgradeUrl: '/plans',
+      });
+    }
+
+    if (limitCheck.warning) {
+      req.headers['x-limit-warning'] = JSON.stringify({
+        used: limitCheck.used,
+        limit: limitCheck.limit,
+        percentage: limitCheck.percentage,
+        remaining: limitCheck.remaining,
+      });
+    }
+
+    const phoneValidation = isValidMpesaPhoneNumber(phone);
+    if (!phoneValidation.isValid) {
+      return res.status(400).json({ message: phoneValidation.message });
     }
 
     const subscription = await Subscription.findOne({ _id: subscriptionId, ownerId });
@@ -65,6 +87,8 @@ export const initiatePayment = async (req: Request, res: Response, next: NextFun
 
     const response: any = await initiateStkPush(phone, amount, businessName);
 
+    await incrementTransactionCount(ownerId.toString());
+
     const newTransaction = new Transaction({
       subscriptionId,
       ownerId,
@@ -76,7 +100,16 @@ export const initiatePayment = async (req: Request, res: Response, next: NextFun
 
     await newTransaction.save();
     
-    res.status(200).json({ message: 'STK push initiated successfully', data: response });
+    const result: any = { message: 'STK push initiated successfully', data: response };
+    if (limitCheck.warning) {
+      result.limitWarning = {
+        used: limitCheck.used + 1,
+        limit: limitCheck.limit,
+        percentage: limitCheck.percentage,
+        remaining: limitCheck.remaining - 1,
+      };
+    }
+    res.status(200).json(result);
   } catch (error) {
     logger.error('STK Push Error:', error); 
     next(error);
@@ -91,20 +124,47 @@ export const simulateStkPush = async (req: Request, res: Response, next: NextFun
       return res.status(400).json({ message: 'Amount and phone number are required.' });
     }
 
-    // Validate phone number
+    const user = req.user as IUser;
+    const ownerId = user?._id;
+    if (!ownerId) {
+      return res.status(401).json({ message: 'User not authenticated.' });
+    }
+
+    const limitCheck = await checkAndUpdateTransactionLimit(ownerId.toString());
+    
+    if (!limitCheck.allowed) {
+      return res.status(429).json({
+        message: 'Transaction limit reached',
+        code: limitCheck.reason,
+        limit: limitCheck.limit,
+        used: limitCheck.used,
+        upgradePlan: limitCheck.upgradePlan,
+        upgradeUrl: '/plans',
+      });
+    }
+
     const phoneValidation = isValidMpesaPhoneNumber(phoneNumber);
     if (!phoneValidation.isValid) {
       return res.status(400).json({ message: phoneValidation.message });
     }
 
-    const user = req.user as IUser;
-    const ownerId = user?._id;
     const fetchedUser = await User.findById(ownerId);
     const businessName = fetchedUser?.businessName || 'FluxPay'; 
 
     const response: any = await initiateStkPush(phoneNumber, amount, businessName);
 
-    res.status(200).json({ message: 'STK push simulation initiated successfully', data: response });
+    await incrementTransactionCount(ownerId.toString());
+
+    const result: any = { message: 'STK push simulation initiated successfully', data: response };
+    if (limitCheck.warning) {
+      result.limitWarning = {
+        used: limitCheck.used + 1,
+        limit: limitCheck.limit,
+        percentage: limitCheck.percentage,
+        remaining: limitCheck.remaining - 1,
+      };
+    }
+    res.status(200).json(result);
   } catch (error) {
     logger.error('STK Push Simulation Error:', error); 
     next(error);

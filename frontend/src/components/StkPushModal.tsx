@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
-import { Smartphone, DollarSign, X, Send, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Smartphone, DollarSign, X, Send, AlertCircle, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { initiateSimulatedStkPushPayment } from '../services/api';
+
+interface LimitWarning {
+  used: number;
+  limit: number;
+  percentage: number;
+  remaining: number;
+}
 
 interface StkPushModalProps {
   isOpen: boolean;
@@ -9,16 +17,19 @@ interface StkPushModalProps {
 }
 
 export const StkPushModal: React.FC<StkPushModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | '' }>({ text: '', type: '' });
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | 'warning' | '' }>({ text: '', type: '' });
+  const [limitWarning, setLimitWarning] = useState<LimitWarning | null>(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage({ text: '', type: '' });
+    setLimitWarning(null);
 
     if (!phoneNumber || !amount) {
       setMessage({ text: 'Phone Number and Amount are required.', type: 'error' });
@@ -35,24 +46,44 @@ export const StkPushModal: React.FC<StkPushModalProps> = ({ isOpen, onClose, onS
 
     setLoading(true);
     try {
-      await initiateSimulatedStkPushPayment({
+      const response = await initiateSimulatedStkPushPayment({
         phoneNumber,
         amount: Number(amount),
       });
+      
+      if (response.limitWarning) {
+        setLimitWarning(response.limitWarning);
+      }
+      
       setMessage({ text: `STK Push sent! Please check your phone.`, type: 'success' });
       
       setTimeout(() => {
         setPhoneNumber('');
         setAmount('');
+        setLimitWarning(null);
         onSuccess();
         onClose();
       }, 2000);
 
     } catch (error: any) {
-      setMessage({ text: error.response?.data?.message || 'Failed to initiate STK Push.', type: 'error' });
+      const errorData = error.response?.data;
+      
+      if (error.response?.status === 429 && errorData?.code === 'TRANSACTION_LIMIT_REACHED') {
+        setMessage({ 
+          text: `Transaction limit reached (${errorData.used}/${errorData.limit}). Upgrade to continue.`, 
+          type: 'error' 
+        });
+      } else {
+        setMessage({ text: errorData?.message || 'Failed to initiate STK Push.', type: 'error' });
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUpgrade = () => {
+    onClose();
+    navigate('/plans');
   };
 
   return (
@@ -71,14 +102,37 @@ export const StkPushModal: React.FC<StkPushModalProps> = ({ isOpen, onClose, onS
         </div>
         
         <div className="p-8">
+          {limitWarning && limitWarning.percentage >= 80 && (
+            <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-start gap-3">
+              <AlertTriangle size={18} className="text-yellow-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-yellow-500">Approaching limit</p>
+                <p className="text-xs text-yellow-500/70 mt-1">
+                  You've used {limitWarning.percentage}% of your monthly transactions ({limitWarning.remaining} remaining). 
+                  Consider upgrading your plan.
+                </p>
+              </div>
+            </div>
+          )}
+
           {message.text && (
-            <div className={`p-4 mb-6 text-sm rounded-xl flex items-center gap-3 border ${
+            <div className={`mb-6 p-4 text-sm rounded-xl flex items-center gap-3 border ${
               message.type === 'error' 
               ? 'bg-red-900/20 border-red-800 text-red-400' 
+              : message.type === 'warning'
+              ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
               : 'bg-secondary/10 border-secondary/20 text-secondary'
             }`}>
-              {message.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+              {message.type === 'error' ? <AlertCircle size={18} /> : message.type === 'warning' ? <AlertTriangle size={18} /> : <CheckCircle2 size={18} />}
               {message.text}
+              {message.type === 'error' && (
+                <button 
+                  onClick={handleUpgrade}
+                  className="ml-auto text-xs font-bold text-main hover:underline whitespace-nowrap"
+                >
+                  Upgrade Plan →
+                </button>
+              )}
             </div>
           )}
 

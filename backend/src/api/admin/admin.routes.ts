@@ -6,7 +6,8 @@ import {
   getAllTransactions,
   getAllSubscriptions,
   getAllApiKeys,
-  getAllWebhooks
+  getAllWebhooks,
+  getPlanLimits
 } from './admin.controller';
 import { isAdmin } from '../../middleware/adminAuth';
 
@@ -19,5 +20,6 @@ router.get('/transactions', isAdmin, getAllTransactions);
 router.get('/subscriptions', isAdmin, getAllSubscriptions);
 router.get('/apikeys', isAdmin, getAllApiKeys);
 router.get('/webhooks', isAdmin, getAllWebhooks);
+router.get('/plan-limits', isAdmin, getPlanLimits);
 
 export default router;

@@ -4,6 +4,39 @@ Prioritized based on competitor analysis and market differentiation.
 
 ---
 
+## Phase 2: Admin Page Enhancements (2026-04-17)
+
+### Plan-Based Transaction Limits
+- **Status**: ✅ BUILT
+- **Description**: Per-plan monthly transaction limits with 80% warning and 100% block behavior
+- **Behavior**:
+  | Plan | Monthly Limit |
+  |------|---------------|
+  | Free | 50 |
+  | Starter | 100 |
+  | Growth | 500 |
+  | Pro | 2,000 |
+  | Enterprise | Unlimited |
+- **Files**:
+  - `backend/src/models/User.ts` - Added `transactionLimit`, `currentMonthTransactions`, `transactionCountResetAt`
+  - `backend/src/services/transactionLimit.service.ts` - NEW: Limit checking logic
+  - `backend/src/api/payments/payments.controller.ts` - Limit enforcement on STK push
+  - `backend/src/api/admin/admin.controller.ts` - Plan limits endpoint
+  - `frontend/src/components/StkPushModal.tsx` - 80% warning and block UI
+  - `frontend/src/pages/Admin.tsx` - Limits tab with usage visualization
+
+### Business Detail View
+- **Status**: ✅ BUILT
+- **Description**: Click-to-expand slide-out panel showing full business details
+- **Files**: `frontend/src/pages/Admin.tsx` - Business detail panel
+
+### Admin Table Enhancements
+- **Date Range Filters**: Added to Transactions and Subscriptions tabs
+- **CSV Export**: Added to all admin tables
+- **Files**: `frontend/src/pages/Admin.tsx`
+
+---
+
 ## Security & Quality Updates (2026-04-17)
 
 ### Critical Security Fixes Applied
