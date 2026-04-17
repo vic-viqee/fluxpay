@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Users,
   History, PieChart, Settings, 
-  ChevronRight, Package, Key, Webhook
+  ChevronRight, Package, Key
 } from 'lucide-react';
 
 interface UserProfile {
