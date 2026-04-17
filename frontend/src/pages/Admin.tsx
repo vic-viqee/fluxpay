@@ -128,16 +128,15 @@ const Admin: React.FC = () => {
   const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
-    // Wait for auth to finish loading
     if (authLoading) return;
     
-    // Auth loaded - check user
     if (user && user.role === 'admin') {
       setLoading(false);
       fetchOverview();
       fetchBusinesses();
+    } else if (user && user.role !== 'admin') {
+      setLoading(false);
     } else {
-      // Not admin or no user - will redirect via render
       setLoading(false);
     }
   }, [authLoading, user]);

@@ -10,6 +10,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   refreshAuth: () => Promise<void>;
   loading: boolean;
+  setUserData: (userData: IUser, token?: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +25,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsAdmin(false);
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
+  }, []);
+
+  const setUserData = useCallback((userData: IUser, token?: string) => {
+    setUser(userData);
+    setIsAdmin(userData.role === 'admin');
+    if (token) {
+      localStorage.setItem('token', token);
+    }
+    setLoading(false);
   }, []);
 
   const refreshAuth = useCallback(async () => {
@@ -60,7 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, login, logout, isAuthenticated, refreshAuth, loading }}>
+    <AuthContext.Provider value={{ user, isAdmin, login, logout, isAuthenticated, refreshAuth, loading, setUserData }}>
       {children}
     </AuthContext.Provider>
   );

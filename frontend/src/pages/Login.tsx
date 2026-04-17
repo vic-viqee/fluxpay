@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { googleAuthUrl } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -8,25 +9,24 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const navigate = useNavigate();
+  const { setUserData } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginLoading(true);
     try {
-      // Login - backend sets httpOnly cookies and returns token
       const loginResponse = await api.post('/auth/login', { email, password });
       const { token, user: userData } = loginResponse.data;
       
-      // Store token in localStorage for API calls
-      if (token) {
-        localStorage.setItem('token', token);
-      }
-      
-      // Redirect based on role
-      if (userData?.role === 'admin') {
-        navigate('/admin', { replace: true });
+      if (token && userData) {
+        setUserData(userData, token);
+        if (userData.role === 'admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
       } else {
-        navigate('/dashboard', { replace: true });
+        setError('Login failed. Please try again.');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'An error occurred during login.');
