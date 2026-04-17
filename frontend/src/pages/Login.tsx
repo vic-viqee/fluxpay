@@ -8,16 +8,22 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { refreshAuth, user } = useAuth();
+  const { refreshAuth } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await api.post('/auth/login', { email, password });
       
+      // Wait for auth to be refreshed and get user data
       await refreshAuth();
-      // Redirect admins to admin page, others to dashboard
-      if (user?.role === 'admin') {
+      
+      // Get updated user from localStorage or re-fetch
+      const userResponse = await api.get('/users/me');
+      const userData = userResponse.data;
+      
+      // Redirect based on role
+      if (userData.role === 'admin') {
         navigate('/admin', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });

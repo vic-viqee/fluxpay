@@ -31,6 +31,7 @@ export const getMe = async (req: Request, res: Response, next: NextFunction) => 
       businessDescription: user.businessDescription,
       logoUrl: user.logoUrl,
       plan: user.plan,
+      serviceType: user.serviceType || 'both',
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       has_received_payment: !!successfulTransaction,
