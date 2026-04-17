@@ -281,3 +281,65 @@ export const getAllSubscriptions = async (req: Request, res: Response, next: Nex
     next(error);
   }
 };
+
+export const getAllApiKeys = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { page = 1, limit = 50, isActive } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const query: any = {};
+    if (isActive !== undefined) {
+      query.isActive = isActive === 'true';
+    }
+
+    const [apiKeys, total] = await Promise.all([
+      ApiKey.find(query)
+        .populate('ownerId', 'businessName email')
+        .select('-secret')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      ApiKey.countDocuments(query)
+    ]);
+
+    res.status(200).json({
+      data: apiKeys,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / Number(limit))
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllWebhooks = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { page = 1, limit = 50, isActive } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const query: any = {};
+    if (isActive !== undefined) {
+      query.isActive = isActive === 'true';
+    }
+
+    const [webhooks, total] = await Promise.all([
+      Webhook.find(query)
+        .populate('ownerId', 'businessName email')
+        .select('-secret')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      Webhook.countDocuments(query)
+    ]);
+
+    res.status(200).json({
+      data: webhooks,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / Number(limit))
+    });
+  } catch (error) {
+    next(error);
+  }
+};

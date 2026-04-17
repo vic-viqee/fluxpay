@@ -70,11 +70,8 @@ const GoogleRegistrationCompletion: React.FC = () => {
         },
       });
 
-      if (response.data.token) {
-        login(response.data.token, response.data.refreshToken);
-        setMessage('Registration complete! Redirecting to dashboard...');
-        setTimeout(() => navigate('/dashboard'), 1500);
-      } else if (response.data.user) {
+      if (response.data.token || response.data.user) {
+        await login();
         setMessage('Registration complete! Redirecting to dashboard...');
         setTimeout(() => navigate('/dashboard'), 1500);
       } else {

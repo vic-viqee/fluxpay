@@ -16,8 +16,23 @@ export const getAnalytics = async (req: Request, res: Response, next: NextFuncti
     }
 
     const ownerObjectId = new mongoose.Types.ObjectId(String(ownerId));
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
-    const [totals, statusBreakdown, monthlyRevenue, subscriptionsByStatus, counts] = await Promise.all([
+    const [
+      totals,
+      statusBreakdown,
+      monthlyRevenue,
+      subscriptionsByStatus,
+      counts,
+      recentRevenue,
+      previousRevenue,
+      recentSubscriptions,
+      previousSubscriptions,
+      recentCustomers,
+      previousCustomers,
+    ] = await Promise.all([
       Transaction.aggregate([
         { $match: { ownerId: ownerObjectId } },
         {
@@ -76,6 +91,42 @@ export const getAnalytics = async (req: Request, res: Response, next: NextFuncti
         ServicePlan.countDocuments({ ownerId: ownerObjectId }),
         Subscription.countDocuments({ ownerId: ownerObjectId }),
       ]),
+      Transaction.aggregate([
+        {
+          $match: {
+            ownerId: ownerObjectId,
+            status: 'SUCCESS',
+            transactionDate: { $gte: thirtyDaysAgo },
+          },
+        },
+        { $group: { _id: null, total: { $sum: '$amountKes' }, count: { $sum: 1 } } },
+      ]),
+      Transaction.aggregate([
+        {
+          $match: {
+            ownerId: ownerObjectId,
+            status: 'SUCCESS',
+            transactionDate: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo },
+          },
+        },
+        { $group: { _id: null, total: { $sum: '$amountKes' }, count: { $sum: 1 } } },
+      ]),
+      Subscription.countDocuments({
+        ownerId: ownerObjectId,
+        createdAt: { $gte: thirtyDaysAgo },
+      }),
+      Subscription.countDocuments({
+        ownerId: ownerObjectId,
+        createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo },
+      }),
+      Client.countDocuments({
+        ownerId: ownerObjectId,
+        createdAt: { $gte: thirtyDaysAgo },
+      }),
+      Client.countDocuments({
+        ownerId: ownerObjectId,
+        createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo },
+      }),
     ]);
 
     const totalBlock = totals[0] || {
@@ -92,6 +143,20 @@ export const getAnalytics = async (req: Request, res: Response, next: NextFuncti
 
     const [totalCustomers, totalPlans, totalSubscriptions] = counts;
 
+    const recentRevenueTotal = recentRevenue[0]?.total || 0;
+    const previousRevenueTotal = previousRevenue[0]?.total || 0;
+    const revenueTrend = previousRevenueTotal > 0
+      ? ((recentRevenueTotal - previousRevenueTotal) / previousRevenueTotal) * 100
+      : 0;
+
+    const subscriptionsTrend = previousSubscriptions > 0
+      ? ((recentSubscriptions - previousSubscriptions) / previousSubscriptions) * 100
+      : recentSubscriptions > 0 ? 100 : 0;
+
+    const customersTrend = previousCustomers > 0
+      ? ((recentCustomers - previousCustomers) / previousCustomers) * 100
+      : recentCustomers > 0 ? 100 : 0;
+
     return res.status(200).json({
       totals: {
         ...totalBlock,
@@ -99,6 +164,11 @@ export const getAnalytics = async (req: Request, res: Response, next: NextFuncti
         totalCustomers,
         totalPlans,
         totalSubscriptions,
+      },
+      trends: {
+        revenue: revenueTrend,
+        subscriptions: subscriptionsTrend,
+        customers: customersTrend,
       },
       transactionStatusBreakdown: statusBreakdown,
       subscriptionStatusBreakdown: subscriptionsByStatus,

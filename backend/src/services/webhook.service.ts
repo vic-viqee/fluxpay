@@ -22,9 +22,6 @@ export const findApiKey = async (key: string): Promise<{ apiKey: IApiKey; ownerI
   const apiKey = await ApiKey.findOne({ key, isActive: true });
   if (!apiKey) return null;
   
-  apiKey.lastUsedAt = new Date();
-  await apiKey.save();
-  
   return { apiKey, ownerId: apiKey.ownerId };
 };
 
@@ -103,6 +100,9 @@ export const triggerSubscriptionCreated = async (
 };
 
 export const verifyApiKey = async (key: string, secret: string): Promise<boolean> => {
-  const apiKey = await ApiKey.findOne({ key, secret, isActive: true });
-  return !!apiKey;
+  const apiKey = await ApiKey.findOne({ key, isActive: true });
+  if (!apiKey) return false;
+  
+  const bcrypt = await import('bcrypt');
+  return bcrypt.compare(secret, apiKey.secret);
 };

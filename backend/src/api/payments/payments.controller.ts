@@ -5,9 +5,11 @@ import logger from '../../utils/logger';
 import User from '../../models/User';
 import Transaction from '../../models/Transaction';
 import Subscription from '../../models/Subscription';
+import ServicePlan from '../../models/ServicePlan';
 import PublicCheckoutTransaction from '../../models/PublicCheckoutTransaction';
 import { IUser } from '../../models/User';
 import { isValidMpesaPhoneNumber } from '../../utils/phone';
+import { calculateNextBillingDate } from '../../utils/billing';
 import config from '../../config';
 
 const verifyMpesaSignature = (req: Request): boolean => {
@@ -207,6 +209,21 @@ export const handleCallback = async (req: Request, res: Response, next: NextFunc
         transaction.status = 'SUCCESS';
         transaction.mpesaReceiptNo = mpesaReceiptNo;
         await transaction.save();
+
+        const subscription = await Subscription.findById(transaction.subscriptionId);
+        if (subscription) {
+          const plan = await ServicePlan.findById(subscription.planId);
+          if (plan) {
+            subscription.nextBillingDate = calculateNextBillingDate(
+              subscription.nextBillingDate,
+              plan.frequency,
+              plan.billingDay
+            );
+            subscription.paymentFailureCount = 0;
+            await subscription.save();
+            logger.info(`Subscription ${subscription._id} billing date advanced to ${subscription.nextBillingDate}`);
+          }
+        }
       } else if (publicTransaction) {
         publicTransaction.status = 'SUCCESS';
         publicTransaction.mpesaReceiptNo = mpesaReceiptNo;

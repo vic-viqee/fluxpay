@@ -28,3 +28,10 @@ export const resolveUploadsDir = () => {
   }
 };
 
+export const isCloudinaryConfigured = (): boolean => {
+  return !!(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
+  );
+};

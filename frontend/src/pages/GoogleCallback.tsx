@@ -21,18 +21,8 @@ const GoogleCallback: React.FC = () => {
       }
 
       if (token) {
-        login(token);
-        // Check role and redirect
-        try {
-          const userResponse = await api.get('/users/me');
-          if (userResponse.data.role === 'admin') {
-            navigate('/admin');
-          } else {
-            navigate('/dashboard');
-          }
-        } catch {
-          navigate('/dashboard');
-        }
+        await login();
+        navigate('/dashboard');
         return;
       }
 
@@ -44,19 +34,9 @@ const GoogleCallback: React.FC = () => {
       try {
         const response = await api.post('/auth/google/exchange-code', { code });
         
-        if (response.data.token) {
-          login(response.data.token, response.data.refreshToken);
-          // Check role and redirect
-          try {
-            const userResponse = await api.get('/users/me');
-            if (userResponse.data.role === 'admin') {
-              navigate('/admin');
-            } else {
-              navigate('/dashboard');
-            }
-          } catch {
-            navigate('/dashboard');
-          }
+        if (response.data.token || response.status === 200) {
+          await login();
+          navigate('/dashboard');
         } else {
           navigate('/dashboard');
         }

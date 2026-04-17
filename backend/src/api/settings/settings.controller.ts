@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { IUser } from '../../models/User';
 import User from '../../models/User';
 import config from '../../config';
+import { isCloudinaryConfigured } from '../../utils/uploads';
 
 const getBackendBaseUrl = (req: Request) => {
   const configuredBackendUrl = (process.env.BACKEND_URL || '').trim();
@@ -65,7 +66,6 @@ export const updateSettings = async (req: Request, res: Response, next: NextFunc
       'preferredPaymentMethod',
       'businessDescription',
       'logoUrl',
-      'plan',
       'serviceType',
     ] as const;
 
@@ -77,7 +77,11 @@ export const updateSettings = async (req: Request, res: Response, next: NextFunc
     }
 
     if (req.file) {
-      updatePayload.logoUrl = `${getBackendBaseUrl(req)}/uploads/${req.file.filename}`;
+      if (isCloudinaryConfigured()) {
+        updatePayload.logoUrl = req.file.path;
+      } else {
+        updatePayload.logoUrl = `${getBackendBaseUrl(req)}/uploads/${req.file.filename}`;
+      }
     }
 
     if (Object.keys(updatePayload).length === 0) {

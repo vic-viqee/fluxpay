@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 import ApiKey from '../../models/ApiKey';
 import logger from '../../utils/logger';
 import { IUser } from '../../models/User';
@@ -21,10 +22,11 @@ export const createApiKey = async (req: Request, res: Response, next: NextFuncti
     }
 
     const { key, secret } = generateKeyPair();
+    const hashedSecret = await bcrypt.hash(secret, 10);
 
     const apiKey = await ApiKey.create({
       key,
-      secret,
+      secret: hashedSecret,
       name,
       ownerId,
     });
@@ -32,11 +34,11 @@ export const createApiKey = async (req: Request, res: Response, next: NextFuncti
     logger.info(`API key created: ${key} for user: ${user.email}`);
 
     res.status(201).json({
-      message: 'API key created successfully',
+      message: 'API key created successfully. Save the secret now - it cannot be retrieved later.',
       data: {
         id: apiKey._id,
         key: apiKey.key,
-        secret: apiKey.secret,
+        secret: secret,
         name: apiKey.name,
         isActive: apiKey.isActive,
         createdAt: apiKey.createdAt,

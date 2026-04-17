@@ -70,9 +70,10 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
     setPlansLoading(true);
     try {
       const fetchedPlans = await getServicePlans();
-      setServicePlans(fetchedPlans);
-      if (!selectedPlanId && fetchedPlans.length > 0) {
-        setSelectedPlanId(fetchedPlans[0]._id);
+      const plansData = fetchedPlans.data || [];
+      setServicePlans(plansData);
+      if (!selectedPlanId && plansData.length > 0) {
+        setSelectedPlanId(plansData[0]._id);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch service plans.');
@@ -84,11 +85,12 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
   const fetchClientsList = async () => {
     try {
       const fetchedClients = await getClients();
-      setClients(fetchedClients || []);
-      if (fetchedClients?.length > 0 && !selectedClientId) {
-        setSelectedClientId(fetchedClients[0]._id);
+      const clientsData = fetchedClients.data || [];
+      setClients(clientsData);
+      if (clientsData.length > 0 && !selectedClientId) {
+        setSelectedClientId(clientsData[0]._id);
       }
-      if (!fetchedClients?.length) {
+      if (!clientsData.length) {
         setClientMode('new');
         setSelectedClientId('');
       }
@@ -166,18 +168,19 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
             phoneNumber: clientPhoneNumber.trim(),
             email: clientEmail.trim() || undefined,
           });
-          clientId = clientResponse._id;
-        } catch (clientErr: any) {
-          if (clientErr.response?.status === 409) {
-            const allClients = await getClients();
-            const existingClient = allClients.find(
-              (client: any) => client.phoneNumber === clientPhoneNumber.trim()
-            );
-            if (existingClient?._id) {
-              clientId = existingClient._id;
-            } else throw clientErr;
+          clientId = clientResponse.client._id;
+      } catch (clientErr: any) {
+        if (clientErr.response?.status === 409) {
+          const allClientsResponse = await getClients();
+          const allClients = allClientsResponse.data || [];
+          const existingClient = allClients.find(
+            (client: any) => client.phoneNumber === clientPhoneNumber.trim()
+          );
+          if (existingClient?._id) {
+            clientId = existingClient._id;
           } else throw clientErr;
-        }
+        } else throw clientErr;
+      }
       }
 
       const response = await api.post('/subscriptions', {

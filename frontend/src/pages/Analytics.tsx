@@ -31,6 +31,17 @@ const Analytics: React.FC = () => {
     fetchAnalyticsData();
   }, []);
 
+  const formatTrend = (value: number): string => {
+    const sign = value >= 0 ? '+' : '';
+    return `${sign}${value.toFixed(1)}%`;
+  };
+
+  const isTrendPositive = (metric: string): boolean => {
+    if (!analyticsData?.trends) return true;
+    const trendValue = analyticsData.trends[metric];
+    return trendValue >= 0;
+  };
+
   const formatKES = (value: number) => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
@@ -111,22 +122,22 @@ const Analytics: React.FC = () => {
             title="Total Revenue" 
             value={formatKES(totals.totalRevenue)} 
             icon={<DollarSign className="text-secondary" />} 
-            trend={"+12.5%"}
-            isPositive={true}
+            trend={analyticsData.trends ? formatTrend(analyticsData.trends.revenue) : 'N/A'}
+            isPositive={isTrendPositive('revenue')}
           />
           <StatCard 
             title="Active Subscriptions" 
             value={totals.totalSubscriptions} 
             icon={<CreditCard className="text-main" />} 
-            trend={"+5.2%"}
-            isPositive={true}
+            trend={analyticsData.trends ? formatTrend(analyticsData.trends.subscriptions) : 'N/A'}
+            isPositive={isTrendPositive('subscriptions')}
           />
           <StatCard 
             title="Total Customers" 
             value={totals.totalCustomers} 
             icon={<Users className="text-accent" />} 
-            trend={"+8.1%"}
-            isPositive={true}
+            trend={analyticsData.trends ? formatTrend(analyticsData.trends.customers) : 'N/A'}
+            isPositive={isTrendPositive('customers')}
           />
           <StatCard 
             title="Success Rate" 

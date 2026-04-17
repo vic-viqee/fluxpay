@@ -23,7 +23,7 @@ const Signup: React.FC = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { login: authLogin } = useAuth();
+  const { login } = useAuth();
   const plan = location.state?.plan;
 
   const isStrongPassword = (value: string) => {
@@ -66,19 +66,9 @@ const Signup: React.FC = () => {
       });
 
       // AUTO-LOGIN Logic
-      if (response.data.token && response.data.refreshToken) {
-        authLogin(response.data.token, response.data.refreshToken);
-        // Check role and redirect
-        try {
-          const userResponse = await api.get('/users/me');
-          if (userResponse.data.role === 'admin') {
-            navigate('/admin');
-          } else {
-            navigate('/dashboard');
-          }
-        } catch {
-          navigate('/dashboard');
-        }
+      if (response.data.token || response.status === 201) {
+        await login();
+        navigate('/dashboard');
       } else {
         navigate('/login', { state: { message: 'Registration successful. Please log in.' } });
       }

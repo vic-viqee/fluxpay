@@ -1,64 +1,53 @@
 import { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
-import { IUser } from '../types/User'; // Import IUser
-import api, {
-  clearStoredAuth,
-  getStoredAccessToken,
-  storeAuthTokens,
-} from '../services/api'; // Import API service
+import { IUser } from '../types/User';
+import api from '../services/api';
 
 interface AuthContextType {
-  token: string | null;
   user: IUser | null;
   isAdmin: boolean;
-  login: (token: string, refreshToken?: string) => void;
+  login: () => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  refreshAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [token, setToken] = useState<string | null>(getStoredAccessToken());
   const [user, setUser] = useState<IUser | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   const logout = useCallback(() => {
-    setToken(null);
     setUser(null);
     setIsAdmin(false);
-    clearStoredAuth();
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
   }, []);
 
-  const fetchUser = useCallback(async () => {
-    if (token) {
-      try {
-        const response = await api.get('/users/me');
-        const userData = response.data;
-        setUser(userData);
-        setIsAdmin(userData.role === 'admin');
-      } catch (err) {
-        console.error('Failed to fetch user data:', err);
-        logout();
-      }
-    } else {
-      setUser(null);
-      setIsAdmin(false);
+  const refreshAuth = useCallback(async () => {
+    try {
+      const response = await api.get('/users/me');
+      const userData = response.data;
+      setUser(userData);
+      setIsAdmin(userData.role === 'admin');
+    } catch (err) {
+      console.error('Failed to fetch user data:', err);
+      logout();
     }
-  }, [token, logout]);
+  }, [logout]);
+
+  const login = useCallback(async () => {
+    await refreshAuth();
+  }, [refreshAuth]);
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    refreshAuth();
+  }, [refreshAuth]);
 
-  const login = (newToken: string, refreshToken?: string) => {
-    setToken(newToken);
-    storeAuthTokens(newToken, refreshToken);
-  };
-
-  const isAuthenticated = !!token;
+  const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ token, user, isAdmin, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, isAdmin, login, logout, isAuthenticated, refreshAuth }}>
       {children}
     </AuthContext.Provider>
   );

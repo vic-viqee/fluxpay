@@ -1,28 +1,6 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
 
-const ACCESS_TOKEN_KEY = 'token';
-const REFRESH_TOKEN_KEY = 'refreshToken';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-
-export const getStoredAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
-export const getStoredRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
-
-export const storeAuthTokens = (token: string, refreshToken?: string) => {
-  localStorage.setItem(ACCESS_TOKEN_KEY, token);
-  if (refreshToken) {
-    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-  }
-};
-
-export const clearStoredAuth = () => {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
-};
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-});
 
 export const googleAuthUrl = (() => {
   const normalizedBase = API_BASE_URL.replace(/\/+$/, '');
@@ -32,16 +10,10 @@ export const googleAuthUrl = (() => {
   return `${normalizedBase}/api/auth/google`;
 })();
 
-api.interceptors.request.use(
-  (config) => {
-    const token = getStoredAccessToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true,
+});
 
 type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
@@ -62,26 +34,23 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const refreshToken = getStoredRefreshToken();
-    if (!refreshToken) {
-      clearStoredAuth();
-      return Promise.reject(error);
-    }
-
     originalRequest._retry = true;
 
     try {
-      const refreshResponse = await axios.post(`${api.defaults.baseURL}/auth/refresh-token`, {
-        refreshToken,
-      }, { withCredentials: true });
+      const refreshResponse = await axios.post(
+        `${api.defaults.baseURL}/auth/refresh-token`,
+        {},
+        { withCredentials: true }
+      );
       const newAccessToken = refreshResponse.data?.token;
       if (newAccessToken) {
-        storeAuthTokens(newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
       }
       return api(originalRequest);
     } catch (refreshError) {
-      clearStoredAuth();
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      window.location.href = '/login';
       return Promise.reject(refreshError);
     }
   }
@@ -103,7 +72,6 @@ export const initiateSimulatedStkPushPayment = async (data: {
   }
 };
 
-// Backward-compatible alias for older imports.
 export const initiateStkPushPayment = initiateSimulatedStkPushPayment;
 
 export const initiatePricingStkPushPayment = async (data: {

@@ -60,8 +60,6 @@ export const processDuePayments = async () => {
           });
           await newTransaction.save({ session });
 
-          // 3. Update the Subscription's nextBillingDate to the next cycle
-          subscription.nextBillingDate = calculateNextBillingDate(subscription.nextBillingDate, plan.frequency, plan.billingDay);
           subscription.lastPaymentAttempt = new Date();
           subscription.paymentFailureCount = 0;
           await subscription.save({ session });

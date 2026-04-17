@@ -4,21 +4,20 @@ import {
   getBusinesses, 
   getBusinessDetail,
   getAllTransactions,
-  getAllSubscriptions
+  getAllSubscriptions,
+  getAllApiKeys,
+  getAllWebhooks
 } from './admin.controller';
 import { isAdmin } from '../../middleware/adminAuth';
-import { seedAdmin } from './seed.controller';
 
 const router = Router();
 
-// Seed endpoint - public, use once then delete or protect
-router.post('/seed', seedAdmin);
-
-// All other routes require admin
 router.get('/overview', isAdmin, getOverview);
 router.get('/businesses', isAdmin, getBusinesses);
 router.get('/businesses/:id', isAdmin, getBusinessDetail);
 router.get('/transactions', isAdmin, getAllTransactions);
 router.get('/subscriptions', isAdmin, getAllSubscriptions);
+router.get('/apikeys', isAdmin, getAllApiKeys);
+router.get('/webhooks', isAdmin, getAllWebhooks);
 
 export default router;

@@ -13,7 +13,7 @@ const Subscriptions: React.FC = () => {
     try {
       setError(null);
       const response = await api.get('/subscriptions');
-      setSubscriptions(response.data);
+      setSubscriptions(response.data.data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch subscriptions.');
     } finally {

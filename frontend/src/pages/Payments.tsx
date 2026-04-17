@@ -26,7 +26,7 @@ const Payments: React.FC = () => {
       else setLoading(true);
       
       const response = await api.get('/transactions');
-      setTransactions(response.data);
+      setTransactions(response.data.data);
       setError(null);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch transactions.');

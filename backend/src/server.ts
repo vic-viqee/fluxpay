@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import config from './config';
 import logger from './utils/logger';
 import errorHandler from './middleware/errorHandler';
+import { requestLogger } from './middleware/requestLogger';
 import authRoutes from './api/auth/auth.routes';
 import paymentRoutes from './api/payments/payments.routes';
 import subscriptionRoutes from './api/subscriptions/subscriptions.routes';
@@ -22,8 +23,8 @@ import mpesaRoutes from './api/mpesa/mpesa.routes';
 import disbursementRoutes from './api/disbursements/disbursements.routes';
 import adminRoutes from './api/admin/admin.routes';
 import connectDB from './config/db';
-import cron from 'node-cron'; // NEW IMPORT
-import { processDuePayments, processFailedTransactions } from './services/billing.service'; // NEW IMPORT
+import cron from 'node-cron';
+import { processDuePayments, processFailedTransactions } from './services/billing.service';
 import passport from './config/passport';
 import securityHeaders from './middleware/securityHeaders';
 import { globalRateLimiter } from './middleware/rateLimit';
@@ -42,16 +43,26 @@ const port = parseInt(process.env.PORT || config.port || '3000', 10);
   }
 })();
 
-// --- FIXED CORS CONFIGURATION ---
-const allowedOrigins = [
-  'http://localhost:5173',                  // Local Frontend (Vite)
-  'http://localhost:3000',                  // Local Backend/Testing
-  'https://fluxpay-frontend.onrender.com'   // <--- YOUR LIVE RENDER FRONTEND
-];
+// --- CORS CONFIGURATION ---
+const getAllowedOrigins = (): string[] => {
+  const envOrigins = process.env.ALLOWED_ORIGINS;
+  const defaultOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
+  
+  if (envOrigins) {
+    const parsedOrigins = envOrigins.split(',').map(o => o.trim()).filter(Boolean);
+    return [...new Set([...defaultOrigins, ...parsedOrigins])];
+  }
+  
+  return defaultOrigins;
+};
+
+const allowedOrigins = getAllowedOrigins();
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) === -1) {
@@ -70,6 +81,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(securityHeaders);
 app.use(globalRateLimiter);
+app.use(requestLogger);
 
 app.use(passport.initialize());
 
@@ -79,6 +91,14 @@ app.use('/uploads', express.static(uploadsDir));
 
 app.get('/', (req: Request, res: Response) => {
   res.send('FluxPay API is running...');
+});
+
+app.get('/health', (req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
 });
 
 // API Routes

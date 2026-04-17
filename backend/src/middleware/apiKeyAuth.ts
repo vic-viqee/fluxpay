@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { findApiKey } from '../services/webhook.service';
+import bcrypt from 'bcrypt';
+import ApiKey from '../models/ApiKey';
 import logger from '../utils/logger';
 
 export const apiKeyAuth = async (req: Request, res: Response, next: NextFunction) => {
@@ -11,18 +12,22 @@ export const apiKeyAuth = async (req: Request, res: Response, next: NextFunction
       return res.status(401).json({ message: 'API key and secret are required' });
     }
 
-    const result = await findApiKey(key);
-    if (!result) {
+    const apiKey = await ApiKey.findOne({ key, isActive: true });
+    if (!apiKey) {
       logger.warn(`Invalid API key: ${key}`);
       return res.status(401).json({ message: 'Invalid API key or secret' });
     }
 
-    if (result.apiKey.secret !== secret) {
+    const isValidSecret = await bcrypt.compare(secret, apiKey.secret);
+    if (!isValidSecret) {
       logger.warn(`Invalid API secret for key: ${key}`);
       return res.status(401).json({ message: 'Invalid API key or secret' });
     }
 
-    req.apiKeyOwnerId = result.ownerId;
+    apiKey.lastUsedAt = new Date();
+    await apiKey.save();
+
+    req.apiKeyOwnerId = apiKey.ownerId;
     next();
   } catch (error) {
     logger.error('API Key auth error:', error);

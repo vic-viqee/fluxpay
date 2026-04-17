@@ -4,6 +4,32 @@ Prioritized based on competitor analysis and market differentiation.
 
 ---
 
+## Security & Quality Updates (2026-04-17)
+
+### Critical Security Fixes Applied
+- **Public Admin Seed Endpoint Removed**: The `/api/admin/seed` endpoint that created admin accounts with hardcoded credentials has been removed
+- **API Key Secrets Now Hashed**: API key secrets are now hashed using bcrypt and verified with constant-time comparison
+- **Webhook Audit Data Pollution Fixed**: API key `lastUsedAt` is now updated only after successful secret validation
+- **Plan Field Protected**: Users can no longer self-upgrade their plan through settings API
+
+### High Priority Fixes Applied
+- **Admin Page Completed**: All admin tabs (transactions, subscriptions, API keys, webhooks) are now fully functional
+- **Pagination Response Shape Fixed**: Frontend now correctly handles paginated responses from backend
+- **Subscription Status Aligned**: Zod validation and Mongoose schema now both include `PAUSED` status
+- **Billing Date Advancement Fixed**: `nextBillingDate` now advances only after successful payment callback
+- **CORS Origins Now Environment-Driven**: Allowed origins can be configured via `ALLOWED_ORIGINS` env var
+- **Cloudinary Integration Added**: Durable file storage for production deployments
+
+### Quality Improvements Applied
+- **Token Storage Secured**: Auth tokens now rely on httpOnly cookies, localStorage no longer stores sensitive tokens
+- **ESLint Config Added**: Frontend now has proper linting configuration
+- **Jest Test Coverage Added**: Backend has basic validation tests
+- **Docker Compose Updated**: Full stack (MongoDB, Mailhog, Backend, Frontend) now containerized
+- **Bundle Optimization**: Code-splitting implemented, main bundle reduced from ~853KB to ~62KB
+- **Analytics Trends Now Real**: Trend calculations use actual period-over-period data
+
+---
+
 ## Recently Implemented: Plan-Based UI
 
 ### Service Type Selection
