@@ -16,7 +16,14 @@ const Login: React.FC = () => {
       const response = await api.post('/auth/login', { email, password });
       if (response.data.token) {
         login(response.data.token, response.data.refreshToken);
-        navigate('/dashboard');
+        
+        // Check if user is admin and redirect accordingly
+        const userResponse = await api.get('/users/me');
+        if (userResponse.data.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'An error occurred during login.');

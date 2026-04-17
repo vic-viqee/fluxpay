@@ -56,7 +56,7 @@ const Admin: React.FC = () => {
 
   const checkAdminStatus = async () => {
     try {
-      const response = await api.get('/auth/me');
+      const response = await api.get('/users/me');
       if (response.data.role === 'admin') {
         setIsAdmin(true);
       } else {
