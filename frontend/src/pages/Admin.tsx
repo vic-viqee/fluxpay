@@ -134,7 +134,7 @@ const Admin: React.FC = () => {
       setLoading(false);
       fetchOverview();
       fetchBusinesses();
-    } else if (user && user.role !== 'admin') {
+    } else if (user) {
       setLoading(false);
     } else {
       setLoading(false);

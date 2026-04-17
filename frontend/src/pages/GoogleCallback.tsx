@@ -6,7 +6,7 @@ import api from '../services/api';
 const GoogleCallback: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { refreshAuth } = useAuth();
 
   useEffect(() => {
     const completeGoogleLogin = async () => {
@@ -21,7 +21,8 @@ const GoogleCallback: React.FC = () => {
       }
 
       if (token) {
-        await login();
+        localStorage.setItem('token', token);
+        await refreshAuth();
         navigate('/dashboard');
         return;
       }
@@ -34,19 +35,18 @@ const GoogleCallback: React.FC = () => {
       try {
         const response = await api.post('/auth/google/exchange-code', { code });
         
-        if (response.data.token || response.status === 200) {
-          await login();
-          navigate('/dashboard');
-        } else {
-          navigate('/dashboard');
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
         }
+        await refreshAuth();
+        navigate('/dashboard');
       } catch (error) {
         navigate('/login');
       }
     };
 
     completeGoogleLogin();
-  }, [location, login, navigate]);
+  }, [location, navigate, refreshAuth]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-primary-bg">

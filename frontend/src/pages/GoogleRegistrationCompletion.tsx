@@ -6,7 +6,7 @@ import api from '../services/api';
 const GoogleRegistrationCompletion: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { refreshAuth } = useAuth();
 
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -71,7 +71,10 @@ const GoogleRegistrationCompletion: React.FC = () => {
       });
 
       if (response.data.token || response.data.user) {
-        await login();
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+        }
+        await refreshAuth();
         setMessage('Registration complete! Redirecting to dashboard...');
         setTimeout(() => navigate('/dashboard'), 1500);
       } else {

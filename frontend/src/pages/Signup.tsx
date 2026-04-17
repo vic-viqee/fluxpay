@@ -23,7 +23,7 @@ const Signup: React.FC = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { refreshAuth } = useAuth();
   const plan = location.state?.plan;
 
   const isStrongPassword = (value: string) => {
@@ -67,7 +67,10 @@ const Signup: React.FC = () => {
 
       // AUTO-LOGIN Logic
       if (response.data.token || response.status === 201) {
-        await login();
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+        }
+        await refreshAuth();
         navigate('/dashboard');
       } else {
         navigate('/login', { state: { message: 'Registration successful. Please log in.' } });

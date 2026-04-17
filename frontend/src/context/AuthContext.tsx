@@ -1,11 +1,10 @@
-import { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
+import { createContext, useState, useContext, ReactNode, useCallback } from 'react';
 import { IUser } from '../types/User';
 import api from '../services/api';
 
 interface AuthContextType {
   user: IUser | null;
   isAdmin: boolean;
-  login: () => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   refreshAuth: () => Promise<void>;
@@ -50,27 +49,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAdmin(userData.role === 'admin');
     } catch (err: any) {
       console.error('Failed to fetch user data:', err);
-      if (err.response?.status === 401) {
-        logout();
-      }
     } finally {
       setLoading(false);
     }
-  }, [logout]);
-
-  const login = useCallback(async () => {
-    setLoading(true);
-    await refreshAuth();
-  }, [refreshAuth]);
-
-  useEffect(() => {
-    refreshAuth();
   }, []);
 
   const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, login, logout, isAuthenticated, refreshAuth, loading, setUserData }}>
+    <AuthContext.Provider value={{ user, isAdmin, logout, isAuthenticated, refreshAuth, loading, setUserData }}>
       {children}
     </AuthContext.Provider>
   );
