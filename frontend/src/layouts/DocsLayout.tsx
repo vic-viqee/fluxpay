@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { 
   Book, 
@@ -13,13 +13,27 @@ import {
   Search,
   Menu,
   X,
-  Home
+  Home,
+  Moon,
+  Sun
 } from 'lucide-react';
 
 const DocsLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const stored = localStorage.getItem('themeMode');
+    return stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  });
   const location = useLocation();
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    document.documentElement.classList.toggle('theme-light', !isDarkMode);
+    localStorage.setItem('themeMode', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => setIsDarkMode(prev => !prev);
 
   const navItems = [
     { id: 'getting-started', label: 'Getting Started', icon: <Zap size={18} />, path: '/docs/getting-started', new: true },
@@ -44,23 +58,28 @@ const DocsLayout: React.FC = () => {
   const currentPath = location.pathname;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-50 shadow-sm">
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 z-50 shadow-sm">
         <div className="flex items-center gap-3">
-          <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-gray-100 rounded-lg">
+          <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
             <Menu size={24} />
           </button>
           <Link to="/docs" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="font-bold text-white text-sm">F</span>
             </div>
-            <span className="font-bold text-gray-800">Docs</span>
+            <span className="font-bold text-gray-800 dark:text-white">Docs</span>
           </Link>
         </div>
-        <Link to="/" className="text-sm text-blue-600 hover:text-blue-700">
-          ← Back to site
-        </Link>
+        <div className="flex items-center gap-3">
+          <button onClick={toggleDarkMode} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+            {isDarkMode ? <Sun size={20} className="text-yellow-500" /> : <Moon size={20} className="text-gray-600" />}
+          </button>
+          <Link to="/" className="text-sm text-blue-600 hover:text-blue-700">
+            ← Back
+          </Link>
+        </div>
       </header>
 
       {/* Mobile Sidebar Overlay */}
@@ -117,21 +136,21 @@ const DocsLayout: React.FC = () => {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-72 bg-white border-r border-gray-200">
-        <div className="p-6 border-b border-gray-200">
+      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <Link to="/docs" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
               <span className="font-bold text-white text-lg">F</span>
             </div>
             <div>
-              <h1 className="font-bold text-gray-800">FluxPay</h1>
-              <p className="text-xs text-gray-500">Documentation</p>
+              <h1 className="font-bold text-gray-800 dark:text-white">FluxPay</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Documentation</p>
             </div>
           </Link>
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
@@ -139,7 +158,7 @@ const DocsLayout: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search docs..."
-              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100"
             />
           </div>
         </div>
@@ -148,7 +167,7 @@ const DocsLayout: React.FC = () => {
           <Link
             to="/docs"
             className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-              currentPath === '/docs' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'
+              currentPath === '/docs' ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
           >
             <Home size={18} />
@@ -160,22 +179,29 @@ const DocsLayout: React.FC = () => {
               key={item.id}
               to={item.path}
               className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-                currentPath === item.path ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'
+                currentPath === item.path ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
               {item.icon}
               <span className="font-medium">{item.label}</span>
               {item.new && (
-                <span className="ml-auto px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">New</span>
+                <span className="ml-auto px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs rounded-full">New</span>
               )}
               {item.badge && (
-                <span className="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">{item.badge}</span>
+                <span className="ml-auto px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs rounded-full">{item.badge}</span>
               )}
             </Link>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+          <button
+            onClick={toggleDarkMode}
+            className="w-full flex items-center gap-3 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+            <span className="font-medium">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+          </button>
           <Link
             to="/gateway/signup"
             className="flex items-center gap-3 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

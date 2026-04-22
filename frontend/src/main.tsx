@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import './index.css';
 
 import { AuthProvider } from './context/AuthContext';
@@ -19,7 +19,6 @@ const Subscriptions = lazy(() => import('./pages/Subscriptions'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Pricing = lazy(() => import('./pages/Pricing'));
-const Documentation = lazy(() => import('./pages/Documentation'));
 const SubscriptionCheckout = lazy(() => import('./pages/SubscriptionCheckout'));
 const Plans = lazy(() => import('./pages/Plans'));
 const GoogleCallback = lazy(() => import('./pages/GoogleCallback'));
@@ -54,6 +53,14 @@ const DocsApiKeys = lazy(() => import('./pages/docs/ApiKeys'));
 const DocsWebhooks = lazy(() => import('./pages/docs/Webhooks'));
 const DocsIntegration = lazy(() => import('./pages/docs/Integration'));
 
+const DocsRedirect = () => {
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    navigate('/docs', { replace: true });
+  }, [navigate]);
+  return null;
+};
+
 const Loading = () => (
   <div className="min-h-screen bg-primary-bg flex items-center justify-center">
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-main"></div>
@@ -77,7 +84,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/pricing" element={<Pricing />} />
-            <Route path="/documentation" element={<Documentation />} />
+            <Route path="/documentation" element={<DocsRedirect />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/subscribe" element={<SubscriptionCheckout />} />

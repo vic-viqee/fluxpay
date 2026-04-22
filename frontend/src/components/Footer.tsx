@@ -27,7 +27,8 @@ const Footer: React.FC = () => {
             <ul className="space-y-2 text-gray-400 text-sm">
               <li><Link to="/#features" className="hover:text-main">Features</Link></li>
               <li><Link to="/pricing" className="hover:text-main">Pricing</Link></li>
-              <li><Link to="/documentation" className="hover:text-main">Success Center</Link></li>
+              <li><Link to="/docs" className="hover:text-main">Documentation</Link></li>
+              <li><Link to="/docs/getting-started" className="hover:text-main">Getting Started</Link></li>
               <li><Link to="/signup" className="hover:text-main">Get Started</Link></li>
             </ul>
           </div>
@@ -35,7 +36,8 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Support</h4>
             <ul className="space-y-2 text-gray-400 text-sm">
-              <li><Link to="/documentation" className="hover:text-main">User Guide</Link></li>
+              <li><Link to="/docs" className="hover:text-main">Docs</Link></li>
+              <li><Link to="/docs/quick-start" className="hover:text-main">Developer API</Link></li>
               <li><a href="#" className="hover:text-main">Contact Sales</a></li>
               <li><a href="#" className="hover:text-main">Privacy Policy</a></li>
               <li><a href="#" className="hover:text-main">Terms of Service</a></li>
