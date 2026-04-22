@@ -7,6 +7,7 @@ import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import MainLayout from './layouts/MainLayout';
 import GatewayLayout from './layouts/GatewayLayout';
+import DocsLayout from './layouts/DocsLayout';
 
 const Index = lazy(() => import('./pages/Index'));
 const Login = lazy(() => import('./pages/Login'));
@@ -39,6 +40,19 @@ const GatewayCustomers = lazy(() => import('./pages/gateway/GatewayCustomers'));
 const GatewayReceipts = lazy(() => import('./pages/gateway/GatewayReceipts'));
 const GatewayApiKeys = lazy(() => import('./pages/gateway/GatewayApiKeys'));
 const GatewayWebhooks = lazy(() => import('./pages/gateway/GatewayWebhooks'));
+
+const DocsIndex = lazy(() => import('./pages/docs/DocsIndex'));
+const DocsGettingStarted = lazy(() => import('./pages/docs/GettingStarted'));
+const DocsQuickStart = lazy(() => import('./pages/docs/QuickStart'));
+const DocsApiReference = lazy(() => import('./pages/docs/ApiReference'));
+const DocsDynamicTill = lazy(() => import('./pages/docs/DynamicTill'));
+const DocsPaymentLinks = lazy(() => import('./pages/docs/PaymentLinks'));
+const DocsTransactions = lazy(() => import('./pages/docs/Transactions'));
+const DocsCustomers = lazy(() => import('./pages/docs/Customers'));
+const DocsReceipts = lazy(() => import('./pages/docs/Receipts'));
+const DocsApiKeys = lazy(() => import('./pages/docs/ApiKeys'));
+const DocsWebhooks = lazy(() => import('./pages/docs/Webhooks'));
+const DocsIntegration = lazy(() => import('./pages/docs/Integration'));
 
 const Loading = () => (
   <div className="min-h-screen bg-primary-bg flex items-center justify-center">
@@ -96,6 +110,21 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Route path="/gateway/receipts" element={<GatewayReceipts />} />
               <Route path="/gateway/api-keys" element={<GatewayApiKeys />} />
               <Route path="/gateway/webhooks" element={<GatewayWebhooks />} />
+            </Route>
+
+            <Route element={<DocsLayout />}>
+              <Route path="/docs" element={<DocsIndex />} />
+              <Route path="/docs/getting-started" element={<DocsGettingStarted />} />
+              <Route path="/docs/quick-start" element={<DocsQuickStart />} />
+              <Route path="/docs/api" element={<DocsApiReference />} />
+              <Route path="/docs/dynamic-till" element={<DocsDynamicTill />} />
+              <Route path="/docs/payment-links" element={<DocsPaymentLinks />} />
+              <Route path="/docs/transactions" element={<DocsTransactions />} />
+              <Route path="/docs/customers" element={<DocsCustomers />} />
+              <Route path="/docs/receipts" element={<DocsReceipts />} />
+              <Route path="/docs/api-keys" element={<DocsApiKeys />} />
+              <Route path="/docs/webhooks" element={<DocsWebhooks />} />
+              <Route path="/docs/integration" element={<DocsIntegration />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" />} />
