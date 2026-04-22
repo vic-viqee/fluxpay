@@ -4,7 +4,10 @@ import config from '../config';
 import User, { IUser } from '../models/User';
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.cookies?.accessToken || req.header('Authorization')?.replace('Bearer ', '');
+  const authHeader = req.header('Authorization');
+  const cookieToken = req.cookies?.accessToken;
+  const bearerToken = authHeader?.replace('Bearer ', '');
+  const token = cookieToken || bearerToken;
 
   if (!token) {
     return res.status(401).json({ message: 'No token, authorization denied' });
@@ -21,6 +24,12 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     (req as any).user = user;
     next();
   } catch (error) {
-    res.status(401).json({ message: 'Token is not valid' });
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ message: 'Token has expired' });
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ message: 'Token is invalid' });
+    }
+    res.status(401).json({ message: 'Token verification failed' });
   }
 };

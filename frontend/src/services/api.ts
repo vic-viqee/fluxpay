@@ -10,64 +10,73 @@ export const googleAuthUrl = (() => {
   return `${normalizedBase}/api/auth/google`;
 })();
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-});
+const createApiInstance = (options: { skipRefresh?: boolean } = {}) => {
+  const instance = axios.create({
+    baseURL: API_BASE_URL,
+    withCredentials: true,
+  });
 
-// Request interceptor to add Authorization header from localStorage
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token && !config.headers.Authorization) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
-
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config as RetriableConfig;
-    const status = error.response?.status;
-    const requestUrl = String(originalRequest?.url || '');
-
-    const shouldSkipRefresh =
-      requestUrl.includes('/auth/login') ||
-      requestUrl.includes('/auth/refresh-token') ||
-      requestUrl.includes('/auth/signup') ||
-      requestUrl.includes('/auth/google/exchange-code');
-
-    if (status !== 401 || !originalRequest || originalRequest._retry || shouldSkipRefresh) {
-      return Promise.reject(error);
-    }
-
-    originalRequest._retry = true;
-
-    try {
-      const refreshResponse = await axios.post(
-        `${api.defaults.baseURL}/auth/refresh-token`,
-        {},
-        { withCredentials: true }
-      );
-      const newAccessToken = refreshResponse.data?.token;
-      if (newAccessToken) {
-        localStorage.setItem('token', newAccessToken);
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+  instance.interceptors.request.use(
+    (config) => {
+      const token = localStorage.getItem('token');
+      if (token && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
-      return api(originalRequest);
-    } catch (refreshError) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      window.location.href = '/login';
-      return Promise.reject(refreshError);
-    }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  if (!options.skipRefresh) {
+    type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
+    instance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config as RetriableConfig;
+        const status = error.response?.status;
+        const requestUrl = String(originalRequest?.url || '');
+
+        const shouldSkipRefresh =
+          requestUrl.includes('/auth/login') ||
+          requestUrl.includes('/auth/refresh-token') ||
+          requestUrl.includes('/auth/signup') ||
+          requestUrl.includes('/auth/google/exchange-code');
+
+        if (status !== 401 || !originalRequest || originalRequest._retry || shouldSkipRefresh) {
+          return Promise.reject(error);
+        }
+
+        originalRequest._retry = true;
+
+        try {
+          const refreshResponse = await axios.post(
+            `${instance.defaults.baseURL}/auth/refresh-token`,
+            {},
+            { withCredentials: true }
+          );
+          const newAccessToken = refreshResponse.data?.token;
+          if (newAccessToken) {
+            localStorage.setItem('token', newAccessToken);
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          }
+          return instance(originalRequest);
+        } catch {
+          const hasToken = !!localStorage.getItem('token');
+          if (!hasToken) {
+            window.location.href = '/login';
+          }
+          return Promise.reject(error);
+        }
+      }
+    );
   }
-);
+
+  return instance;
+};
+
+export const api = createApiInstance();
+export const adminApi = createApiInstance({ skipRefresh: true });
 
 export default api;
 

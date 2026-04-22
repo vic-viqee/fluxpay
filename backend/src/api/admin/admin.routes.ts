@@ -11,17 +11,18 @@ import {
   getAuditLogs
 } from './admin.controller';
 import { isAdmin } from '../../middleware/adminAuth';
+import { authMiddleware } from '../../middleware/auth.middleware';
 
 const router = Router();
 
-router.get('/overview', isAdmin, getOverview);
-router.get('/businesses', isAdmin, getBusinesses);
-router.get('/businesses/:id', isAdmin, getBusinessDetail);
-router.get('/transactions', isAdmin, getAllTransactions);
-router.get('/subscriptions', isAdmin, getAllSubscriptions);
-router.get('/apikeys', isAdmin, getAllApiKeys);
-router.get('/webhooks', isAdmin, getAllWebhooks);
-router.get('/plan-limits', isAdmin, getPlanLimits);
-router.get('/audit-logs', isAdmin, getAuditLogs);
+router.get('/overview', authMiddleware, isAdmin, getOverview);
+router.get('/businesses', authMiddleware, isAdmin, getBusinesses);
+router.get('/businesses/:id', authMiddleware, isAdmin, getBusinessDetail);
+router.get('/transactions', authMiddleware, isAdmin, getAllTransactions);
+router.get('/subscriptions', authMiddleware, isAdmin, getAllSubscriptions);
+router.get('/apikeys', authMiddleware, isAdmin, getAllApiKeys);
+router.get('/webhooks', authMiddleware, isAdmin, getAllWebhooks);
+router.get('/plan-limits', authMiddleware, isAdmin, getPlanLimits);
+router.get('/audit-logs', authMiddleware, isAdmin, getAuditLogs);
 
 export default router;

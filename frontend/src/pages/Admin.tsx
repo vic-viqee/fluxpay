@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import api from '../services/api';
+import { adminApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
   Users, CreditCard, Activity, DollarSign, 
@@ -106,7 +106,7 @@ interface PaginationState {
 }
 
 const Admin: React.FC = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, justLoggedIn } = useAuth();
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -124,11 +124,19 @@ const Admin: React.FC = () => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('');
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
-    if (authLoading) return;
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted || justLoggedIn) return;
     
     if (user && user.role === 'admin') {
       setLoading(false);
@@ -139,10 +147,10 @@ const Admin: React.FC = () => {
     } else {
       setLoading(false);
     }
-  }, [authLoading, user]);
+  }, [isMounted, justLoggedIn, user]);
 
   useEffect(() => {
-    if (!isAdmin || loading) return;
+    if (!isAdmin || loading || !isMounted) return;
     
     switch (activeTab) {
       case 'transactions': fetchTransactions(); break;
@@ -152,11 +160,11 @@ const Admin: React.FC = () => {
       case 'limits': fetchPlanLimits(); break;
       case 'audit': fetchAuditLogs(); break;
     }
-  }, [activeTab, transactionStatus, subscriptionStatus, pagination.page, dateRange, isAdmin, loading]);
+  }, [activeTab, transactionStatus, subscriptionStatus, pagination.page, dateRange, isAdmin, loading, isMounted]);
 
   const fetchOverview = async () => {
     try {
-      const response = await api.get('/admin/overview');
+      const response = await adminApi.get('/admin/overview');
       setOverview(response.data);
     } catch (err) {
       console.error('Failed to fetch overview:', err);
@@ -165,7 +173,7 @@ const Admin: React.FC = () => {
 
   const fetchBusinesses = async (page = 1) => {
     try {
-      const response = await api.get(`/admin/businesses?page=${page}&search=${searchTerm}`);
+      const response = await adminApi.get(`/admin/businesses?page=${page}&search=${searchTerm}`);
       setBusinesses(response.data.data);
       setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
     } catch (err) {
@@ -177,7 +185,7 @@ const Admin: React.FC = () => {
     try {
       const statusParam = transactionStatus ? `&status=${transactionStatus}` : '';
       const dateParam = dateRange.start ? `&startDate=${dateRange.start}&endDate=${dateRange.end}` : '';
-      const response = await api.get(`/admin/transactions?page=${page}&limit=20${statusParam}${dateParam}`);
+      const response = await adminApi.get(`/admin/transactions?page=${page}&limit=20${statusParam}${dateParam}`);
       setTransactions(response.data.data);
       setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
     } catch (err) {
@@ -188,7 +196,7 @@ const Admin: React.FC = () => {
   const fetchSubscriptions = async (page = pagination.page) => {
     try {
       const statusParam = subscriptionStatus ? `&status=${subscriptionStatus}` : '';
-      const response = await api.get(`/admin/subscriptions?page=${page}&limit=20${statusParam}`);
+      const response = await adminApi.get(`/admin/subscriptions?page=${page}&limit=20${statusParam}`);
       setSubscriptions(response.data.data);
       setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
     } catch (err) {
@@ -198,7 +206,7 @@ const Admin: React.FC = () => {
 
   const fetchApiKeys = async (page = pagination.page) => {
     try {
-      const response = await api.get(`/admin/apikeys?page=${page}&limit=20`);
+      const response = await adminApi.get(`/admin/apikeys?page=${page}&limit=20`);
       setApiKeys(response.data.data);
       setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
     } catch (err) {
@@ -208,7 +216,7 @@ const Admin: React.FC = () => {
 
   const fetchWebhooks = async (page = pagination.page) => {
     try {
-      const response = await api.get(`/admin/webhooks?page=${page}&limit=20`);
+      const response = await adminApi.get(`/admin/webhooks?page=${page}&limit=20`);
       setWebhooks(response.data.data);
       setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
     } catch (err) {
@@ -218,7 +226,7 @@ const Admin: React.FC = () => {
 
   const fetchPlanLimits = async (page = pagination.page) => {
     try {
-      const response = await api.get(`/admin/plan-limits?page=${page}&limit=20`);
+      const response = await adminApi.get(`/admin/plan-limits?page=${page}&limit=20`);
       setPlanLimits(response.data.data);
       setPlanStats(response.data.planStats || []);
       setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
@@ -229,7 +237,7 @@ const Admin: React.FC = () => {
 
   const fetchAuditLogs = async (page = pagination.page) => {
     try {
-      const response = await api.get(`/admin/audit-logs?page=${page}&limit=20`);
+      const response = await adminApi.get(`/admin/audit-logs?page=${page}&limit=20`);
       setAuditLogs(response.data.data);
       setPagination({ page: response.data.page, totalPages: response.data.totalPages, total: response.data.total });
     } catch (err) {
@@ -252,8 +260,7 @@ const Admin: React.FC = () => {
     window.location.href = '/login';
   };
 
-  // Show loading while checking auth
-  if (authLoading || (loading && !user)) {
+  if (!isMounted) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
@@ -261,14 +268,12 @@ const Admin: React.FC = () => {
     );
   }
 
-  // If not logged in, redirect to login
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
-  // If logged in but not admin, redirect to dashboard
   if (!isAdmin) {
-    return <Navigate to="/dashboard" />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const navItems = [
