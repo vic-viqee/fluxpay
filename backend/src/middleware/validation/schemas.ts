@@ -91,7 +91,19 @@ export const paymentSchema = z.object({
   amount: z.number().positive('Amount must be positive').min(1, 'Minimum amount is 1'),
   phone: z.string().min(1, 'Phone number is required').optional(),
   phoneNumber: z.string().min(1, 'Phone number is required').optional(),
-  subscriptionId: z.string().min(1, 'Subscription ID is required'),
+  accountReference: z.string().min(1, 'Account reference is required').optional(),
+  transactionDesc: z.string().optional(),
+  customerName: z.string().optional(),
+  customerEmail: z.string().email().optional().or(z.literal('')),
+});
+
+export const gatewayPaymentSchema = z.object({
+  amount: z.number().positive('Amount must be positive').min(1, 'Minimum amount is 1'),
+  phoneNumber: z.string().min(1, 'Phone number is required'),
+  accountReference: z.string().min(1, 'Account reference is required'),
+  transactionDesc: z.string().optional(),
+  customerName: z.string().optional(),
+  customerEmail: z.string().email().optional().or(z.literal('')),
 });
 
 export const simulateStkPushSchema = z.object({

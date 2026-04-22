@@ -4,6 +4,7 @@ import { IUser } from './User';
 export interface IGatewayTransaction extends Document {
   ownerId: IUser['_id'];
   customerId?: IUser['_id'];
+  paymentLinkId?: IUser['_id'];
   amountKes: number;
   status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
   mpesaReceiptNo?: string;
@@ -23,6 +24,7 @@ export interface IGatewayTransaction extends Document {
 const GatewayTransactionSchema: Schema = new Schema({
   ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   customerId: { type: Schema.Types.ObjectId, ref: 'User' },
+  paymentLinkId: { type: Schema.Types.ObjectId, ref: 'PaymentLink' },
   amountKes: { type: Number, required: true },
   status: { type: String, enum: ['PENDING', 'SUCCESS', 'FAILED', 'CANCELLED'], default: 'PENDING' },
   mpesaReceiptNo: { type: String },

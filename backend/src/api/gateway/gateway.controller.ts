@@ -4,6 +4,7 @@ import GatewayTransaction from '../../models/GatewayTransaction';
 import GatewayCustomer from '../../models/GatewayCustomer';
 import PaymentLink from '../../models/PaymentLink';
 import config from '../../config';
+import { initiateStkPush } from '../../services/mpesa.service';
 
 export const initiatePayment = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -14,7 +15,7 @@ export const initiatePayment = async (req: Request, res: Response, next: NextFun
       return res.status(400).json({ message: 'phoneNumber, amount, and accountReference are required' });
     }
 
-    const normalizedPhone = phoneNumber.replace(/^254/, '254');
+    const normalizedPhone = phoneNumber.startsWith('0') ? `254${phoneNumber.substring(1)}` : phoneNumber;
     
     let customer: any = null;
     if (customerEmail || normalizedPhone) {
@@ -36,6 +37,13 @@ export const initiatePayment = async (req: Request, res: Response, next: NextFun
       }
     }
 
+    const stkResponse: any = await initiateStkPush(
+      normalizedPhone,
+      amount,
+      accountReference,
+      transactionDesc || user.businessName || 'FluxPay'
+    );
+
     const transaction = await GatewayTransaction.create({
       ownerId: user._id,
       customerId: customer?._id,
@@ -45,17 +53,20 @@ export const initiatePayment = async (req: Request, res: Response, next: NextFun
       accountReference,
       transactionDesc,
       paymentMethod: 'STK_PUSH',
-      paymentSource: 'gateway_api'
+      paymentSource: 'gateway_api',
+      darajaRequestId: stkResponse.CheckoutRequestID,
+      checkoutRequestId: stkResponse.CheckoutRequestID
     });
 
     res.status(200).json({
       message: 'Payment initiated',
       transactionId: transaction._id,
-      checkoutRequestId: transaction.checkoutRequestId,
+      checkoutRequestId: stkResponse.CheckoutRequestID,
       status: transaction.status
     });
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error('Payment initiation error:', error);
+    res.status(500).json({ message: error.message || 'Failed to initiate payment' });
   }
 };
 
@@ -247,6 +258,110 @@ export const createPaymentLink = async (req: Request, res: Response, next: NextF
   }
 };
 
+export const getPaymentLinkByCode = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { code } = req.params;
+
+    const link = await PaymentLink.findOne({ paymentLink: `${config.frontendUrl}/pay/${code}` })
+      .populate('ownerId', 'businessName businessLogo');
+
+    if (!link) {
+      return res.status(404).json({ message: 'Payment link not found' });
+    }
+
+    if (link.status === 'EXPIRED' || (link.expiresAt && new Date(link.expiresAt) < new Date())) {
+      return res.status(410).json({ message: 'Payment link has expired' });
+    }
+
+    if (link.status === 'USED' || (link.maxUses && link.currentUses >= link.maxUses)) {
+      return res.status(410).json({ message: 'Payment link has reached maximum uses' });
+    }
+
+    const owner = link.ownerId as any;
+    res.status(200).json({
+      _id: link._id,
+      title: link.title,
+      description: link.description,
+      amount: link.amount,
+      currency: link.currency,
+      ownerName: owner?.businessName || 'FluxPay Merchant',
+      ownerLogo: owner?.businessLogo,
+      paymentLink: link.paymentLink
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const payPaymentLink = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { code } = req.params;
+    const { phoneNumber, customerName, customerEmail } = req.body;
+
+    if (!phoneNumber) {
+      return res.status(400).json({ message: 'phoneNumber is required' });
+    }
+
+    const link = await PaymentLink.findOne({ paymentLink: `${config.frontendUrl}/pay/${code}` });
+
+    if (!link) {
+      return res.status(404).json({ message: 'Payment link not found' });
+    }
+
+    if (link.status === 'EXPIRED' || (link.expiresAt && new Date(link.expiresAt) < new Date())) {
+      return res.status(410).json({ message: 'Payment link has expired' });
+    }
+
+    if (link.maxUses && link.currentUses >= link.maxUses) {
+      return res.status(410).json({ message: 'Payment link has reached maximum uses' });
+    }
+
+    const normalizedPhone = phoneNumber.replace(/^0/, '254').replace(/^\+?254(\d{9})$/, '254$1');
+
+    let customer: any = null;
+    if (customerEmail || normalizedPhone) {
+      customer = await GatewayCustomer.findOne({
+        ownerId: link.ownerId,
+        $or: [
+          { email: customerEmail },
+          { phoneNumber: normalizedPhone }
+        ].filter(q => q.email || q.phoneNumber)
+      });
+
+      if (!customer) {
+        customer = await GatewayCustomer.create({
+          ownerId: link.ownerId,
+          name: customerName || customerEmail?.split('@')[0] || 'Guest',
+          email: customerEmail,
+          phoneNumber: normalizedPhone
+        });
+      }
+    }
+
+    const transaction = await GatewayTransaction.create({
+      ownerId: link.ownerId,
+      customerId: customer?._id,
+      amountKes: link.amount,
+      status: 'PENDING',
+      phoneNumber: normalizedPhone,
+      accountReference: code,
+      transactionDesc: link.title,
+      paymentMethod: 'STK_PUSH',
+      paymentSource: 'payment_link',
+      paymentLinkId: link._id
+    });
+
+    res.status(200).json({
+      message: 'Payment initiated',
+      transactionId: transaction._id,
+      checkoutRequestId: transaction.checkoutRequestId,
+      status: transaction.status
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getPaymentLinks = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user as any;
@@ -431,6 +546,10 @@ export const handleMpesaCallback = async (req: Request, res: Response) => {
     }
 
     await transaction.save();
+
+    if (ResultCode === 0 && (transaction as any).paymentLinkId) {
+      await PaymentLink.findByIdAndUpdate((transaction as any).paymentLinkId, { $inc: { currentUses: 1 } });
+    }
 
     const webhookUrl = (transaction as any).ownerId?.webhookUrl;
     if (webhookUrl) {

@@ -53,6 +53,8 @@ const DocsApiKeys = lazy(() => import('./pages/docs/ApiKeys'));
 const DocsWebhooks = lazy(() => import('./pages/docs/Webhooks'));
 const DocsIntegration = lazy(() => import('./pages/docs/Integration'));
 
+const PublicPayment = lazy(() => import('./pages/public/PublicPayment'));
+
 const DocsRedirect = () => {
   const navigate = useNavigate();
   React.useEffect(() => {
@@ -90,6 +92,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="/subscribe" element={<SubscriptionCheckout />} />
             <Route path="/auth/google/callback" element={<GoogleCallback />} />
             <Route path="/google-register-complete" element={<GoogleRegistrationCompletion />} />
+            <Route path="/pay/:code" element={<PublicPayment />} />
             
             <Route element={<PrivateRoute />}>
               <Route element={<MainLayout />}>

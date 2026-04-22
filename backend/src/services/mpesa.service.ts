@@ -55,7 +55,12 @@ const getAuthToken = async () => {
   }
 };
 
-const initiateStkPush = async (phoneNumber: string, amount: number, businessName: string = 'FluxPay') => {
+const initiateStkPush = async (
+  phoneNumber: string, 
+  amount: number, 
+  accountReference: string = 'FluxPay', 
+  transactionDesc: string = 'FluxPay Payment'
+) => {
   const token = await getAuthToken();
   const formattedPhone = formatKenyanPhoneNumber(phoneNumber);
   const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, -3);
@@ -72,8 +77,8 @@ const initiateStkPush = async (phoneNumber: string, amount: number, businessName
       PartyB: config.mpesa.shortCode,
       PhoneNumber: formattedPhone,
       CallBackURL: config.mpesa.callbackUrl,
-      AccountReference: `${businessName} Subscription`,
-      TransactionDesc: `Payment for ${businessName}`,
+      AccountReference: accountReference,
+      TransactionDesc: transactionDesc,
     }, {
       headers: {
         Authorization: `Bearer ${token}`,

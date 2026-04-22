@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Phone, Copy, Check, AlertCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { gatewayTransactions } from '../../services/gatewayApi';
 
 const GatewayDynamicTill: React.FC = () => {
   const [amount, setAmount] = useState('');
@@ -11,6 +12,7 @@ const GatewayDynamicTill: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
+  const [transactionId, setTransactionId] = useState<string>('');
 
   const businessTill = '123456';
 
@@ -24,11 +26,20 @@ const GatewayDynamicTill: React.FC = () => {
     setLoading(true);
     setError('');
 
-    // Simulate payment initiation
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const response = await gatewayTransactions.initiate({
+        phoneNumber,
+        amount: parseInt(amount),
+        accountReference,
+        transactionDesc: description || accountReference,
+      });
+      setTransactionId(response.transactionId);
       setSuccess(true);
-    }, 2000);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to initiate payment');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const copyTill = () => {
@@ -43,6 +54,7 @@ const GatewayDynamicTill: React.FC = () => {
     setAccountReference('');
     setDescription('');
     setSuccess(false);
+    setTransactionId('');
   };
 
   if (success) {
@@ -69,6 +81,12 @@ const GatewayDynamicTill: React.FC = () => {
                 <span className="text-gray-500">Reference</span>
                 <span className="font-medium text-gray-800">{accountReference}</span>
               </div>
+              {transactionId && (
+                <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                  <span className="text-gray-500">Transaction ID</span>
+                  <span className="text-sm font-mono text-gray-600">{transactionId.slice(-8)}</span>
+                </div>
+              )}
 
               <div className="bg-yellow-50 p-4 rounded-lg flex items-start gap-3">
                 <AlertCircle size={20} className="text-yellow-600 mt-0.5" />
