@@ -137,3 +137,23 @@ export const updatePlanSchema = z.object({
   frequency: z.enum(['daily', 'weekly', 'monthly', 'annually']).optional(),
   billingDay: z.number().int().min(1).max(31, 'Billing day must be between 1 and 31').optional(),
 });
+
+export const paymentLinkSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  amount: z.number().positive('Amount must be positive').min(1, 'Minimum amount is 1'),
+  expiresAt: z.string().optional(),
+  maxUses: z.number().optional(),
+  customerPhone: z.string().optional(),
+  customerEmail: z.string().email().optional().or(z.literal('')),
+  redirectUrl: z.string().url().optional().or(z.literal('')),
+  webhookUrl: z.string().url().optional().or(z.literal('')),
+});
+
+export const customerSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email().optional().or(z.literal('')),
+  phoneNumber: z.string().min(1, 'Phone number is required'),
+  notes: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+});

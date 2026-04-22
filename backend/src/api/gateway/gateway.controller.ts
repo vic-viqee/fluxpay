@@ -3,7 +3,6 @@ import crypto from 'crypto';
 import GatewayTransaction from '../../models/GatewayTransaction';
 import GatewayCustomer from '../../models/GatewayCustomer';
 import PaymentLink from '../../models/PaymentLink';
-import { sendPaymentWebhook } from '../../services/webhook.service';
 import config from '../../config';
 
 export const initiatePayment = async (req: Request, res: Response, next: NextFunction) => {
@@ -435,15 +434,23 @@ export const handleMpesaCallback = async (req: Request, res: Response) => {
 
     const webhookUrl = (transaction as any).ownerId?.webhookUrl;
     if (webhookUrl) {
-      await sendPaymentWebhook(webhookUrl, {
-        event: `payment.${transaction.status.toLowerCase()}`,
-        transactionId: transaction._id,
-        amount: transaction.amountKes,
-        phoneNumber: transaction.phoneNumber,
-        status: transaction.status,
-        mpesaReceiptNo: transaction.mpesaReceiptNo,
-        timestamp: new Date()
-      });
+      try {
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event: `payment.${transaction.status.toLowerCase()}`,
+            transactionId: transaction._id,
+            amount: transaction.amountKes,
+            phoneNumber: transaction.phoneNumber,
+            status: transaction.status,
+            mpesaReceiptNo: transaction.mpesaReceiptNo,
+            timestamp: new Date()
+          })
+        });
+      } catch (webhookError) {
+        console.error('Webhook failed:', webhookError);
+      }
     }
 
     res.status(200).json({ ResultCode: 0, ResultDesc: 'Received' });
