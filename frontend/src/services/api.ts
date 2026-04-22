@@ -184,3 +184,39 @@ export const createAbortController = () => new AbortController();
 export const cancelRequest = (abortController: AbortController) => {
   abortController.abort();
 };
+
+export const createApiKey = async (data: { name: string }) => {
+  try {
+    const response = await api.post('/apikeys', data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getApiKeys = async (page = 1, limit = 20) => {
+  try {
+    const response = await api.get('/apikeys', { params: { page, limit } });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const revokeApiKey = async (id: string) => {
+  try {
+    const response = await api.patch(`/apikeys/${id}/revoke`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const deleteApiKey = async (id: string) => {
+  try {
+    const response = await api.delete(`/apikeys/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

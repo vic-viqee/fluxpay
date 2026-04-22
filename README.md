@@ -13,6 +13,8 @@ FluxPay bridges the gap between M-Pesa's APIs and your business needs. It handle
 
 ## Key Features
 
+- **Two Products in One**: FluxPay offers both subscription billing AND payment gateway services
+- **Gateway Portal** (`/gateway`): Standalone payment portal for Retail/POS and E-commerce businesses
 - **Admin Dashboard**: Full-featured admin panel with dark theme, tabs for overview, businesses, transactions, subscriptions, API keys, webhooks, plan limits, and audit trail.
 - **Business Success Center**: Comprehensive guides on automating M-Pesa collections and scaling Kenyan businesses.
 - **Analytics Dashboard**: Real-time revenue trends, transaction status distribution, and subscription health visualizations using Recharts.
@@ -24,6 +26,31 @@ FluxPay bridges the gap between M-Pesa's APIs and your business needs. It handle
 - **M-Pesa Integration**: Automated STK push for collections and recurring billing.
 - **Subscription Management**: Flexible service plans and automated recurring payment processing.
 - **Mobile First**: Fully responsive sidebar and navigation optimized for all screen sizes.
+
+## Gateway Portal
+
+The Gateway Portal is a separate portal for businesses that want to use FluxPay as a payment processor (not subscription billing).
+
+### Gateway Features
+- **Dynamic Till**: Enter amount → QR code + Till display for in-person payments
+- **Payment Links**: Generate shareable payment links for customers
+- **Transaction History**: Filter by date, status, amount with CSV export
+- **Customer Management**: Track payers and contact info
+- **Receipts**: Generate and print payment receipts
+- **API Keys**: For e-commerce integration
+- **Webhooks**: Real-time payment notifications
+
+### Gateway Access
+- **URL**: `/gateway`
+- **Signup**: `/gateway/signup`
+- **Login**: `/gateway/login`
+
+### Payment Flows
+| Flow | Use Case |
+|------|---------|
+| Dynamic Till | Retail/POS - merchant enters amount, customer scans QR |
+| Payment Links | Shareable links for one-time payments |
+| E-commerce Redirect | Online checkout → FluxPay → Return to store |
 
 ## Tech Stack
 

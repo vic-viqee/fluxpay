@@ -1,11 +1,12 @@
 import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './index.css';
 
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import MainLayout from './layouts/MainLayout';
+import GatewayLayout from './layouts/GatewayLayout';
 
 const Index = lazy(() => import('./pages/Index'));
 const Login = lazy(() => import('./pages/Login'));
@@ -27,6 +28,17 @@ const GoogleRegistrationCompletion = lazy(() => import('./pages/GoogleRegistrati
 const Admin = lazy(() => import('./pages/Admin'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+
+const GatewayLogin = lazy(() => import('./pages/gateway/GatewayLogin'));
+const GatewaySignup = lazy(() => import('./pages/gateway/GatewaySignup'));
+const GatewayDashboard = lazy(() => import('./pages/gateway/GatewayDashboard'));
+const GatewayDynamicTill = lazy(() => import('./pages/gateway/GatewayDynamicTill'));
+const GatewayTransactions = lazy(() => import('./pages/gateway/GatewayTransactions'));
+const GatewayPaymentLinks = lazy(() => import('./pages/gateway/GatewayPaymentLinks'));
+const GatewayCustomers = lazy(() => import('./pages/gateway/GatewayCustomers'));
+const GatewayReceipts = lazy(() => import('./pages/gateway/GatewayReceipts'));
+const GatewayApiKeys = lazy(() => import('./pages/gateway/GatewayApiKeys'));
+const GatewayWebhooks = lazy(() => import('./pages/gateway/GatewayWebhooks'));
 
 const Loading = () => (
   <div className="min-h-screen bg-primary-bg flex items-center justify-center">
@@ -72,6 +84,21 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
             <Route path="/admin" element={<Admin />} />
 
+            <Route path="/gateway/login" element={<GatewayLogin />} />
+            <Route path="/gateway/signup" element={<GatewaySignup />} />
+
+            <Route element={<GatewayLayout />}>
+              <Route path="/gateway" element={<GatewayDashboard />} />
+              <Route path="/gateway/till" element={<GatewayDynamicTill />} />
+              <Route path="/gateway/transactions" element={<GatewayTransactions />} />
+              <Route path="/gateway/payment-links" element={<GatewayPaymentLinks />} />
+              <Route path="/gateway/customers" element={<GatewayCustomers />} />
+              <Route path="/gateway/receipts" element={<GatewayReceipts />} />
+              <Route path="/gateway/api-keys" element={<GatewayApiKeys />} />
+              <Route path="/gateway/webhooks" element={<GatewayWebhooks />} />
+            </Route>
+
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

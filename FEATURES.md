@@ -4,6 +4,76 @@ Prioritized based on competitor analysis and market differentiation.
 
 ---
 
+## Gateway Portal (2026-04-22)
+
+### Overview
+- **Status**: ✅ BUILT
+- **Description**: Standalone payment gateway portal for Retail/POS and E-commerce businesses
+- **Portal URL**: `/gateway`
+- **Access**: Separate account (different email/password per business)
+
+### Features (8)
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Payment Dashboard | ✅ | Overview of transactions, revenue, stats |
+| Dynamic Till | ✅ | Enter amount → QR code + Till display |
+| Payment Links | ✅ | Generate shareable payment links |
+| Transaction History | ✅ | Filter by date, status, amount, export CSV |
+| Customer Management | ✅ | Track payers, contact info |
+| Receipts | ✅ | Generate/print payment receipts |
+| API Keys | ✅ | For e-commerce integration |
+| Webhooks | ✅ | Real-time payment notifications |
+
+### Payment Flows
+
+| Flow | Description |
+|------|-------------|
+| **Dynamic Till** | Merchant enters amount → Shows QR/Till → Customer pays via M-Pesa |
+| **Payment Links** | Generate link → Share → Customer pays via link |
+| **E-commerce (Redirect)** | Redirect to FluxPay → Pay → Return to store with status |
+
+### Backend Files
+- `backend/src/models/GatewayTransaction.ts` - NEW: Gateway transaction model
+- `backend/src/models/PaymentLink.ts` - NEW: Payment link model
+- `backend/src/models/GatewayCustomer.ts` - NEW: Gateway customer model
+- `backend/src/api/gateway/gateway.controller.ts` - NEW: Gateway endpoints
+- `backend/src/api/gateway/gateway.routes.ts` - NEW: Gateway routes
+- `backend/src/api/gateway/gatewayAuth.controller.ts` - NEW: Gateway auth (signup/login)
+- `backend/src/api/gateway/gatewayAuth.routes.ts` - NEW: Gateway auth routes
+
+### Frontend Files
+- `frontend/src/layouts/GatewayLayout.tsx` - NEW: Gateway portal layout
+- `frontend/src/services/gatewayApi.ts` - NEW: Gateway API client
+- `frontend/src/pages/gateway/GatewayLogin.tsx` - NEW: Gateway login
+- `frontend/src/pages/gateway/GatewaySignup.tsx` - NEW: Gateway signup
+- `frontend/src/pages/gateway/GatewayDashboard.tsx` - NEW: Dashboard
+- `frontend/src/pages/gateway/GatewayDynamicTill.tsx` - NEW: Dynamic Till
+- `frontend/src/pages/gateway/GatewayTransactions.tsx` - NEW: Transactions
+- `frontend/src/pages/gateway/GatewayPaymentLinks.tsx` - NEW: Payment Links
+- `frontend/src/pages/gateway/GatewayCustomers.tsx` - NEW: Customers
+- `frontend/src/pages/gateway/GatewayReceipts.tsx` - NEW: Receipts
+- `frontend/src/pages/gateway/GatewayApiKeys.tsx` - NEW: API Keys
+- `frontend/src/pages/gateway/GatewayWebhooks.tsx` - NEW: Webhooks
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/gateway-auth/signup` | POST | Gateway signup |
+| `/api/gateway-auth/login` | POST | Gateway login |
+| `/api/gateway/initiate` | POST | Initiate payment |
+| `/api/gateway/transactions` | GET | List transactions |
+| `/api/gateway/transactions/:id` | GET | Get transaction |
+| `/api/gateway/dashboard` | GET | Dashboard stats |
+| `/api/gateway/payment-links` | GET/POST | Payment links |
+| `/api/gateway/payment-links/:id` | DELETE | Delete payment link |
+| `/api/gateway/customers` | GET/POST | Customers |
+| `/api/gateway/customers/:id` | PUT/DELETE | Update/delete customer |
+| `/api/gateway/callback` | POST | M-Pesa callback |
+
+---
+
 ## Phase 2: Admin Page Enhancements (2026-04-17)
 
 ### Admin Authentication Fix
