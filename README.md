@@ -13,12 +13,13 @@ FluxPay bridges the gap between M-Pesa's APIs and your business needs. It handle
 
 ## Key Features
 
+- **Admin Dashboard**: Full-featured admin panel with dark theme, tabs for overview, businesses, transactions, subscriptions, API keys, webhooks, plan limits, and audit trail.
 - **Business Success Center**: Comprehensive guides on automating M-Pesa collections and scaling Kenyan businesses.
 - **Analytics Dashboard**: Real-time revenue trends, transaction status distribution, and subscription health visualizations using Recharts.
 - **Interactive Dashboard**: Manual data refresh, quick-action shortcuts, and a guided onboarding checklist for new users.
 - **Data Export & Reporting**: One-click **CSV Export** for both Transactions and Customer lists, perfect for accounting and KRA returns.
 - **Streamlined Onboarding**: Auto-login after signup and a frictionless, business-focused registration flow.
-- **Enhanced Security**: Hashed password reset tokens, protected password change flow, and JWT-based session management with refresh tokens.
+- **Enhanced Security**: Hashed password reset tokens, protected password change flow, JWT-based session management with refresh tokens, and httpOnly cookies.
 - **Email Support**: Password reset and notification emails using Brevo (Production) and Mailhog (Local).
 - **M-Pesa Integration**: Automated STK push for collections and recurring billing.
 - **Subscription Management**: Flexible service plans and automated recurring payment processing.
@@ -102,6 +103,7 @@ All endpoints are under `/api`.
 - **Plans**: `POST/GET /plans`, `PUT/DELETE /plans/:id`
 - **Analytics**: `GET /analytics`
 - **Transactions**: `GET /transactions`
+- **Admin**: `/admin/overview`, `/admin/businesses`, `/admin/transactions`, `/admin/subscriptions`, `/admin/apikeys`, `/admin/webhooks`, `/admin/plan-limits`, `/admin/audit-logs` (admin only)
 
 ## Notes
 

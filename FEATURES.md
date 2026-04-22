@@ -6,6 +6,24 @@ Prioritized based on competitor analysis and market differentiation.
 
 ## Phase 2: Admin Page Enhancements (2026-04-17)
 
+### Admin Authentication Fix
+- **Status**: ✅ BUILT (2026-04-22)
+- **Problem**: Admin login would briefly show the admin page, then redirect back to login
+- **Root Cause**: Race condition between auth state initialization and admin route protection
+- **Solution**:
+  | Component | Fix Applied |
+  |----------|------------|
+  | `AuthContext.tsx` | Initialize user from localStorage on mount, add `justLoggedIn` flag |
+  | `Admin.tsx` | 500ms mounting guard before auth check |
+  | `api.ts` | Separate `adminApi` without token refresh logic |
+  | `auth.middleware.ts` | Improved token verification |
+- **Files**:
+  - `frontend/src/context/AuthContext.tsx` - User persistence, `justLoggedIn` state
+  - `frontend/src/pages/Admin.tsx` - `isMounted` guard, `adminApi` usage
+  - `frontend/src/services/api.ts` - `adminApi` instance (no refresh interceptor)
+  - `backend/src/api/admin/admin.routes.ts` - Added `authMiddleware` before `isAdmin`
+  - `backend/src/middleware/auth.middleware.ts` - Better token handling
+
 ### Plan-Based Transaction Limits
 - **Status**: ✅ BUILT
 - **Description**: Per-plan monthly transaction limits with 80% warning and 100% block behavior
