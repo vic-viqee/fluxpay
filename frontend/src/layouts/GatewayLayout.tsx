@@ -11,7 +11,8 @@ import {
   LogOut, 
   Menu, 
   X,
-  QrCode
+  QrCode,
+  MousePointer
 } from 'lucide-react';
 
 const GatewayLayout: React.FC = () => {
@@ -24,6 +25,7 @@ const GatewayLayout: React.FC = () => {
     { id: 'till', label: 'Dynamic Till', icon: <QrCode size={20} />, path: '/gateway/till' },
     { id: 'transactions', label: 'Transactions', icon: <CreditCard size={20} />, path: '/gateway/transactions' },
     { id: 'payment-links', label: 'Payment Links', icon: <Link size={20} />, path: '/gateway/payment-links' },
+    { id: 'payment-buttons', label: 'Payment Buttons', icon: <MousePointer size={20} />, path: '/gateway/payment-buttons' },
     { id: 'customers', label: 'Customers', icon: <Users size={20} />, path: '/gateway/customers' },
     { id: 'receipts', label: 'Receipts', icon: <Receipt size={20} />, path: '/gateway/receipts' },
     { id: 'api-keys', label: 'API Keys', icon: <Key size={20} />, path: '/gateway/api-keys' },

@@ -39,6 +39,7 @@ const GatewayCustomers = lazy(() => import('./pages/gateway/GatewayCustomers'));
 const GatewayReceipts = lazy(() => import('./pages/gateway/GatewayReceipts'));
 const GatewayApiKeys = lazy(() => import('./pages/gateway/GatewayApiKeys'));
 const GatewayWebhooks = lazy(() => import('./pages/gateway/GatewayWebhooks'));
+const GatewayPaymentButtons = lazy(() => import('./pages/gateway/GatewayPaymentButtons'));
 
 const DocsIndex = lazy(() => import('./pages/docs/DocsIndex'));
 const DocsGettingStarted = lazy(() => import('./pages/docs/GettingStarted'));
@@ -54,6 +55,7 @@ const DocsWebhooks = lazy(() => import('./pages/docs/Webhooks'));
 const DocsIntegration = lazy(() => import('./pages/docs/Integration'));
 
 const PublicPayment = lazy(() => import('./pages/public/PublicPayment'));
+const PublicPaymentButton = lazy(() => import('./pages/public/PublicPaymentButton'));
 
 const DocsRedirect = () => {
   const navigate = useNavigate();
@@ -93,6 +95,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="/auth/google/callback" element={<GoogleCallback />} />
             <Route path="/google-register-complete" element={<GoogleRegistrationCompletion />} />
             <Route path="/pay/:code" element={<PublicPayment />} />
+            <Route path="/paybtn/:buttonId" element={<PublicPaymentButton />} />
             
             <Route element={<PrivateRoute />}>
               <Route element={<MainLayout />}>
@@ -116,6 +119,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Route path="/gateway/till" element={<GatewayDynamicTill />} />
               <Route path="/gateway/transactions" element={<GatewayTransactions />} />
               <Route path="/gateway/payment-links" element={<GatewayPaymentLinks />} />
+              <Route path="/gateway/payment-buttons" element={<GatewayPaymentButtons />} />
               <Route path="/gateway/customers" element={<GatewayCustomers />} />
               <Route path="/gateway/receipts" element={<GatewayReceipts />} />
               <Route path="/gateway/api-keys" element={<GatewayApiKeys />} />

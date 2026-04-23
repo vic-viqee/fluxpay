@@ -128,6 +128,7 @@ app.use('/api/disbursements', disbursementRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/gateway', require('./api/gateway/gateway.routes').default);
 app.use('/api/gateway-auth', require('./api/gateway/gatewayAuth.routes').default);
+app.use('/api/pay', require('./api/gateway/publicCheckout.routes').default);
 
 // Schedule daily tasks
 cron.schedule('0 0 * * *', () => { // Runs daily at midnight
