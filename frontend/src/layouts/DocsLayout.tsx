@@ -15,7 +15,8 @@ import {
   X,
   Home,
   Moon,
-  Sun
+  Sun,
+  MousePointer
 } from 'lucide-react';
 
 const DocsLayout: React.FC = () => {
@@ -36,11 +37,12 @@ const DocsLayout: React.FC = () => {
   const toggleDarkMode = () => setIsDarkMode(prev => !prev);
 
   const navItems = [
-    { id: 'getting-started', label: 'Getting Started', icon: <Zap size={18} />, path: '/docs/getting-started', new: true },
+    { id: 'getting-started', label: 'Getting Started', icon: <Zap size={18} />, path: '/docs/getting-started' },
     { id: 'quick-start', label: 'Quick Start', icon: <Zap size={18} />, path: '/docs/quick-start', badge: 'Popular' },
     { id: 'api-reference', label: 'API Reference', icon: <Code size={18} />, path: '/docs/api' },
     { id: 'dynamic-till', label: 'Dynamic Till', icon: <CreditCard size={18} />, path: '/docs/dynamic-till' },
     { id: 'payment-links', label: 'Payment Links', icon: <LinkIcon size={18} />, path: '/docs/payment-links' },
+    { id: 'payment-buttons', label: 'Payment Buttons', icon: <MousePointer size={18} />, path: '/docs/payment-buttons', new: true },
     { id: 'transactions', label: 'Transactions', icon: <CreditCard size={18} />, path: '/docs/transactions' },
     { id: 'customers', label: 'Customers', icon: <Users size={18} />, path: '/docs/customers' },
     { id: 'receipts', label: 'Receipts', icon: <Receipt size={18} />, path: '/docs/receipts' },

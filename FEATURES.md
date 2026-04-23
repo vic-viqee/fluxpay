@@ -17,6 +17,34 @@
 
 ---
 
+## ✅ Gateway Access Control (COMPLETED)
+
+### Payment Gateway Discovery
+- **Status:** ✅ BUILT (2026-04-23)
+- **Changes:**
+  - Footer now includes "Payment Gateway" link to `/gateway/signup`
+  - Homepage gateway card links directly to `/gateway/signup`
+  - No longer discoverable via direct URL access (must go through footer or homepage)
+
+### Free Tier System
+- **Status:** ✅ BUILT (2026-04-23)
+- **Features:**
+  - Free gateway accounts with 50 transactions/month
+  - Auto-approved signup (no payment required)
+  - Premium features shown but locked (greyed out)
+  - Transaction limit progress bar on dashboard
+  - Premium Features section in sidebar with lock icons
+  - Plan badge in sidebar showing current plan
+- **Files:**
+  - `frontend/src/components/Footer.tsx` - Added Payment Gateway link
+  - `frontend/src/pages/Index.tsx` - Updated gateway card link
+  - `frontend/src/pages/gateway/GatewaySignup.tsx` - Free tier info banner
+  - `frontend/src/pages/gateway/GatewayDashboard.tsx` - Plan banner + progress bar
+  - `frontend/src/layouts/GatewayLayout.tsx` - Premium features section
+  - `backend/src/api/gateway/gatewayAuth.controller.ts` - Assigns free plan by default
+
+---
+
 ## TIER 1: CRITICAL (Must Have) - 0-4 Weeks
 
 ### 1. Embeddable Payment Button ⭐ PRIORITY #1

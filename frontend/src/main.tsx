@@ -47,6 +47,7 @@ const DocsQuickStart = lazy(() => import('./pages/docs/QuickStart'));
 const DocsApiReference = lazy(() => import('./pages/docs/ApiReference'));
 const DocsDynamicTill = lazy(() => import('./pages/docs/DynamicTill'));
 const DocsPaymentLinks = lazy(() => import('./pages/docs/PaymentLinks'));
+const DocsPaymentButtons = lazy(() => import('./pages/docs/PaymentButtons'));
 const DocsTransactions = lazy(() => import('./pages/docs/Transactions'));
 const DocsCustomers = lazy(() => import('./pages/docs/Customers'));
 const DocsReceipts = lazy(() => import('./pages/docs/Receipts'));
@@ -133,6 +134,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Route path="/docs/api" element={<DocsApiReference />} />
               <Route path="/docs/dynamic-till" element={<DocsDynamicTill />} />
               <Route path="/docs/payment-links" element={<DocsPaymentLinks />} />
+              <Route path="/docs/payment-buttons" element={<DocsPaymentButtons />} />
               <Route path="/docs/transactions" element={<DocsTransactions />} />
               <Route path="/docs/customers" element={<DocsCustomers />} />
               <Route path="/docs/receipts" element={<DocsReceipts />} />
