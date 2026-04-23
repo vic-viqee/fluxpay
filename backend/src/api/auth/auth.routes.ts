@@ -50,13 +50,13 @@ router.get(
     '/google/callback',
     async (req, res, next) => {
       if (!config.google.clientId || !config.google.clientSecret) {
-        return res.status(503).json({ message: 'Google OAuth is not configured.' });
+        return res.redirect(`${config.frontendUrl}/login?error=google_oauth_not_configured`);
       }
 
       pruneExpiredStates();
       const state = typeof req.query.state === 'string' ? req.query.state : '';
       if (!state || !googleOAuthStateStore.has(state)) {
-        return res.status(400).json({ message: 'Invalid OAuth state.' });
+        return res.redirect(`${config.frontendUrl}/login?error=invalid_oauth_state`);
       }
       googleOAuthStateStore.delete(state);
       return passport.authenticate('google', { session: false })(req, res, next);
