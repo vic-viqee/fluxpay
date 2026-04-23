@@ -7,16 +7,22 @@ import {
   Clock, 
   AlertCircle,
   Users,
-  QrCode
+  QrCode,
+  Zap
 } from 'lucide-react';
 import { gatewayDashboard } from '../../services/gatewayApi';
 
 const GatewayDashboard: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [userPlan, setUserPlan] = useState<any>(null);
 
   useEffect(() => {
     fetchStats();
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUserPlan(JSON.parse(userData));
+    }
   }, []);
 
   const fetchStats = async () => {
@@ -29,6 +35,17 @@ const GatewayDashboard: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const planInfo = {
+    free: { name: 'Free', color: 'bg-gray-100 text-gray-700', limit: 50 },
+    starter: { name: 'Starter', color: 'bg-blue-100 text-blue-700', limit: 100 },
+    growth: { name: 'Growth', color: 'bg-purple-100 text-purple-700', limit: 1000 },
+    pro: { name: 'Pro', color: 'bg-yellow-100 text-yellow-700', limit: 999999 }
+  };
+
+  const currentPlan = planInfo[userPlan?.plan as keyof typeof planInfo] || planInfo.free;
+  const transactionsUsed = userPlan?.currentMonthTransactions || 0;
+  const transactionsPercent = Math.round((transactionsUsed / currentPlan.limit) * 100);
 
   if (loading) {
     return (
@@ -62,6 +79,70 @@ const GatewayDashboard: React.FC = () => {
             Open Till
           </Link>
         </div>
+      </div>
+
+      {/* Plan Banner */}
+      {userPlan?.plan === 'free' && (
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Zap size={20} />
+                <span className="font-bold text-lg">Free Plan - Testing</span>
+              </div>
+              <p className="text-blue-100 text-sm">
+                You're using the free tier with 50 transactions/month.
+                {transactionsPercent >= 80 && (
+                  <span className="text-yellow-200 font-medium ml-2">
+                    ({transactionsUsed}/{currentPlan.limit} used - {100 - transactionsPercent}% remaining)
+                  </span>
+                )}
+              </p>
+              <div className="mt-3 flex items-center gap-2 text-sm text-blue-200">
+                <span className="px-2 py-1 bg-blue-500/30 rounded">API Access</span>
+                <span className="px-2 py-1 bg-blue-500/30 rounded">Webhooks</span>
+                <span className="px-2 py-1 bg-blue-500/30 rounded">Dashboard</span>
+                <span className="px-2 py-1 bg-blue-800/50 rounded line-through opacity-60">B2C Payouts</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-blue-200 mb-1">Upgrade for more</div>
+              <div className="flex gap-2">
+                <Link
+                  to="/pricing"
+                  className="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
+                >
+                  View Plans
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transaction Limit Bar */}
+      <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-700">Monthly Transactions</span>
+          <span className={`text-sm font-medium ${transactionsPercent >= 90 ? 'text-red-600' : 'text-gray-600'}`}>
+            {transactionsUsed} / {currentPlan.limit}
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className={`h-2 rounded-full transition-all ${
+              transactionsPercent >= 90 ? 'bg-red-500' :
+              transactionsPercent >= 75 ? 'bg-yellow-500' :
+              'bg-blue-600'
+            }`}
+            style={{ width: `${Math.min(transactionsPercent, 100)}%` }}
+          />
+        </div>
+        {transactionsPercent >= 80 && (
+          <p className="text-xs text-yellow-600 mt-2">
+            You've used {transactionsPercent}% of your monthly transactions.
+          </p>
+        )}
       </div>
 
       {/* Today's Stats */}

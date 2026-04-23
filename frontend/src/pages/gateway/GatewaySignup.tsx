@@ -57,6 +57,21 @@ const GatewaySignup: React.FC = () => {
           <p className="text-gray-500 mt-1">Create your gateway account</p>
         </div>
 
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h3 className="font-semibold text-blue-800 mb-2">Free Tier</h3>
+          <p className="text-sm text-blue-700">
+            You're signing up for the Free plan with 50 transactions/month. 
+            Upgrade anytime to unlock more features like B2C Disbursements, Priority Support, and more.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">API Access</span>
+            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Webhooks</span>
+            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Dashboard</span>
+            <span className="text-xs bg-gray-200 text-gray-500 px-2 py-1 rounded line-through">B2C Payouts</span>
+            <span className="text-xs bg-gray-200 text-gray-500 px-2 py-1 rounded line-through">Priority Support</span>
+          </div>
+        </div>
+
         <div className="bg-white py-8 px-6 shadow rounded-xl border border-gray-200">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (

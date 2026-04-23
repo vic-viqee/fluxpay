@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   CreditCard, 
-  Link, 
   Users, 
   Receipt, 
   Key, 
@@ -12,25 +11,47 @@ import {
   Menu, 
   X,
   QrCode,
-  MousePointer
+  MousePointer,
+  ArrowUpCircle,
+  Lock,
+  Crown
 } from 'lucide-react';
 
 const GatewayLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [userPlan, setUserPlan] = useState<string>('free');
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      setUserPlan(user.plan || 'free');
+    }
+  }, []);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/gateway' },
     { id: 'till', label: 'Dynamic Till', icon: <QrCode size={20} />, path: '/gateway/till' },
     { id: 'transactions', label: 'Transactions', icon: <CreditCard size={20} />, path: '/gateway/transactions' },
-    { id: 'payment-links', label: 'Payment Links', icon: <Link size={20} />, path: '/gateway/payment-links' },
+    { id: 'payment-links', label: 'Payment Links', icon: <MousePointer size={20} />, path: '/gateway/payment-links' },
     { id: 'payment-buttons', label: 'Payment Buttons', icon: <MousePointer size={20} />, path: '/gateway/payment-buttons' },
     { id: 'customers', label: 'Customers', icon: <Users size={20} />, path: '/gateway/customers' },
     { id: 'receipts', label: 'Receipts', icon: <Receipt size={20} />, path: '/gateway/receipts' },
     { id: 'api-keys', label: 'API Keys', icon: <Key size={20} />, path: '/gateway/api-keys' },
     { id: 'webhooks', label: 'Webhooks', icon: <Webhook size={20} />, path: '/gateway/webhooks' },
+    { 
+      id: 'b2c', 
+      label: 'B2C Payouts', 
+      icon: <ArrowUpCircle size={20} />, 
+      path: '/pricing',
+      locked: true 
+    },
   ];
+
+  const premiumNavItems = navItems.filter(item => item.locked);
+  const regularNavItems = navItems.filter(item => !item.locked);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -120,7 +141,7 @@ const GatewayLayout: React.FC = () => {
         </div>
         
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
+          {regularNavItems.map((item) => (
             <button
               key={item.id}
               onClick={() => navigate(item.path)}
@@ -134,7 +155,46 @@ const GatewayLayout: React.FC = () => {
               <span className="font-medium">{item.label}</span>
             </button>
           ))}
+          
+          {/* Premium Section */}
+          {premiumNavItems.length > 0 && (
+            <div className="pt-4 mt-4 border-t border-gray-200">
+              <div className="px-4 py-2 flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <Crown size={14} />
+                Premium Features
+              </div>
+              {premiumNavItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(item.path)}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-gray-400 hover:bg-gray-100 cursor-pointer"
+                >
+                  <Lock size={18} />
+                  <span className="font-medium">{item.label}</span>
+                  <span className="ml-auto text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">PRO</span>
+                </button>
+              ))}
+            </div>
+          )}
         </nav>
+
+        {/* Plan Badge */}
+        {userPlan === 'free' && (
+          <div className="p-4 border-t border-gray-200">
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-3">
+              <p className="text-xs text-gray-500 mb-1">Your Plan</p>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-gray-800">Free</span>
+                <Link
+                  to="/pricing"
+                  className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Upgrade
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="p-4 border-t border-gray-200">
           <button

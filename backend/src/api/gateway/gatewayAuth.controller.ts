@@ -73,7 +73,11 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       businessTillOrPaybill,
       businessType: businessType || 'retail',
       serviceType: 'gateway',
-      role: 'user'
+      role: 'user',
+      plan: 'free',
+      transactionLimit: 50,
+      currentMonthTransactions: 0,
+      transactionCountResetAt: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
     });
 
     await newUser.save();
@@ -94,7 +98,10 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
         email: newUser.email,
         businessName: newUser.businessName,
         businessPhoneNumber: newUser.businessPhoneNumber,
-        serviceType: newUser.serviceType
+        serviceType: newUser.serviceType,
+        plan: newUser.plan,
+        transactionLimit: newUser.transactionLimit,
+        currentMonthTransactions: newUser.currentMonthTransactions
       }
     });
   } catch (error) {
@@ -137,7 +144,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         email: user.email,
         businessName: user.businessName,
         businessPhoneNumber: user.businessPhoneNumber,
-        serviceType: user.serviceType
+        serviceType: user.serviceType,
+        plan: user.plan,
+        transactionLimit: user.transactionLimit,
+        currentMonthTransactions: user.currentMonthTransactions
       }
     });
   } catch (error) {

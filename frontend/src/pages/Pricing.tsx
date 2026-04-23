@@ -47,11 +47,20 @@ const Pricing: React.FC = () => {
 
   const gatewayPlans = [
     {
+      name: 'Free',
+      price: 'KES 0',
+      features: ['50 Transactions/mo', 'API Access', 'Webhooks', '1 Business', 'Basic Dashboard', 'Email Support'],
+      cta: 'Start Testing',
+      description: 'For developers',
+      greyedOutFeatures: ['B2C Disbursements', 'Priority Support', 'Custom Branding', 'Multi-business', 'Advanced Analytics']
+    },
+    {
       name: 'Starter',
       price: 'KES 1,499',
-      features: ['Up to 100 Transactions/mo', 'API Access', 'Webhooks', 'Email Support'],
+      features: ['Up to 100 Transactions/mo', 'API Access', 'Webhooks', '1 Business', 'Full Dashboard', 'Email Support'],
       cta: 'Start Integrating',
-      description: 'For small apps'
+      description: 'For small apps',
+      greyedOutFeatures: ['B2C Disbursements', 'Priority Support', 'Custom Branding', 'Multi-business', 'Advanced Analytics']
     },
     {
       name: 'Growth',

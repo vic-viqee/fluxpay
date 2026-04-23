@@ -84,7 +84,7 @@ const Index: React.FC = () => {
             </Link>
 
             {/* Payment Gateway */}
-            <Link to="/pricing" className="group p-8 rounded-2xl bg-surface-bg border border-gray-800 hover:border-secondary transition-all">
+            <Link to="/gateway/signup" className="group p-8 rounded-2xl bg-surface-bg border border-gray-800 hover:border-secondary transition-all">
               <div className="flex items-center gap-4 mb-6">
                 <div className="p-4 bg-secondary/20 rounded-xl">
                   <Globe className="w-8 h-8 text-secondary" />
@@ -110,7 +110,7 @@ const Index: React.FC = () => {
               </ul>
               <div className="mt-6 pt-6 border-t border-gray-800 flex items-center justify-between">
                 <span className="text-gray-400">Starting at</span>
-                <span className="text-2xl font-bold text-white">KES 1,499<span className="text-gray-400 font-normal">/mo</span></span>
+                <span className="text-2xl font-bold text-white">KES 0<span className="text-gray-400 font-normal">/mo</span></span>
               </div>
             </Link>
           </div>
