@@ -23,6 +23,14 @@ const pruneExpiredStates = () => {
 
 setInterval(pruneExpiredStates, 60_000).unref();
 
+const redirectToLogin = (res: any, error?: string) => {
+  const baseUrl = config.frontendUrl || 'http://localhost:5173';
+  if (error) {
+    return res.redirect(`${baseUrl}/login?error=${error}`);
+  }
+  return res.redirect(`${baseUrl}/login`);
+};
+
 router.post('/signup', authRateLimiter, uploadLogo, validate(signupSchema), signup); 
 router.post('/login', authRateLimiter, validate(loginSchema), login);
 router.post('/refresh-token', validate(refreshTokenSchema), refreshToken);
@@ -37,7 +45,7 @@ router.post('/google/registration-context', authRateLimiter, validate(googleRegi
 
 router.get('/google', async (req, res, next) => {
   if (!config.google.clientId || !config.google.clientSecret) {
-    return res.status(503).json({ message: 'Google OAuth is not configured.' });
+    return redirectToLogin(res, 'google_oauth_not_configured');
   }
 
   pruneExpiredStates();
@@ -46,22 +54,34 @@ router.get('/google', async (req, res, next) => {
   return passport.authenticate('google', { scope: ['profile', 'email'], state, session: false })(req, res, next);
 });
 
-router.get(
-    '/google/callback',
-    async (req, res, next) => {
-      if (!config.google.clientId || !config.google.clientSecret) {
-        return res.redirect(`${config.frontendUrl}/login?error=google_oauth_not_configured`);
-      }
+router.get('/google/callback', async (req, res, next) => {
+  try {
+    const state = typeof req.query.state === 'string' ? req.query.state : '';
+    
+    if (!config.google.clientId || !config.google.clientSecret) {
+      return redirectToLogin(res, 'google_oauth_not_configured');
+    }
 
-      pruneExpiredStates();
-      const state = typeof req.query.state === 'string' ? req.query.state : '';
-      if (!state || !googleOAuthStateStore.has(state)) {
-        return res.redirect(`${config.frontendUrl}/login?error=invalid_oauth_state`);
+    pruneExpiredStates();
+    if (!state || !googleOAuthStateStore.has(state)) {
+      return redirectToLogin(res, 'invalid_oauth_state');
+    }
+    googleOAuthStateStore.delete(state);
+
+    passport.authenticate('google', { session: false }, (err: any, user: any, authInfo: any) => {
+      if (err) {
+        console.error('Passport authenticate error:', err);
+        return redirectToLogin(res, 'oauth_error');
       }
-      googleOAuthStateStore.delete(state);
-      return passport.authenticate('google', { session: false })(req, res, next);
-    },
-    googleCallback
-);
+      
+      req.user = user;
+      req.authInfo = authInfo;
+      next();
+    })(req, res, next);
+  } catch (error) {
+    console.error('Google callback error:', error);
+    return redirectToLogin(res, 'callback_error');
+  }
+}, googleCallback);
 
 export default router;

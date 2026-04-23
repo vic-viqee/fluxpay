@@ -322,27 +322,40 @@ export const googleCallback = (req: Request, res: Response) => {
   const user = req.user as IUser | null; 
   const authInfo = req.authInfo as { message?: string; profile?: any } | null;
 
+  const redirectToLoginWithError = (error?: string) => {
+    const baseUrl = config.frontendUrl || 'http://localhost:5173';
+    if (error) {
+      return res.redirect(`${baseUrl}/login?error=${error}`);
+    }
+    return res.redirect(`${baseUrl}/login`);
+  };
+
+  const redirectToFrontend = (path: string) => {
+    const baseUrl = config.frontendUrl || 'http://localhost:5173';
+    return res.redirect(`${baseUrl}${path}`);
+  };
+
   if (user) {
     const token = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
     const code = generateGoogleAuthCode(token, refreshToken);
     logger.info(`Google OAuth success for user: ${user.email}`);
-    return res.redirect(`${config.frontendUrl}/auth/google/callback?code=${code}`);
+    return redirectToFrontend(`/auth/google/callback?code=${code}`);
   }
 
   if (authInfo && authInfo.message === 'Registration required' && authInfo.profile) {
     try {
       const ticket = generateGoogleRegistrationTicket(authInfo.profile);
       logger.info(`New Google user, generating registration ticket for: ${authInfo.profile.emails?.[0]?.value}`);
-      return res.redirect(`${config.frontendUrl}/auth/google/callback?ticket=${encodeURIComponent(ticket)}`);
+      return redirectToFrontend(`/auth/google/callback?ticket=${encodeURIComponent(ticket)}`);
     } catch (error) {
       logger.error('Failed to generate Google registration ticket:', error);
-      return res.redirect(`${config.frontendUrl}/login?error=registration_failed`);
+      return redirectToLoginWithError('registration_failed');
     }
   }
   
   logger.warn('Google OAuth callback: No user and no authInfo, redirecting to login');
-  return res.redirect(`${config.frontendUrl}/login`);
+  return redirectToLoginWithError();
 };
 
 export const exchangeGoogleAuthCode = async (req: Request, res: Response) => {
