@@ -20,7 +20,7 @@
 ## TIER 1: CRITICAL (Must Have) - 0-4 Weeks
 
 ### 1. Embeddable Payment Button ⭐ PRIORITY #1
-- **Status:** TODO
+- **Status:** ✅ BUILT (2026-04-23)
 - **Target:** Small Business
 - **Description:** Generate a "Pay with M-Pesa" button code to paste on any website without code
 - **Behavior:**
@@ -31,9 +31,13 @@
 - **Use Case:** Businesses without developers, WhatsApp shops, social media sellers
 - **Effort:** Low
 - **Files:**
-  - `backend/src/api/payment-button/` - NEW routes and controller
-  - `frontend/src/pages/gateway/PaymentButton.tsx` - NEW UI to generate button code
-  - `frontend/src/components/PublicPayButton.tsx` - NEW embeddable component
+  - `backend/src/api/gateway/publicCheckout.controller.ts` - NEW controller
+  - `backend/src/api/gateway/publicCheckout.routes.ts` - NEW routes
+  - `backend/src/models/PublicCheckoutButton.ts` - NEW model
+  - `frontend/src/pages/gateway/GatewayPaymentButtons.tsx` - NEW UI
+  - `frontend/src/pages/public/PublicPaymentButton.tsx` - NEW public page
+  - `frontend/src/layouts/GatewayLayout.tsx` - Added navigation
+  - `frontend/src/main.tsx` - Added routes
 
 ### 2. C2B Validation URL ⭐ PRIORITY #2
 - **Status:** TODO
@@ -283,7 +287,7 @@
 
 | Tier | Features | Status |
 |------|----------|--------|
-| Tier 1 | 5 Critical | 1 done, 4 TODO |
+| Tier 1 | 5 Critical | 2 done, 3 TODO |
 | Tier 2 | 5 Important | TODO |
 | Tier 3 | 5 Competitive | TODO |
 | Tier 4 | 6 Professional | TODO |
@@ -297,7 +301,7 @@
 ## Quick Wins Checklist
 
 ### This Week
-- [ ] Embeddable Payment Button (generate + embed code)
+- [x] Embeddable Payment Button (generate + embed code)
 - [ ] Dashboard Quick Actions (floating buttons)
 - [ ] Payment Status Polling button (promote existing feature)
 
