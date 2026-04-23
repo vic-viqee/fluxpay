@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api, { googleAuthUrl } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -7,9 +7,23 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { setUserData } = useAuth();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const errorParam = params.get('error');
+    const messageParam = params.get('message');
+    
+    if (errorParam === 'registration_failed') {
+      setError('Google registration failed. Please try again or sign up with email.');
+    } else if (messageParam) {
+      setSuccess(messageParam);
+    }
+  }, [location]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +59,7 @@ const Login: React.FC = () => {
         </div>
 
         {error && <div className="p-4 text-sm text-red-400 bg-red-900 bg-opacity-50 rounded-lg border border-red-400">{error}</div>}
+        {success && <div className="p-4 text-sm text-green-400 bg-green-900 bg-opacity-50 rounded-lg border border-green-400">{success}</div>}
 
         <div>
           <a

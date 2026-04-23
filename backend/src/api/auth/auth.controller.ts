@@ -319,26 +319,29 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
 };
 
 export const googleCallback = (req: Request, res: Response) => {
-  const user = req.user as IUser; 
-  const authInfo = req.authInfo;
+  const user = req.user as IUser | null; 
+  const authInfo = req.authInfo as { message?: string; profile?: any } | null;
 
   if (user) {
     const token = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
     const code = generateGoogleAuthCode(token, refreshToken);
+    logger.info(`Google OAuth success for user: ${user.email}`);
     return res.redirect(`${config.frontendUrl}/auth/google/callback?code=${code}`);
   }
 
   if (authInfo && authInfo.message === 'Registration required' && authInfo.profile) {
     try {
       const ticket = generateGoogleRegistrationTicket(authInfo.profile);
+      logger.info(`New Google user, generating registration ticket for: ${authInfo.profile.emails?.[0]?.value}`);
       return res.redirect(`${config.frontendUrl}/auth/google/callback?ticket=${encodeURIComponent(ticket)}`);
     } catch (error) {
       logger.error('Failed to generate Google registration ticket:', error);
-      return res.redirect(`${config.frontendUrl}/login`);
+      return res.redirect(`${config.frontendUrl}/login?error=registration_failed`);
     }
   }
   
+  logger.warn('Google OAuth callback: No user and no authInfo, redirecting to login');
   return res.redirect(`${config.frontendUrl}/login`);
 };
 

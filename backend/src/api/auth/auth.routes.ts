@@ -59,7 +59,7 @@ router.get(
         return res.status(400).json({ message: 'Invalid OAuth state.' });
       }
       googleOAuthStateStore.delete(state);
-      return passport.authenticate('google', { failureRedirect: `${config.frontendUrl}/login`, session: false })(req, res, next);
+      return passport.authenticate('google', { session: false })(req, res, next);
     },
     googleCallback
 );

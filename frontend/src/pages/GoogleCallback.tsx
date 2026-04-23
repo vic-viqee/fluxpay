@@ -14,6 +14,12 @@ const GoogleCallback: React.FC = () => {
       const code = params.get('code');
       const token = params.get('token');
       const ticket = params.get('ticket');
+      const error = params.get('error');
+
+      if (error) {
+        navigate(`/login?error=${error}`);
+        return;
+      }
 
       if (ticket) {
         navigate(`/google-register-complete?ticket=${encodeURIComponent(ticket)}`);
@@ -40,7 +46,7 @@ const GoogleCallback: React.FC = () => {
         }
         await refreshAuth();
         navigate('/dashboard');
-      } catch (error) {
+      } catch (err) {
         navigate('/login');
       }
     };
