@@ -8,14 +8,20 @@ import {
   AlertCircle,
   Users,
   QrCode,
-  Zap
+  Zap,
+  Plus,
+  Link as LinkIcon,
+  X
 } from 'lucide-react';
-import { gatewayDashboard } from '../../services/gatewayApi';
+import { gatewayDashboard, mpesa } from '../../services/gatewayApi';
 
 const GatewayDashboard: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [userPlan, setUserPlan] = useState<any>(null);
+  const [showQuickActions, setShowQuickActions] = useState(false);
+  const [balance, setBalance] = useState<any>(null);
+  const [loadingBalance, setLoadingBalance] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -33,6 +39,18 @@ const GatewayDashboard: React.FC = () => {
       console.error('Failed to fetch stats:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkTillBalance = async () => {
+    setLoadingBalance(true);
+    try {
+      const result = await mpesa.checkBalance();
+      setBalance(result);
+    } catch (err) {
+      console.error('Failed to fetch balance:', err);
+    } finally {
+      setLoadingBalance(false);
     }
   };
 
@@ -265,6 +283,128 @@ const GatewayDashboard: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Floating Quick Actions Button */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={() => setShowQuickActions(!showQuickActions)}
+          className={`w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center ${
+            showQuickActions ? 'rotate-45' : ''
+          }`}
+        >
+          <Plus size={24} />
+        </button>
+
+        {/* Quick Actions Menu */}
+        {showQuickActions && (
+          <div className="absolute bottom-20 right-0 bg-white rounded-xl shadow-xl border border-gray-200 p-2 min-w-[200px]">
+            <p className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase">Quick Actions</p>
+            
+            <Link
+              to="/gateway/till"
+              className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={() => setShowQuickActions(false)}
+            >
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <QrCode size={16} className="text-green-600" />
+              </div>
+              <div>
+                <p className="font-medium text-gray-800 text-sm">New Payment</p>
+                <p className="text-xs text-gray-500">Send STK push</p>
+              </div>
+            </Link>
+
+            <Link
+              to="/gateway/payment-links"
+              className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={() => setShowQuickActions(false)}
+            >
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <LinkIcon size={16} className="text-purple-600" />
+              </div>
+              <div>
+                <p className="font-medium text-gray-800 text-sm">Create Link</p>
+                <p className="text-xs text-gray-500">Generate payment link</p>
+              </div>
+            </Link>
+
+            <button
+              onClick={() => {
+                checkTillBalance();
+                setShowQuickActions(false);
+              }}
+              disabled={loadingBalance}
+              className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <DollarSign size={16} className={loadingBalance ? "text-blue-600 animate-pulse" : "text-blue-600"} />
+              </div>
+              <div className="text-left">
+                <p className="font-medium text-gray-800 text-sm">Check Balance</p>
+                <p className="text-xs text-gray-500">View Till balance</p>
+              </div>
+            </button>
+
+            <Link
+              to="/gateway/transactions"
+              className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={() => setShowQuickActions(false)}
+            >
+              <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <CreditCard size={16} className="text-yellow-600" />
+              </div>
+              <div>
+                <p className="font-medium text-gray-800 text-sm">View Transactions</p>
+                <p className="text-xs text-gray-500">See all payments</p>
+              </div>
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* Balance Modal */}
+      {balance && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setBalance(null)} />
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
+            <button
+              onClick={() => setBalance(null)}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <DollarSign size={32} className="text-green-600" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-800">Till Balance</h2>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-gray-600">Available</span>
+                <span className="font-bold text-green-600">KES {parseFloat(balance.availableBalance).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-gray-600">Reserved</span>
+                <span className="font-semibold text-gray-800">KES {parseFloat(balance.reservedBalance).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-gray-600">Uncleared</span>
+                <span className="font-semibold text-yellow-600">KES {parseFloat(balance.unclearedBalance).toLocaleString()}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setBalance(null)}
+              className="w-full mt-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-900 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -68,7 +68,7 @@
   - `frontend/src/main.tsx` - Added routes
 
 ### 2. C2B Validation URL ⭐ PRIORITY #2
-- **Status:** TODO
+- **Status:** ✅ BUILT (2026-04-23)
 - **Target:** All
 - **Description:** Track manual payments made via `*384*#` (Lipa na M-Pesa)
 - **Why Critical:** Manual M-Pesa payments (customer dials `*384*#` and enters Till) need to be tracked and reconciled
@@ -76,13 +76,16 @@
 - **Effort:** Medium
 - **API Endpoint:** `POST /api/gateway/c2b/register` - Register callback URLs with Safaricom
 - **Files:**
-  - `backend/src/services/mpesa.service.ts` - Add C2BRegister function
-  - `backend/src/api/gateway/gateway.controller.ts` - Add register C2B URLs endpoint
-  - `backend/src/models/C2bTransaction.ts` - NEW model for manual payments
-  - `frontend/src/pages/gateway/Settings.tsx` - Add C2B registration toggle
+  - `backend/src/models/C2BTransaction.ts` - NEW model for manual payments
+  - `backend/src/services/mpesa.service.ts` - Added registerC2BUrls function
+  - `backend/src/api/gateway/gateway.controller.ts` - Added register C2B, validation, confirmation, reconcile endpoints
+  - `backend/src/api/gateway/gateway.routes.ts` - Added C2B routes
+  - `frontend/src/pages/gateway/GatewayC2B.tsx` - NEW C2B page with setup + transactions
+  - `frontend/src/layouts/GatewayLayout.tsx` - Added C2B Manual nav item
+  - `frontend/src/services/gatewayApi.ts` - Added mpesa.checkStatus and c2b API calls
 
 ### 3. Transaction Reversal ⭐ PRIORITY #3
-- **Status:** TODO
+- **Status:** ✅ BUILT (2026-04-23)
 - **Target:** All
 - **Description:** Initiate M-Pesa transaction reversal for refunds/disputes
 - **Why Critical:** Businesses must handle "wrong payments" and disputes professionally
@@ -90,18 +93,20 @@
 - **Effort:** Low
 - **API Endpoint:** `POST /api/gateway/reversal`
 - **Files:**
-  - `backend/src/services/mpesa.service.ts` - Add reversal function
-  - `backend/src/api/gateway/gateway.controller.ts` - Add reversal endpoint
-  - `frontend/src/pages/gateway/Transactions.tsx` - Add "Reverse" button per transaction
+  - `backend/src/services/mpesa.service.ts` - Added reverseTransaction function
+  - `backend/src/models/Reversal.ts` - NEW model for tracking reversals
+  - `backend/src/api/gateway/gateway.controller.ts` - Added reversal endpoints
+  - `frontend/src/pages/gateway/GatewayTransactions.tsx` - Added reverse button with modal
 
 ### 4. Dashboard Quick Actions ⭐ PRIORITY #4
-- **Status:** TODO
+- **Status:** ✅ BUILT (2026-04-23)
 - **Target:** All
 - **Description:** Floating action buttons on dashboard for quick tasks
-- **Buttons:** "New Payment", "Create Link", "Check Balance"
+- **Buttons:** "New Payment", "Create Link", "Check Balance", "View Transactions"
 - **Effort:** Low
 - **Files:**
-  - `frontend/src/pages/gateway/GatewayDashboard.tsx` - Add floating action buttons
+  - `frontend/src/pages/gateway/GatewayDashboard.tsx` - Added floating action button with quick actions menu
+  - `frontend/src/services/gatewayApi.ts` - Added checkBalance method
 
 ### 5. Payment Status Polling (ALREADY BUILT)
 - **Status:** ✅ BUILT (promote in UI)
@@ -315,7 +320,7 @@
 
 | Tier | Features | Status |
 |------|----------|--------|
-| Tier 1 | 5 Critical | 2 done, 3 TODO |
+| Tier 1 | 5 Critical | 5 done (ALL COMPLETE) |
 | Tier 2 | 5 Important | TODO |
 | Tier 3 | 5 Competitive | TODO |
 | Tier 4 | 6 Professional | TODO |
@@ -330,12 +335,12 @@
 
 ### This Week
 - [x] Embeddable Payment Button (generate + embed code)
-- [ ] Dashboard Quick Actions (floating buttons)
-- [ ] Payment Status Polling button (promote existing feature)
+- [x] Payment Status Polling button (added check status button in Transactions page)
+- [x] Dashboard Quick Actions (floating buttons)
+- [x] C2B Validation URL (track manual payments)
+- [x] Transaction Reversal (refund handling)
 
 ### This Month
-- [ ] C2B Validation URL (track manual payments)
-- [ ] Transaction Reversal (refund handling)
 - [ ] Recurring Payment Links
 - [ ] Till Balance Display on dashboard
 

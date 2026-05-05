@@ -1,6 +1,6 @@
 services:
   mongo:
-    image: mongo:latest
+    image: mongo:5.0
     container_name: fluxpay-mongo
     ports:
       - "27017:27017"
@@ -27,22 +27,25 @@ services:
       dockerfile: Dockerfile
     container_name: fluxpay-backend
     ports:
-      - "3000:3000"
+      - "8000:8000"
     environment:
       - NODE_ENV=development
       - MONGODB_URI=mongodb://mongo:27017/fluxpay
-      - PORT=3000
+      - PORT=8000
       - JWT_SECRET=${JWT_SECRET:-your_dev_jwt_secret}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-your_dev_refresh_secret}
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
       - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
-      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8000
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=http://localhost:8000/api/auth/google/callback
     depends_on:
       mongo:
         condition: service_healthy
     volumes:
-      - ./backend/src:/app/src
+      - ./backend/app:/app/app
       - uploads-data:/app/uploads
     restart: unless-stopped
 

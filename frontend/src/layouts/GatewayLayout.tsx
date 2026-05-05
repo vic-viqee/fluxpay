@@ -14,7 +14,8 @@ import {
   MousePointer,
   ArrowUpCircle,
   Lock,
-  Crown
+  Crown,
+  PhoneIncoming
 } from 'lucide-react';
 
 const GatewayLayout: React.FC = () => {
@@ -34,6 +35,7 @@ const GatewayLayout: React.FC = () => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/gateway' },
     { id: 'till', label: 'Dynamic Till', icon: <QrCode size={20} />, path: '/gateway/till' },
+    { id: 'c2b', label: 'C2B Manual', icon: <PhoneIncoming size={20} />, path: '/gateway/c2b', badge: 'NEW' },
     { id: 'transactions', label: 'Transactions', icon: <CreditCard size={20} />, path: '/gateway/transactions' },
     { id: 'payment-links', label: 'Payment Links', icon: <MousePointer size={20} />, path: '/gateway/payment-links' },
     { id: 'payment-buttons', label: 'Payment Buttons', icon: <MousePointer size={20} />, path: '/gateway/payment-buttons' },
@@ -153,6 +155,9 @@ const GatewayLayout: React.FC = () => {
             >
               {item.icon}
               <span className="font-medium">{item.label}</span>
+              {item.badge && (
+                <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">{item.badge}</span>
+              )}
             </button>
           ))}
           

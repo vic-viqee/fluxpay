@@ -1,0 +1,32 @@
+from datetime import datetime, timezone
+from typing import Optional, Literal
+from beanie import Document, PydanticObjectId
+from pydantic import Field
+
+
+class GatewayCustomer(Document):
+    owner_id: PydanticObjectId = Field(alias="ownerId")
+    name: str
+    email: Optional[str] = None
+    phone_number: str = Field(alias="phoneNumber")
+    total_transactions: int = Field(default=0, alias="totalTransactions")
+    total_amount: float = Field(default=0, alias="totalAmount")
+    last_transaction_date: Optional[datetime] = Field(
+        default=None, alias="lastTransactionDate"
+    )
+    last_transaction_status: Optional[Literal["PENDING", "SUCCESS", "FAILED"]] = Field(
+        default=None, alias="lastTransactionStatus"
+    )
+    notes: Optional[str] = None
+    tags: Optional[list[str]] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    class Settings:
+        name = "gatewaycustomers"
+        populate_by_name = True
+        indexes = [
+            "owner_id",
+            "phone_number",
+            "email",
+        ]

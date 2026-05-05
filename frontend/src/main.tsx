@@ -40,6 +40,7 @@ const GatewayReceipts = lazy(() => import('./pages/gateway/GatewayReceipts'));
 const GatewayApiKeys = lazy(() => import('./pages/gateway/GatewayApiKeys'));
 const GatewayWebhooks = lazy(() => import('./pages/gateway/GatewayWebhooks'));
 const GatewayPaymentButtons = lazy(() => import('./pages/gateway/GatewayPaymentButtons'));
+const GatewayC2B = lazy(() => import('./pages/gateway/GatewayC2B'));
 
 const DocsIndex = lazy(() => import('./pages/docs/DocsIndex'));
 const DocsGettingStarted = lazy(() => import('./pages/docs/GettingStarted'));
@@ -118,6 +119,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route element={<GatewayLayout />}>
               <Route path="/gateway" element={<GatewayDashboard />} />
               <Route path="/gateway/till" element={<GatewayDynamicTill />} />
+              <Route path="/gateway/c2b" element={<GatewayC2B />} />
               <Route path="/gateway/transactions" element={<GatewayTransactions />} />
               <Route path="/gateway/payment-links" element={<GatewayPaymentLinks />} />
               <Route path="/gateway/payment-buttons" element={<GatewayPaymentButtons />} />

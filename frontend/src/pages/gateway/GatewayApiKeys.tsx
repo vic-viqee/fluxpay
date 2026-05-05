@@ -30,7 +30,7 @@ const GatewayApiKeys: React.FC = () => {
     e.preventDefault();
     try {
       const data = await createApiKey({ name });
-      setNewKey(data);
+      setNewKey(data.data);
       setShowModal(true);
       setName('');
       fetchApiKeys();

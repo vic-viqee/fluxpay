@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Download, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
-import { gatewayTransactions } from '../../services/gatewayApi';
+import { Search, Download, ChevronLeft, ChevronRight, Filter, RefreshCw, CheckCircle, RotateCcw, X } from 'lucide-react';
+import { gatewayTransactions, mpesa, reversal } from '../../services/gatewayApi';
 
 const GatewayTransactions: React.FC = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -9,6 +9,12 @@ const GatewayTransactions: React.FC = () => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [checkingStatus, setCheckingStatus] = useState<string | null>(null);
+  const [showReversalModal, setShowReversalModal] = useState(false);
+  const [selectedTx, setSelectedTx] = useState<any>(null);
+  const [reversalReason, setReversalReason] = useState('');
+  const [reversing, setReversing] = useState(false);
+  const [reversalResult, setReversalResult] = useState<any>(null);
 
   useEffect(() => {
     fetchTransactions();
@@ -59,6 +65,46 @@ const GatewayTransactions: React.FC = () => {
     a.href = url;
     a.download = `transactions-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+  };
+
+  const checkTransactionStatus = async (tx: any) => {
+    if (!tx.checkoutRequestId || checkingStatus) return;
+    setCheckingStatus(tx._id);
+    try {
+      const result = await mpesa.checkStatus(tx.checkoutRequestId);
+      if (result.TransactionStatus) {
+        if (result.TransactionStatus === 'Completed') {
+          await fetchTransactions();
+        }
+      }
+    } catch (err) {
+      console.error('Failed to check status:', err);
+    } finally {
+      setCheckingStatus(null);
+    }
+  };
+
+  const openReversalModal = (tx: any) => {
+    setSelectedTx(tx);
+    setReversalReason('');
+    setReversalResult(null);
+    setShowReversalModal(true);
+  };
+
+  const handleReversal = async () => {
+    if (!selectedTx || !reversalReason) return;
+    setReversing(true);
+    try {
+      const result = await reversal.initiate({
+        transactionId: selectedTx._id,
+        reason: reversalReason
+      });
+      setReversalResult(result.reversal);
+    } catch (err: any) {
+      setReversalResult({ status: 'FAILED', responseDescription: err.response?.data?.message || 'Reversal failed' });
+    } finally {
+      setReversing(false);
+    }
   };
 
   return (
@@ -137,18 +183,19 @@ const GatewayTransactions: React.FC = () => {
                 <th className="text-left p-4 text-xs font-semibold text-gray-500 uppercase">Status</th>
                 <th className="text-left p-4 text-xs font-semibold text-gray-500 uppercase">Reference</th>
                 <th className="text-left p-4 text-xs font-semibold text-gray-500 uppercase">Receipt</th>
+                <th className="text-left p-4 text-xs font-semibold text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center">
+                  <td colSpan={7} className="p-8 text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mx-auto"></div>
                   </td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">No transactions found</td>
+                  <td colSpan={7} className="p-8 text-center text-gray-500">No transactions found</td>
                 </tr>
               ) : (
                 transactions.map((tx) => (
@@ -174,6 +221,33 @@ const GatewayTransactions: React.FC = () => {
                     </td>
                     <td className="p-4 text-sm text-gray-600">{tx.accountReference}</td>
                     <td className="p-4 text-sm text-gray-600">{tx.mpesaReceiptNo || '-'}</td>
+                    <td className="p-4">
+                      <div className="flex gap-1">
+                        {tx.status === 'PENDING' && tx.checkoutRequestId && (
+                          <button
+                            onClick={() => checkTransactionStatus(tx)}
+                            disabled={checkingStatus === tx._id}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+                            title="Check payment status"
+                          >
+                            {checkingStatus === tx._id ? (
+                              <RefreshCw size={16} className="animate-spin" />
+                            ) : (
+                              <RefreshCw size={16} />
+                            )}
+                          </button>
+                        )}
+                        {tx.status === 'SUCCESS' && (
+                          <button
+                            onClick={() => openReversalModal(tx)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Reverse transaction"
+                          >
+                            <RotateCcw size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -207,6 +281,101 @@ const GatewayTransactions: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Reversal Modal */}
+      {showReversalModal && selectedTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowReversalModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <button
+              onClick={() => setShowReversalModal(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <X size={18} />
+            </button>
+
+            {!reversalResult ? (
+              <>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <RotateCcw size={24} className="text-red-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-800">Reverse Transaction</h2>
+                    <p className="text-sm text-gray-500">This action cannot be undone</p>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-gray-500">Amount</span>
+                    <span className="font-bold text-gray-800">KES {selectedTx.amountKes.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Receipt</span>
+                    <span className="font-mono text-sm text-gray-600">{selectedTx.mpesaReceiptNo || 'N/A'}</span>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Reason for reversal</label>
+                  <textarea
+                    value={reversalReason}
+                    onChange={(e) => setReversalReason(e.target.value)}
+                    placeholder="e.g., Customer paid wrong amount, duplicate payment..."
+                    rows={3}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                <button
+                  onClick={handleReversal}
+                  disabled={reversing || !reversalReason}
+                  className="w-full py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {reversing ? (
+                    <>
+                      <RefreshCw size={18} className="animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <RotateCcw size={18} />
+                      Confirm Reversal
+                    </>
+                  )}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-6">
+                  {reversalResult.status === 'SUCCESS' ? (
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle size={32} className="text-green-600" />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <X size={32} className="text-red-600" />
+                    </div>
+                  )}
+                  <h2 className="text-lg font-bold text-gray-800">
+                    {reversalResult.status === 'SUCCESS' ? 'Reversal Initiated' : 'Reversal Failed'}
+                  </h2>
+                  <p className="text-gray-500 mt-2">{reversalResult.responseDescription}</p>
+                </div>
+
+                <button
+                  onClick={() => setShowReversalModal(false)}
+                  className="w-full py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-900 transition-colors"
+                >
+                  Close
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,0 +1,18 @@
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e1e1e1; border-radius: 10px;">
+  <h2 style="color: #d9534f;">Payment Failed - Action Required</h2>
+  <p>Hello,</p>
+  <p>A payment has <strong>failed</strong> for one of your subscriptions.</p>
+  <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+    <p style="margin: 5px 0;"><strong>Customer:</strong> {{ client_name }}</p>
+    <p style="margin: 5px 0;"><strong>Phone:</strong> {{ phone_number }}</p>
+    <p style="margin: 5px 0;"><strong>Plan:</strong> {{ plan_name }}</p>
+    <p style="margin: 5px 0;"><strong>Amount:</strong> KES {{ amount }}</p>
+    <p style="margin: 5px 0;"><strong>Failure Count:</strong> {{ failure_count }} of 3</p>
+  </div>
+  {% if failure_count >= 3 %}
+  <p style="color: #d9534f; font-weight: bold;">Warning: After 3 consecutive failures, the subscription will be automatically suspended.</p>
+  {% endif %}
+  <p>Please contact the customer to resolve the payment issue.</p>
+  <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+  <p style="font-size: 12px; color: #777;">&copy; 2026 FluxPay. All rights reserved.</p>
+</div>

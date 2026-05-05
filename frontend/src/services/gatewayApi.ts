@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const gatewayApi = axios.create({
   baseURL: API_BASE_URL,
@@ -136,6 +136,43 @@ export const gatewayCustomers = {
   },
   delete: async (id: string) => {
     const response = await gatewayApi.delete(`/gateway/customers/${id}`);
+    return response.data;
+  }
+};
+
+export const mpesa = {
+  checkStatus: async (checkoutRequestId: string) => {
+    const response = await axios.get(`${API_BASE_URL}/mpesa/status/${checkoutRequestId}`);
+    return response.data.data;
+  },
+  checkBalance: async () => {
+    const response = await axios.get(`${API_BASE_URL}/mpesa/balance`);
+    return response.data.data;
+  }
+};
+
+export const c2b = {
+  register: async (confirmationUrl: string) => {
+    const response = await gatewayApi.post('/gateway/c2b/register', { confirmationUrl });
+    return response.data;
+  },
+  getTransactions: async (params?: { page?: number; limit?: number; reconciled?: boolean; startDate?: string; endDate?: string }) => {
+    const response = await gatewayApi.get('/gateway/c2b/transactions', { params });
+    return response.data;
+  },
+  reconcile: async (id: string) => {
+    const response = await gatewayApi.post(`/gateway/c2b/transactions/${id}/reconcile`);
+    return response.data;
+  }
+};
+
+export const reversal = {
+  initiate: async (data: { transactionId: string; reason: string }) => {
+    const response = await gatewayApi.post('/gateway/reversal', data);
+    return response.data;
+  },
+  getAll: async (params?: { page?: number; limit?: number }) => {
+    const response = await gatewayApi.get('/gateway/reversal', { params });
     return response.data;
   }
 };
