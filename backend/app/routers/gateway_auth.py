@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import uuid
 import time
-import jwt
+from jose import jwt
 import json
 from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel

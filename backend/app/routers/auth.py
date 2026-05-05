@@ -16,7 +16,7 @@ import os
 from pathlib import Path
 import uuid
 import time
-import jwt
+from jose import jwt
 import json
 import httpx
 from datetime import datetime, timedelta, timezone
@@ -459,9 +459,7 @@ async def google_auth():
     settings = get_settings()
 
     if not settings.google_client_id:
-        mock_auth_url = (
-            f"{settings.backend_url.rstrip('/')}/api/auth/google/callback?code=mock_google_code_12345&state=mock"
-        )
+        mock_auth_url = f"{settings.backend_url.rstrip('/')}/api/auth/google/callback?code=mock_google_code_12345&state=mock"
         return RedirectResponse(url=mock_auth_url, status_code=302)
 
     redirect_url = (
@@ -507,9 +505,7 @@ async def google_auth_callback(code: Optional[str] = None, state: Optional[str] 
             return redirect_to_frontend(f"/auth/google/callback?code={auth_code}")
         else:
             ticket = generate_google_registration_ticket(mock_profile)
-            return redirect_to_frontend(
-                f"/auth/google/callback?ticket={ticket}"
-            )
+            return redirect_to_frontend(f"/auth/google/callback?ticket={ticket}")
 
     # REAL MODE: Exchange code for tokens
     try:
