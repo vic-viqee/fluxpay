@@ -16,7 +16,7 @@ from app.utils.logger import logger
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     try:
         if hashed_password:
-            logger.debug(f"Verifying password against hash starting with: {hashed_password[:10]}...")
+            logger.info(f"Verifying password against hash starting with: {hashed_password[:10]}...")
         return pwd_context.verify(plain_password, hashed_password)
     except Exception as e:
         logger.error(f"Password verification error: {e}")

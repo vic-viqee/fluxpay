@@ -242,7 +242,7 @@ async def login(
 ):
     prune_expired_stores()
 
-    logger.debug(f"Login attempt for email: {login_data.email}")
+    logger.info(f"Login attempt for email: {login_data.email}")
     
     # Try case-insensitive search and catch validation errors
     try:
@@ -264,14 +264,14 @@ async def login(
         logger.warning(f"Login failed: User not found for email {login_data.email}")
         # Diagnostic: Count all users to see if collection is correct
         total_users = await User.count()
-        logger.debug(f"Total users in 'users' collection: {total_users}")
+        logger.info(f"Total users in 'users' collection: {total_users}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if not user.password_hash:
         logger.warning(f"Login failed: No password hash for user {login_data.email}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    logger.debug(f"User found: {user.email}, verifying password...")
+    logger.info(f"User found: {user.email}, verifying password...")
     is_match = verify_password(login_data.password, user.password_hash)
     
     if not is_match:
