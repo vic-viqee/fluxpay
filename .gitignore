@@ -37,6 +37,9 @@ FIXES_PROGRESS.md
 NEW_FEATURES.md
 features.md
 connection_test.txt
+FEATURES.md
+GEMINI.md
+.codex
 
 # Dependency lock files (uncomment if you want to ignore them)
 # package-lock.json
