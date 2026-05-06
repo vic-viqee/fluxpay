@@ -243,10 +243,28 @@ async def login(
     prune_expired_stores()
 
     logger.debug(f"Login attempt for email: {login_data.email}")
-    user = await User.find_one({"email": login_data.email})
+    
+    # Try case-insensitive search and catch validation errors
+    try:
+        user = await User.find_one({"email": {"$regex": f"^{login_data.email}$", "$options": "i"}})
+    except Exception as e:
+        logger.error(f"Error during user lookup/validation for {login_data.email}: {e}")
+        # Try to find the raw document to see what's wrong
+        raw_user = await User.get_motor_collection().find_one({"email": {"$regex": f"^{login_data.email}$", "$options": "i"}})
+        if raw_user:
+            logger.error(f"Raw user document found but failed to validate: {raw_user.keys()}")
+            # Check for missing fields that are required in Pydantic model
+            required_fields = ["businessName", "businessPhoneNumber"]
+            missing = [f for f in required_fields if f not in raw_user and raw_user.get(f) is None]
+            if missing:
+                logger.error(f"Missing required fields in legacy document: {missing}")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     
     if not user:
         logger.warning(f"Login failed: User not found for email {login_data.email}")
+        # Diagnostic: Count all users to see if collection is correct
+        total_users = await User.count()
+        logger.debug(f"Total users in 'users' collection: {total_users}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if not user.password_hash:
