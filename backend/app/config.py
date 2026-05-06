@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     mongodb_uri: str = "mongodb://localhost:27017/fluxpay"
     mongodb_db_name: str = "fluxpay"
 
-    allowed_origins: str = "http://localhost:5173,http://localhost:3000"
+    allowed_origins: str = "http://localhost:5173,http://localhost:3000,https://fluxpay-frontend.onrender.com,https://fluxpay.onrender.com"
 
     cloudinary_cloud_name: Optional[str] = None
     cloudinary_api_key: Optional[str] = None

@@ -51,6 +51,9 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, create_rate_limit_handler(limiter))
 
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.parsed_allowed_origins,
@@ -63,11 +66,10 @@ app.add_middleware(
         "Cookie",
         "X-API-Key",
         "X-API-Secret",
+        "Accept",
+        "Origin",
     ],
 )
-
-app.add_middleware(RequestLoggingMiddleware)
-app.add_middleware(SecurityHeadersMiddleware)
 
 uploads_dir = resolve_uploads_dir()
 app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
