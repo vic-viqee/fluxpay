@@ -242,12 +242,22 @@ async def login(
 ):
     prune_expired_stores()
 
+    logger.debug(f"Login attempt for email: {login_data.email}")
     user = await User.find_one({"email": login_data.email})
-    if not user or not user.password_hash:
+    
+    if not user:
+        logger.warning(f"Login failed: User not found for email {login_data.email}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
+    if not user.password_hash:
+        logger.warning(f"Login failed: No password hash for user {login_data.email}")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    logger.debug(f"User found: {user.email}, verifying password...")
     is_match = verify_password(login_data.password, user.password_hash)
+    
     if not is_match:
+        logger.warning(f"Login failed: Password mismatch for user {login_data.email}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     logger.info(f"User logged in: {user.email}")
