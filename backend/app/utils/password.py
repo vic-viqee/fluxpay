@@ -11,10 +11,13 @@ def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
+from app.utils.logger import logger
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     try:
         return pwd_context.verify(plain_password, hashed_password)
-    except Exception:
+    except Exception as e:
+        logger.error(f"Password verification error: {e}")
         return False
 
 
