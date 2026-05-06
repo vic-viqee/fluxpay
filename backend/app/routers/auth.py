@@ -62,9 +62,10 @@ def prune_expired_stores():
         del used_google_registration_tickets[jti]
 
 
-def generate_google_auth_code(token: str, refresh_token: str) -> str:
+def generate_google_auth_code(user_id: str, token: str, refresh_token: str) -> str:
     code = str(uuid.uuid4())
     google_auth_code_store[code] = {
+        "userId": user_id,
         "token": token,
         "refreshToken": refresh_token,
         "expiresAt": int(time.time() * 1000) + 2 * 60 * 1000,
@@ -501,7 +502,7 @@ async def google_auth_callback(code: Optional[str] = None, state: Optional[str] 
         if user:
             access_token = generate_access_token(str(user.id), user.email)
             refresh_token = generate_refresh_token(str(user.id), user.email)
-            auth_code = generate_google_auth_code(access_token, refresh_token)
+            auth_code = generate_google_auth_code(str(user.id), access_token, refresh_token)
             return redirect_to_frontend(f"/auth/google/callback?code={auth_code}")
         else:
             ticket = generate_google_registration_ticket(mock_profile)
@@ -552,7 +553,7 @@ async def google_auth_callback(code: Optional[str] = None, state: Optional[str] 
     if user:
         access_token = generate_access_token(str(user.id), user.email)
         refresh_token = generate_refresh_token(str(user.id), user.email)
-        auth_code = generate_google_auth_code(access_token, refresh_token)
+        auth_code = generate_google_auth_code(str(user.id), access_token, refresh_token)
         return redirect_to_frontend(f"/auth/google/callback?code={auth_code}")
     else:
         ticket = generate_google_registration_ticket(google_profile)
@@ -579,12 +580,13 @@ async def exchange_google_auth_code(
         del google_auth_code_store[code]
         raise HTTPException(status_code=400, detail="Authorization code has expired")
 
+    user = await User.get(entry["userId"])
+    if not user:
+        del google_auth_code_store[code]
+        raise HTTPException(status_code=404, detail="User not found")
+
     del google_auth_code_store[code]
-    return {
-        "message": "Login successful",
-        "token": entry["token"],
-        "refreshToken": entry["refreshToken"],
-    }
+    return make_auth_response(user, "Login successful")
 
 
 class GoogleRegistrationContextRequest(BaseModel):

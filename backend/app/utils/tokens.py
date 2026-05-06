@@ -3,7 +3,7 @@ from jose import jwt
 from app.config import get_settings
 
 
-def generate_access_token(user_id: str, email: str) -> str:
+def generate_access_token(user_id: str, email: str, gateway: bool = False) -> str:
     settings = get_settings()
     expire = datetime.now(timezone.utc) + timedelta(
         seconds=settings.jwt_access_expires_in
@@ -13,6 +13,8 @@ def generate_access_token(user_id: str, email: str) -> str:
         "email": email,
         "exp": expire,
     }
+    if gateway:
+        payload["gateway"] = True
     return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
 
 
