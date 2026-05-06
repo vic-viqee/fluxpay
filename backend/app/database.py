@@ -35,7 +35,6 @@ async def init_db():
         await client.admin.command("ping")
 
         db = client[settings.mongodb_db_name]
-        logger.info(f"Connecting to database: {settings.mongodb_db_name}")
 
         await init_beanie(
             database=db,
