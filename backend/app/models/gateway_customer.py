@@ -34,7 +34,6 @@ class GatewayCustomer(Document):
     @field_validator("phone_number")
     @classmethod
     def validate_phone(cls, v: str) -> str:
-        # Updated regex to accept 2541 and 2547 prefixes
         if not re.match(r"^254(1|7)\d{8}$", v):
             raise ValueError("Phone number must be in format 254XXXXXXXX")
         return v
