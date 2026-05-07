@@ -53,6 +53,7 @@ app.add_exception_handler(RateLimitExceeded, create_rate_limit_handler(limiter))
 
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(IdempotencyMiddleware) # Add idempotency middleware
 
 app.add_middleware(
     CORSMiddleware,
@@ -68,6 +69,7 @@ app.add_middleware(
         "X-API-Secret",
         "Accept",
         "Origin",
+        "X-Idempotency-Key", # Add idempotency key to allowed headers
     ],
 )
 

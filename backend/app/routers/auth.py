@@ -677,6 +677,7 @@ async def google_complete_registration(
         business_description=businessDescription,
         logo_url=logo_url,
         plan=plan,
+        webhook_secret=secrets.token_hex(32) # Generate and store webhook secret
     )
     await new_user.create()
 
