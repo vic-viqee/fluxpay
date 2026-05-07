@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 from typing import Optional, Literal
 from beanie import Document, PydanticObjectId
-from pydantic import Field
-
+from pydantic import Field, field_validator # Import field_validator
+import re # Import re module for regex
 
 class GatewayCustomer(Document):
     owner_id: PydanticObjectId = Field(alias="ownerId")
@@ -30,3 +30,11 @@ class GatewayCustomer(Document):
             "phone_number",
             "email",
         ]
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone(cls, v: str) -> str:
+        # Updated regex to accept 2541 and 2547 prefixes
+        if not re.match(r"^254(1|7)\d{8}$", v):
+            raise ValueError("Phone number must be in format 254XXXXXXXX")
+        return v

@@ -11,8 +11,9 @@ FluxPay is a dual-purpose platform: a **Subscription Billing Engine** and a **Pa
 - **Payment Gateway**: Public checkout links and direct API for STK initiation.
 - **Merchant Dashboard**: Transaction tracking, customer management, and basic analytics.
 - **Auth System**: Regular credentials, Google OAuth, and secure JWT (Cookie + Header) management.
-- **Idempotency Support**: Implemented for critical API operations via `X-Idempotency-Key` header.
+- **Idempotency Support**: Implemented for critical API operations via `X-Idempotency-Key` header using middleware.
 - **Webhook Secrets**: Secure webhook secrets generated and stored per user.
+- **Request Rate Limiting**: Applied to authentication endpoints (`/api/auth/login`, `/api/auth/signup`) with a default limit of 60 requests/minute/IP.
 
 ---
 
@@ -21,15 +22,19 @@ FluxPay is a dual-purpose platform: a **Subscription Billing Engine** and a **Pa
 
 ### 1.1 Idempotency Support
 - **What**: Prevent duplicate transactions if an API call is retried.
-- **Spec**: Implemented `X-Idempotency-Key` header check using middleware. Keys are stored in MongoDB for 24 hours.
+- **Spec**: Implemented `X-Idempotency-Key` header check using middleware. Keys are stored in MongoDB for 24 hours. Applied to `/api/gateway/initiate`.
 
 ### 1.2 Webhook Hardening (HMAC Signatures)
 - **What**: Secure merchant notifications.
-- **Spec**: Outgoing webhooks are signed using HMAC-SHA256 with a per-webhook `secret`. The signature is sent in the `X-Webhook-Signature` header.
+- **Spec**: Outgoing webhooks are signed using HMAC-SHA256 with a per-webhook `secret`. The signature is sent in the `X-Webhook-Signature` header. Secrets are automatically generated for each webhook.
 
 ### 1.3 Request Rate Limiting
 - **What**: Prevent API abuse and ensure fair usage.
 - **Spec**: Applied a default rate limit of **60 requests per minute per IP address** to authentication endpoints (`/api/auth/login`, `/api/auth/signup`). This protects against brute-force attacks.
+
+### 1.4 Customer Phone Number Validation Fix
+- **What**: Allow creation of customers with Kenyan phone numbers starting with `2541` or `2547`.
+- **Spec**: Updated the phone number validation regex in `backend/app/models/gateway_customer.py` from `^2547\d{8}$` to `^254(1|7)\d{8}$`.
 
 ---
 
@@ -74,9 +79,10 @@ FluxPay is a dual-purpose platform: a **Subscription Billing Engine** and a **Pa
 
 ## 📝 Implementation Notes for Future Agents
 - **Beanie / MongoDB**: Always use `alias` for camelCase compatibility with legacy data.
-- **Middleware**: `CORSMiddleware` must always be the outermost layer.
+- **Middleware**: `CORSMiddleware` must always be the outermost layer. `IdempotencyMiddleware` is placed after security headers but before CORS.
 - **Logging**: Use `logger.info` for critical production paths (Render defaults hide DEBUG).
 - **JWT**: Use the dual-mode (Cookie for SPA, Header for API) defined in `dependencies.py`.
 - **Rate Limiting**: Applied to critical endpoints like `/api/auth/login` and `/api/auth/signup` (60 requests/minute/IP).
-- **Idempotency**: Middleware implemented, and applied to `/api/gateway/initiate`.
-- **Webhooks**: Signed with HMAC-SHA256 using per-webhook secrets.
+- **Idempotency**: Middleware implemented, applied to `/api/gateway/initiate`.
+- **Webhooks**: Signed with HMAC-SHA256 using per-webhook secrets. Secrets are auto-generated.
+- **Customer Phone Validation**: Updated regex to `^254(1|7)\d{8}$` to support common Kenyan phone number formats.
