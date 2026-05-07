@@ -24,15 +24,17 @@ router = APIRouter()
 @router.post("/initiate", response_model=dict)
 async def initiate_payment(
     payment_data: dict,
+    request: Request,
     current_user: User = Depends(get_current_user),
-    request: Request, # Inject request to get headers
 ):
     # Check for idempotency key first
     idempotency_response = await check_idempotency(request, current_user)
     if idempotency_response:
-        logger.info(f"Returning cached response for idempotency key: {request.headers.get('X-Idempotency-Key')}")
+        logger.info(
+            f"Returning cached response for idempotency key: {request.headers.get('X-Idempotency-Key')}"
+        )
         return idempotency_response
-    
+
     phone_number = payment_data.get("phoneNumber")
     amount = payment_data.get("amount")
     account_reference = payment_data.get("accountReference")
@@ -118,7 +120,7 @@ async def initiate_payment(
             "checkoutRequestId": stk_response.get("CheckoutRequestID"),
             "status": transaction.status,
         }
-        
+
         # Save idempotency response
         idempotency_key = request.headers.get("X-Idempotency-Key")
         if idempotency_key:
@@ -126,8 +128,8 @@ async def initiate_payment(
                 key=idempotency_key,
                 user_id=str(current_user.id),
                 path=request.url.path,
-                response_code=200, # Assuming 200 OK for successful initiation
-                response_body=response_data
+                response_code=200,  # Assuming 200 OK for successful initiation
+                response_body=response_data,
             )
 
         return response_data
