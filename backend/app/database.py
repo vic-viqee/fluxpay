@@ -63,7 +63,8 @@ async def init_db():
         logger.info("Database connected and Beanie initialized")
     except Exception as e:
         logger.error(f"Database connection failed: {e}")
-        raise
+        # Don't raise - allow app to run without DB
+        db = None
 
 
 async def close_db():
