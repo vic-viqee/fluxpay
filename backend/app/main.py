@@ -38,18 +38,19 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Database connection failed: {e}")
 
-    try:
-        start_scheduler()
-        logger.info("Scheduler started")
-    except Exception as e:
-        logger.error(f"Scheduler failed to start: {e}")
+    # Temporarily disabled for debugging
+    # try:
+    #     start_scheduler()
+    #     logger.info("Scheduler started")
+    # except Exception as e:
+    #     logger.error(f"Scheduler failed to start: {e}")
 
     logger.info("FluxPay Python backend started")
     yield
 
     try:
         await close_db()
-        stop_scheduler()
+        # stop_scheduler()
         logger.info("FluxPay Python backend shut down")
     except Exception as e:
         logger.error(f"Error during shutdown: {e}")
@@ -90,8 +91,8 @@ app.add_middleware(
     ],
 )
 
-uploads_dir = resolve_uploads_dir()
-app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
+# uploads_dir = resolve_uploads_dir()
+# app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 
 @app.get("/")
