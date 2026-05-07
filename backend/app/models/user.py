@@ -29,6 +29,7 @@ class User(Document):
     transaction_count_reset_at: datetime = Field(default_factory=next_month_first_day, alias="transactionCountResetAt")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), alias="createdAt")
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), alias="updatedAt")
+    webhook_secret: Optional[str] = Field(default=None, exclude=True, alias="webhookSecret") # Add for webhook security
 
     class Settings:
         name = "users"
