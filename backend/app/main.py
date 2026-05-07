@@ -1,33 +1,32 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
+
+# from slowapi import Limiter
+# from slowapi.util import get_remote_address
+# from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
 from pathlib import Path
 
 from app.config import get_settings
 from app.database import init_db, close_db
-from app.middleware.request_log import RequestLoggingMiddleware
-from app.middleware.security_headers import SecurityHeadersMiddleware
-from app.middleware.idempotency import (
-    IdempotencyMiddleware,
-)  # Import IdempotencyMiddleware
-from app.tasks.scheduler import start_scheduler, stop_scheduler
+
+# from app.middleware.request_log import RequestLoggingMiddleware
+# from app.middleware.security_headers import SecurityHeadersMiddleware
+# from app.middleware.idempotency import IdempotencyMiddleware
+# from app.tasks.scheduler import start_scheduler, stop_scheduler
 from app.utils.logger import logger
-from app.utils.uploads import resolve_uploads_dir
+# from app.utils.uploads import resolve_uploads_dir
 
 
-def create_rate_limit_handler(limiter: Limiter):
-    async def rate_limit_handler(request, exc):
-        return JSONResponse(
-            status_code=429,
-            content={"message": str(exc)},
-        )
+# def create_rate_limit_handler(limiter: Limiter):
+#     async def rate_limit_handler(request, exc):
+#         return JSONResponse(
+#             status_code=429,
+#             content={"message": str(exc)},
+#         )
 
-    return rate_limit_handler
+#     return rate_limit_handler
 
 
 @asynccontextmanager
@@ -65,12 +64,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, create_rate_limit_handler(limiter))
+# limiter = Limiter(key_func=get_remote_address)
+# app.state.limiter = limiter
+# app.add_exception_handler(RateLimitExceeded, create_rate_limit_handler(limiter))
 
-app.add_middleware(RequestLoggingMiddleware)
-app.add_middleware(SecurityHeadersMiddleware)
+# app.add_middleware(RequestLoggingMiddleware)
+# app.add_middleware(SecurityHeadersMiddleware)
 # app.add_middleware(IdempotencyMiddleware)  # Disabled temporarily for debugging
 
 app.add_middleware(
