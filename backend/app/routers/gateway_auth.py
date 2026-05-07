@@ -111,12 +111,12 @@ class GatewayResetPasswordRequest(BaseModel):
     password: str
 
 
-@router.post("/signup")
+@router.post("/signup", response_model=dict)
 async def gateway_signup(
     request: Request,
     body: GatewaySignupRequest,
 ):
-    prune_expired_stores()
+    logger.info(f"Signup attempt for {body.email}")
 
     if not is_strong_password(body.password):
         raise HTTPException(
@@ -150,14 +150,14 @@ async def gateway_signup(
     )
     await new_user.create()
 
-    logger.info(f"New gateway user signed up: {body.email}")
+    logger.info(f"User created: {new_user.id}")
 
     access_token = generate_access_token(str(new_user.id), new_user.email)
     refresh_token = generate_refresh_token(
         str(new_user.id), new_user.email, gateway=True
     )
 
-    response_content = {
+    return {
         "message": "Registration successful",
         "token": access_token,
         "refreshToken": refresh_token,
@@ -172,8 +172,6 @@ async def gateway_signup(
             "currentMonthTransactions": new_user.current_month_transactions,
         },
     }
-
-    return response_content
 
 
 @router.post("/login")
