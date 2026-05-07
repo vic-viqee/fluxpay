@@ -12,7 +12,9 @@ from app.config import get_settings
 from app.database import init_db, close_db
 from app.middleware.request_log import RequestLoggingMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
-from app.middleware.idempotency import IdempotencyMiddleware # Import IdempotencyMiddleware
+from app.middleware.idempotency import (
+    IdempotencyMiddleware,
+)  # Import IdempotencyMiddleware
 from app.tasks.scheduler import start_scheduler, stop_scheduler
 from app.utils.logger import logger
 from app.utils.uploads import resolve_uploads_dir
@@ -30,13 +32,27 @@ def create_rate_limit_handler(limiter: Limiter):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
-    start_scheduler()
+    try:
+        await init_db()
+        logger.info("Database connected")
+    except Exception as e:
+        logger.error(f"Database connection failed: {e}")
+
+    try:
+        start_scheduler()
+        logger.info("Scheduler started")
+    except Exception as e:
+        logger.error(f"Scheduler failed to start: {e}")
+
     logger.info("FluxPay Python backend started")
     yield
-    await close_db()
-    stop_scheduler()
-    logger.info("FluxPay Python backend shut down")
+
+    try:
+        await close_db()
+        stop_scheduler()
+        logger.info("FluxPay Python backend shut down")
+    except Exception as e:
+        logger.error(f"Error during shutdown: {e}")
 
 
 settings = get_settings()
@@ -54,7 +70,7 @@ app.add_exception_handler(RateLimitExceeded, create_rate_limit_handler(limiter))
 
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(IdempotencyMiddleware) # Add idempotency middleware
+app.add_middleware(IdempotencyMiddleware)  # Add idempotency middleware
 
 app.add_middleware(
     CORSMiddleware,
@@ -70,7 +86,7 @@ app.add_middleware(
         "X-API-Secret",
         "Accept",
         "Origin",
-        "X-Idempotency-Key", # Add idempotency key to allowed headers
+        "X-Idempotency-Key",  # Add idempotency key to allowed headers
     ],
 )
 
