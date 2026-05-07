@@ -116,111 +116,67 @@ async def gateway_signup(
     request: Request,
     body: GatewaySignupRequest,
 ):
-    try:
-        prune_expired_stores()
+    prune_expired_stores()
 
-        if not is_strong_password(body.password):
-            raise HTTPException(
-                status_code=400,
-                detail="Password must be at least 8 characters and include uppercase, lowercase, number, and special character",
-            )
-
-        existing_user = await User.find_one(
-            {"email": body.email, "service_type": "gateway"}
+    if not is_strong_password(body.password):
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 8 characters and include uppercase, lowercase, number, and special character",
         )
 
-        if existing_user:
-            raise HTTPException(
-                status_code=409, detail="User with that email already exists"
-            )
+    existing_user = await User.find_one(
+        {"email": body.email, "service_type": "gateway"}
+    )
 
-        hashed_password = hash_password(body.password)
-
-        user_data = {
-            "email": body.email,
-            "password": hashed_password,
-            "businessName": body.businessName,
-            "businessPhoneNumber": body.businessPhoneNumber,
-            "businessTillOrPaybill": body.businessTillOrPaybill,
-            "businessType": body.businessType or "retail",
-            "serviceType": "gateway",
-            "role": "user",
-            "plan": "free",
-            "transactionLimit": 50,
-            "currentMonthTransactions": 0,
-        }
-
-        logger.info(f"Creating user with data: {user_data}")
-
-        new_user = User(**user_data)
-        await new_user.create()
-
-        logger.info(f"New gateway user signed up: {body.email}")
-
-        access_token = generate_access_token(str(new_user.id), new_user.email)
-        refresh_token = generate_refresh_token(
-            str(new_user.id), new_user.email, gateway=True
+    if existing_user:
+        raise HTTPException(
+            status_code=409, detail="User with that email already exists"
         )
 
-        response_content = {
-            "message": "Registration successful",
-            "token": access_token,
-            "refreshToken": refresh_token,
-            "user": {
-                "id": str(new_user.id),
-                "email": new_user.email,
-                "businessName": new_user.business_name,
-                "businessPhoneNumber": new_user.business_phone_number,
-                "serviceType": new_user.service_type,
-                "plan": new_user.plan,
-                "transactionLimit": new_user.transaction_limit,
-                "currentMonthTransactions": new_user.current_month_transactions,
-            },
-        }
+    hashed_password = hash_password(body.password)
+    now = datetime.now(timezone.utc)
+    next_month = now.month + 1 if now.month < 12 else 1
+    next_year = now.year if now.month < 12 else now.year + 1
 
-        response = Response(
-            content=json.dumps(response_content),
-            status_code=201,
-            media_type="application/json",
-        )
-        response.set_cookie(
-            key="accessToken",
-            value=access_token,
-            httponly=True,
-            max_age=60 * 60,
-            path="/",
-        )
-        response.set_cookie(
-            key="refreshToken",
-            value=refresh_token,
-            httponly=True,
-            max_age=7 * 24 * 60 * 60,
-            path="/",
-        )
+    new_user = User(
+        email=body.email,
+        password_hash=hashed_password,
+        business_name=body.businessName,
+        business_phone_number=body.businessPhoneNumber,
+        business_till_or_paybill=body.businessTillOrPaybill,
+        business_type=body.businessType or "retail",
+        service_type="gateway",
+        role="user",
+        plan="free",
+        transaction_limit=50,
+        current_month_transactions=0,
+    )
+    await new_user.create()
 
-        # Try to log audit event but don't fail if it errors
-        try:
-            await log_audit_event(
-                admin_id=str(new_user.id),
-                action="GATEWAY_SIGNUP",
-                resource="User",
-                resource_id=str(new_user.id),
-                details={"email": body.email, "business_name": body.businessName},
-                ip_address=await get_client_ip(request),
-                user_agent=request.headers.get("user-agent"),
-            )
-        except Exception as audit_err:
-            logger.error(f"Audit logging failed (non-critical): {audit_err}")
+    logger.info(f"New gateway user signed up: {body.email}")
 
-        return response
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Gateway signup error: {e}")
-        import traceback
+    access_token = generate_access_token(str(new_user.id), new_user.email)
+    refresh_token = generate_refresh_token(
+        str(new_user.id), new_user.email, gateway=True
+    )
 
-        logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+    response_content = {
+        "message": "Registration successful",
+        "token": access_token,
+        "refreshToken": refresh_token,
+        "user": {
+            "id": str(new_user.id),
+            "email": new_user.email,
+            "businessName": new_user.business_name,
+            "businessPhoneNumber": new_user.business_phone_number,
+            "serviceType": new_user.service_type,
+            "plan": new_user.plan,
+            "transactionLimit": new_user.transaction_limit,
+            "currentMonthTransactions": new_user.current_month_transactions,
+        },
+    }
+
+    return response_content
 
 
 @router.post("/login")
