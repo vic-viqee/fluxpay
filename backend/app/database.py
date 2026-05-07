@@ -34,29 +34,33 @@ async def init_db():
         # Verify connection
         await client.admin.command("ping")
 
-        db = client[settings.mongodb_db_name]
+        from app.models.idempotency_key import IdempotencyKey
 
-        await init_beanie(
-            database=db,
-            document_models=[
-                User,
-                Transaction,
-                Subscription,
-                ServicePlan,
-                Client,
-                ApiKey,
-                AuditLog,
-                Invoice,
-                Webhook,
-                GatewayTransaction,
-                GatewayCustomer,
-                PaymentLink,
-                Reversal,
-                PublicCheckoutButton,
-                PublicCheckoutTransaction,
-                C2BTransaction,
-            ],
-        )
+
+        async def init_db():
+        ...
+                await init_beanie(
+                    database=db,
+                    document_models=[
+                        User,
+                        Transaction,
+                        Subscription,
+                        ServicePlan,
+                        Client,
+                        ApiKey,
+                        AuditLog,
+                        Invoice,
+                        Webhook,
+                        GatewayTransaction,
+                        GatewayCustomer,
+                        PaymentLink,
+                        Reversal,
+                        PublicCheckoutButton,
+                        PublicCheckoutTransaction,
+                        C2BTransaction,
+                        IdempotencyKey,
+                    ],
+                )
         logger.info("Database connected and Beanie initialized")
     except Exception as e:
         logger.error(f"Database connection failed: {e}")

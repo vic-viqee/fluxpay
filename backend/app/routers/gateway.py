@@ -25,7 +25,14 @@ router = APIRouter()
 async def initiate_payment(
     payment_data: dict,
     current_user: User = Depends(get_current_user),
+    request: Request, # Inject request to get headers
 ):
+    # Check for idempotency key first
+    idempotency_response = await check_idempotency(request, current_user)
+    if idempotency_response:
+        logger.info(f"Returning cached response for idempotency key: {request.headers.get('X-Idempotency-Key')}")
+        return idempotency_response
+    
     phone_number = payment_data.get("phoneNumber")
     amount = payment_data.get("amount")
     account_reference = payment_data.get("accountReference")
@@ -105,12 +112,25 @@ async def initiate_payment(
 
         logger.info(f"Payment initiated: {transaction.id} for {formatted_phone}")
 
-        return {
+        response_data = {
             "message": "Payment initiated",
             "transactionId": str(transaction.id),
             "checkoutRequestId": stk_response.get("CheckoutRequestID"),
             "status": transaction.status,
         }
+        
+        # Save idempotency response
+        idempotency_key = request.headers.get("X-Idempotency-Key")
+        if idempotency_key:
+            await save_idempotency(
+                key=idempotency_key,
+                user_id=str(current_user.id),
+                path=request.url.path,
+                response_code=200, # Assuming 200 OK for successful initiation
+                response_body=response_data
+            )
+
+        return response_data
     except Exception as e:
         logger.error(f"Payment initiation failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to initiate payment")
