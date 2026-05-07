@@ -136,10 +136,8 @@ async def gateway_signup(
 
         hashed_password = hash_password(body.password)
         now = datetime.now(timezone.utc)
-        next_month = now.month + 1 if now.month < 12 else 1
-        next_year = now.year if now.month < 12 else now.year + 1
 
-new_user = User(
+        new_user = User(
             email=body.email,
             password_hash=hashed_password,
             business_name=body.businessName,
