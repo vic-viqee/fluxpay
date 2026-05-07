@@ -70,7 +70,7 @@ app.add_exception_handler(RateLimitExceeded, create_rate_limit_handler(limiter))
 
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(IdempotencyMiddleware)  # Add idempotency middleware
+# app.add_middleware(IdempotencyMiddleware)  # Disabled temporarily for debugging
 
 app.add_middleware(
     CORSMiddleware,
