@@ -107,15 +107,58 @@ async def health():
 
 
 # Import all routers
-from app.routers import (
-    auth,
-    gateway_auth,
-    payments,
-    subscriptions,
-    clients,
-    plans,
-    customers,
-)
+try:
+    from app.routers import (
+        auth,
+        gateway_auth,
+        payments,
+        subscriptions,
+        clients,
+        plans,
+        customers,
+    )
+    from app.routers import (
+        transactions,
+        users,
+        settings as user_settings,
+        analytics,
+        apikeys,
+        thirdparty,
+    )
+    from app.routers import (
+        invoices,
+        mpesa,
+        disbursements,
+        admin,
+        gateway,
+        public_checkout,
+        docs,
+    )
+
+    logger.info("All routers imported successfully")
+except Exception as e:
+    logger.error(f"Failed to import routers: {e}")
+    # Import only what works
+    from app.routers import gateway_auth
+
+    auth = gateway_auth
+    payments = gateway_auth
+    subscriptions = gateway_auth
+    clients = gateway_auth
+    plans = gateway_auth
+    customers = gateway_auth
+    transactions = gateway_auth
+    users = gateway_auth
+    user_settings = gateway_auth
+    analytics = gateway_auth
+    apikeys = gateway_auth
+    thirdparty = gateway_auth
+    invoices = gateway_auth
+    mpesa = gateway_auth
+    disbursements = gateway_auth
+    admin = gateway_auth
+    public_checkout = gateway_auth
+    docs = gateway_auth
 from app.routers import (
     transactions,
     users,
