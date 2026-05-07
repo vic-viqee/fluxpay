@@ -92,20 +92,94 @@ async def health():
     }
 
 
-@app.on_event("startup")
-async def startup_event():
-    route_count = len(app.routes)
-    logger.info(f"Total routes registered: {route_count}")
+# Import all routers
+from app.routers import auth
 
+app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 
-# Import just auth router first to test
-try:
-    from app.routers import auth
+from app.routers import gateway_auth
 
-    app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
-    logger.info("Added auth router - SUCCESS")
-except Exception as e:
-    logger.error(f"Failed to import auth router: {e}")
+app.include_router(
+    gateway_auth.router, prefix="/api/gateway-auth", tags=["Gateway Auth"]
+)
+
+from app.routers import payments
+
+app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
+
+from app.routers import subscriptions
+
+app.include_router(
+    subscriptions.router, prefix="/api/subscriptions", tags=["Subscriptions"]
+)
+
+from app.routers import clients
+
+app.include_router(clients.router, prefix="/api/clients", tags=["Clients"])
+
+from app.routers import plans
+
+app.include_router(plans.router, prefix="/api/plans", tags=["Plans"])
+
+from app.routers import customers
+
+app.include_router(customers.router, prefix="/api/customers", tags=["Customers"])
+
+from app.routers import transactions
+
+app.include_router(
+    transactions.router, prefix="/api/transactions", tags=["Transactions"]
+)
+
+from app.routers import users
+
+app.include_router(users.router, prefix="/api/users", tags=["Users"])
+
+from app.routers import settings as user_settings
+
+app.include_router(user_settings.router, prefix="/api/settings", tags=["Settings"])
+
+from app.routers import analytics
+
+app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
+
+from app.routers import apikeys
+
+app.include_router(apikeys.router, prefix="/api/apikeys", tags=["API Keys"])
+
+from app.routers import thirdparty
+
+app.include_router(thirdparty.router, prefix="/api/v1", tags=["Third Party"])
+
+from app.routers import invoices
+
+app.include_router(invoices.router, prefix="/api/invoices", tags=["Invoices"])
+
+from app.routers import mpesa
+
+app.include_router(mpesa.router, prefix="/api/mpesa", tags=["M-Pesa"])
+
+from app.routers import disbursements
+
+app.include_router(
+    disbursements.router, prefix="/api/disbursements", tags=["Disbursements"]
+)
+
+from app.routers import admin
+
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+
+from app.routers import gateway
+
+app.include_router(gateway.router, prefix="/api/gateway", tags=["Gateway"])
+
+from app.routers import public_checkout
+
+app.include_router(public_checkout.router, prefix="/api/pay", tags=["Public Checkout"])
+
+from app.routers import docs
+
+app.include_router(docs.router, prefix="/api/docs", tags=["Docs"])
 
 # Comment out others for now - will add back once auth works
 # from app.routers import gateway_auth

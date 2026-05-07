@@ -20,12 +20,14 @@ class Settings(BaseSettings):
     jwt_access_expires_in: int = 3600
     jwt_refresh_expires_in: int = 604800
 
-    backend_url: str = "http://localhost:8000"
-    frontend_url: str = "http://localhost:5173"
+    backend_url: str = "https://fluxpay-backend.onrender.com"
+    frontend_url: str = "https://fluxpay-frontend.onrender.com"
 
     google_client_id: Optional[str] = None
     google_client_secret: Optional[str] = None
-    google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
+    google_redirect_uri: str = (
+        "https://fluxpay-backend.onrender.com/api/auth/google/callback"
+    )
 
     email_host: str = "localhost"
     email_port: int = 1025
