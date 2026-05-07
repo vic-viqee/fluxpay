@@ -98,7 +98,11 @@ from app.routers import auth
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 logger.info("auth router added")
 
+# Test importing gateway_auth separately
 try:
+    import app.routers.gateway_auth
+
+    logger.info("gateway_auth module imported OK")
     from app.routers import gateway_auth
 
     app.include_router(
@@ -106,7 +110,10 @@ try:
     )
     logger.info("gateway_auth router added")
 except Exception as e:
-    logger.error(f"Failed to add gateway_auth: {e}")
+    logger.error(f"Failed gateway_auth: {type(e).__name__}: {e}")
+    import traceback
+
+    logger.error(traceback.format_exc())
 
 try:
     from app.routers import payments
