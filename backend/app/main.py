@@ -92,11 +92,20 @@ async def health():
     }
 
 
-# Import just auth router first to test
-from app.routers import auth
+@app.on_event("startup")
+async def startup_event():
+    route_count = len(app.routes)
+    logger.info(f"Total routes registered: {route_count}")
 
-app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
-logger.info("Added auth router")
+
+# Import just auth router first to test
+try:
+    from app.routers import auth
+
+    app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
+    logger.info("Added auth router - SUCCESS")
+except Exception as e:
+    logger.error(f"Failed to import auth router: {e}")
 
 # Comment out others for now - will add back once auth works
 # from app.routers import gateway_auth
