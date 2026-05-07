@@ -135,21 +135,24 @@ async def gateway_signup(
             )
 
         hashed_password = hash_password(body.password)
-        now = datetime.now(timezone.utc)
 
-        new_user = User(
-            email=body.email,
-            password_hash=hashed_password,
-            business_name=body.businessName,
-            business_phone_number=body.businessPhoneNumber,
-            business_till_or_paybill=body.businessTillOrPaybill,
-            business_type=body.businessType or "retail",
-            service_type="gateway",
-            role="user",
-            plan="free",
-            transaction_limit=50,
-            current_month_transactions=0,
-        )
+        user_data = {
+            "email": body.email,
+            "password": hashed_password,
+            "businessName": body.businessName,
+            "businessPhoneNumber": body.businessPhoneNumber,
+            "businessTillOrPaybill": body.businessTillOrPaybill,
+            "businessType": body.businessType or "retail",
+            "serviceType": "gateway",
+            "role": "user",
+            "plan": "free",
+            "transactionLimit": 50,
+            "currentMonthTransactions": 0,
+        }
+
+        logger.info(f"Creating user with data: {user_data}")
+
+        new_user = User(**user_data)
         await new_user.create()
 
         logger.info(f"New gateway user signed up: {body.email}")
@@ -214,6 +217,9 @@ async def gateway_signup(
         raise
     except Exception as e:
         logger.error(f"Gateway signup error: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
 
 
