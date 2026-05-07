@@ -111,51 +111,51 @@ async def health():
     }
 
 
-from app.routers import (
-    auth,
-    gateway_auth,
-    payments,
-    subscriptions,
-    clients,
-    plans,
-    customers,
-)
-from app.routers import transactions, users, settings, analytics, apikeys, thirdparty
-from app.routers import (
-    invoices,
-    mpesa,
-    disbursements,
-    admin,
-    gateway,
-    public_checkout,
-    docs,
-)
+# from app.routers import (
+#     auth,
+#     gateway_auth,
+#     payments,
+#     subscriptions,
+#     clients,
+#     plans,
+#     customers,
+# )
+# from app.routers import transactions, users, settings, analytics, apikeys, thirdparty
+# from app.routers import (
+#     invoices,
+#     mpesa,
+#     disbursements,
+#     admin,
+#     gateway,
+#     public_checkout,
+#     docs,
+# )
 
-app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
-app.include_router(
-    gateway_auth.router, prefix="/api/gateway-auth", tags=["Gateway Auth"]
-)
-app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
-app.include_router(
-    subscriptions.router, prefix="/api/subscriptions", tags=["Subscriptions"]
-)
-app.include_router(clients.router, prefix="/api/clients", tags=["Clients"])
-app.include_router(plans.router, prefix="/api/plans", tags=["Plans"])
-app.include_router(customers.router, prefix="/api/customers", tags=["Customers"])
-app.include_router(
-    transactions.router, prefix="/api/transactions", tags=["Transactions"]
-)
-app.include_router(users.router, prefix="/api/users", tags=["Users"])
-app.include_router(settings.router, prefix="/api/settings", tags=["Settings"])
-app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
-app.include_router(apikeys.router, prefix="/api/apikeys", tags=["API Keys"])
-app.include_router(thirdparty.router, prefix="/api/v1", tags=["Third Party"])
-app.include_router(invoices.router, prefix="/api/invoices", tags=["Invoices"])
-app.include_router(mpesa.router, prefix="/api/mpesa", tags=["M-Pesa"])
-app.include_router(
-    disbursements.router, prefix="/api/disbursements", tags=["Disbursements"]
-)
-app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
-app.include_router(gateway.router, prefix="/api/gateway", tags=["Gateway"])
-app.include_router(public_checkout.router, prefix="/api/pay", tags=["Public Checkout"])
-app.include_router(docs.router, prefix="/api/docs", tags=["Docs"])
+# app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
+# app.include_router(
+#     gateway_auth.router, prefix="/api/gateway-auth", tags=["Gateway Auth"]
+# )
+# app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
+# app.include_router(
+#     subscriptions.router, prefix="/api/subscriptions", tags=["Subscriptions"]
+# )
+# app.include_router(clients.router, prefix="/api/clients", tags=["Clients"])
+# app.include_router(plans.router, prefix="/api/plans", tags=["Plans"])
+# app.include_router(customers.router, prefix="/api/customers", tags=["Customers"])
+# app.include_router(
+#     transactions.router, prefix="/api/transactions", tags=["Transactions"]
+# )
+# app.include_router(users.router, prefix="/api/users", tags=["Users"])
+# app.include_router(settings.router, prefix="/api/settings", tags=["Settings"])
+# app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
+# app.include_router(apikeys.router, prefix="/api/apikeys", tags=["API Keys"])
+# app.include_router(thirdparty.router, prefix="/api/v1", tags=["Third Party"])
+# app.include_router(invoices.router, prefix="/api/invoices", tags=["Invoices"])
+# app.include_router(mpesa.router, prefix="/api/mpesa", tags=["M-Pesa"])
+# app.include_router(
+#     disbursements.router, prefix="/api/disbursements", tags=["Disbursements"]
+# )
+# app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+# app.include_router(gateway.router, prefix="/api/gateway", tags=["Gateway"])
+# app.include_router(public_checkout.router, prefix="/api/pay", tags=["Public Checkout"])
+# app.include_router(docs.router, prefix="/api/docs", tags=["Docs"])
