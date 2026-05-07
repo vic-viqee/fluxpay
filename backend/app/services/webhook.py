@@ -44,37 +44,34 @@ async def forward_webhook(owner_id: Any, event: str, data: dict[str, Any]):
 
     for webhook in webhooks:
         try:
-            for webhook in webhooks:
-                try:
-                    signature = sign_payload(payload_string, webhook.secret) # Use the webhook's secret
-                    async with httpx.AsyncClient() as client:
-                        await client.post(
-                            webhook.url,
-                            json=payload,
-                            headers={
-                                "Content-Type": "application/json",
-                                "X-Webhook-Signature": signature,
-                                "X-Webhook-Event": event,
-                            },
-                            timeout=30,
-                        )
+            signature = sign_payload(payload_string, webhook.secret)
+            async with httpx.AsyncClient() as client:
+                await client.post(
+                    webhook.url,
+                    json=payload,
+                    headers={
+                        "Content-Type": "application/json",
+                        "X-Webhook-Signature": signature,
+                        "X-Webhook-Event": event,
+                    },
+                    timeout=30,
+                )
 
-                    webhook.last_triggered_at = datetime.datetime.now(datetime.timezone.utc)
-                    webhook.failure_count = 0
-                    await webhook.save()
-                    logger.info(f"Webhook delivered successfully for event: {event}")
-                except Exception as e:
-                    logger.error(f"Webhook delivery failed for {webhook.url}: {e}")
-                    webhook.failure_count = (webhook.failure_count or 0) + 1
-                    await webhook.save()
+            webhook.last_triggered_at = datetime.datetime.now(datetime.timezone.utc)
+            webhook.failure_count = 0
+            await webhook.save()
+            logger.info(f"Webhook delivered successfully for event: {event}")
+        except Exception as e:
+            logger.error(f"Webhook delivery failed for {webhook.url}: {e}")
+            webhook.failure_count = (webhook.failure_count or 0) + 1
+            await webhook.save()
 
-                    if webhook.failure_count >= 3:
-                        webhook.is_active = False
-                        await webhook.save()
-                        logger.warning(
-                            f"Webhook {webhook.url} disabled after 3 consecutive failures"
-                        )
-
+            if webhook.failure_count >= 3:
+                webhook.is_active = False
+                await webhook.save()
+                logger.warning(
+                    f"Webhook {webhook.url} disabled after 3 consecutive failures"
+                )
 
 
 async def trigger_payment_success(owner_id: Any, transaction_data: dict[str, Any]):
