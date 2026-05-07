@@ -31,6 +31,24 @@ continuation_notes.txt
 opencodetmp/
 .gemini/tmp/
 
+# OS
+.DS_Store
+.vscode/
+
+# Frontend (create-react-app or Vite)
+build/
+frontend/dist/
+
+# Backend specific
+backend/dist/
+backend/.env
+backend/*.log
+
+# Project specific
+continuation_notes.txt
+opencodetmp/
+.gemini/tmp/
+
 # Documentation (local only)
 STATUS.md
 FIXES_PROGRESS.md
@@ -38,8 +56,19 @@ NEW_FEATURES.md
 features.md
 connection_test.txt
 FEATURES.md
-GEMINI.md
-.codex
+# GEMINI.md removed from ignore
+
+# Dependency lock files (uncomment if you want to ignore them)
+# package-lock.json
+# yarn.lock
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.bak
+*.swo
+
 
 # Dependency lock files (uncomment if you want to ignore them)
 # package-lock.json
