@@ -53,9 +53,6 @@ async def root():
 
 @app.get("/health")
 async def health():
-    import time
-
     return {
-        "status": "healthy",
-        "timestamp": time.time(),
+        "status": "ok",
     }
