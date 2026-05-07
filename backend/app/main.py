@@ -12,6 +12,7 @@ from app.config import get_settings
 from app.database import init_db, close_db
 from app.middleware.request_log import RequestLoggingMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
+from app.middleware.idempotency import IdempotencyMiddleware # Import IdempotencyMiddleware
 from app.tasks.scheduler import start_scheduler, stop_scheduler
 from app.utils.logger import logger
 from app.utils.uploads import resolve_uploads_dir
