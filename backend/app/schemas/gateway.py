@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
 
@@ -55,22 +55,31 @@ class SubscriptionUpdate(BaseModel):
 
 class ClientCreate(BaseModel):
     name: str
-    phone_number: str
+    phone_number: str = Field(alias="phoneNumber")
     email: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
 
 
 class PlanCreate(BaseModel):
     name: str
-    amount_kes: float
+    amount_kes: float = Field(alias="amountKes")
     frequency: str
-    billing_day: int
+    billing_day: int = Field(alias="billingDay")
+
+    class Config:
+        populate_by_name = True
 
 
 class PlanUpdate(BaseModel):
     name: Optional[str] = None
-    amount_kes: Optional[float] = None
+    amount_kes: Optional[float] = Field(default=None, alias="amountKes")
     frequency: Optional[str] = None
-    billing_day: Optional[int] = None
+    billing_day: Optional[int] = Field(default=None, alias="billingDay")
+
+    class Config:
+        populate_by_name = True
 
 
 class InvoiceCreate(BaseModel):
