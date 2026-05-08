@@ -15,6 +15,7 @@ class Client(Document):
 
     class Settings:
         name = "clients"
+        populate_by_name = True
         indexes = [
             "owner_id",
             "phone_number",

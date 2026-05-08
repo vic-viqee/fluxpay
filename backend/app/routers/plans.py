@@ -29,7 +29,10 @@ async def create_plan(
 async def get_plans(
     current_user: User = Depends(get_current_user),
 ):
-    plans = await ServicePlan.find({"owner_id": current_user.id}).to_list()
+    logger.info(f"Fetching plans for user: {current_user.id} ({current_user.email})")
+    # Use explicit database alias for maximum reliability
+    plans = await ServicePlan.find({"ownerId": current_user.id}).to_list()
+    logger.info(f"Found {len(plans)} plans in database")
     return [_serialize_plan(p) for p in plans]
 
 

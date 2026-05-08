@@ -15,6 +15,7 @@ class ServicePlan(Document):
 
     class Settings:
         name = "serviceplans"
+        populate_by_name = True
         indexes = [
             "owner_id",
             "name",

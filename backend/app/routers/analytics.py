@@ -21,10 +21,10 @@ async def get_analytics(
     thirty_days_ago = now - timedelta(days=30)
     sixty_days_ago = now - timedelta(days=60)
 
-    transactions = await Transaction.find({"owner_id": current_user.id}).to_list()
-    subscriptions = await Subscription.find({"owner_id": current_user.id}).to_list()
-    clients = await Client.find({"owner_id": current_user.id}).to_list()
-    total_plans = await ServicePlan.find({"owner_id": current_user.id}).count()
+    transactions = await Transaction.find(Transaction.owner_id == current_user.id).to_list()
+    subscriptions = await Subscription.find(Subscription.owner_id == current_user.id).to_list()
+    clients = await Client.find(Client.owner_id == current_user.id).to_list()
+    total_plans = await ServicePlan.find(ServicePlan.owner_id == current_user.id).count()
 
     successful_transactions = [tx for tx in transactions if tx.status == "SUCCESS"]
     pending_transactions = [tx for tx in transactions if tx.status == "PENDING"]
