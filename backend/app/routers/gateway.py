@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from typing import List, Optional
 from datetime import datetime, timezone
+from beanie import PydanticObjectId
 from pymongo import DESCENDING
 
 from app.dependencies import get_current_user
@@ -149,30 +150,28 @@ async def get_transactions(
     end_date: Optional[str] = None,
     search: Optional[str] = None,
 ):
-    query = {"owner_id": current_user.id}
+    query = GatewayTransaction.owner_id == current_user.id
 
     if status:
-        query["status"] = status
+        query &= GatewayTransaction.status == status
 
-    if start_date or end_date:
-        query["transaction_date"] = {}
-        if start_date:
-            query["transaction_date"]["$gte"] = datetime.fromisoformat(start_date)
-        if end_date:
-            query["transaction_date"]["$lte"] = datetime.fromisoformat(end_date)
+    if start_date:
+        query &= GatewayTransaction.transaction_date >= datetime.fromisoformat(start_date)
+    if end_date:
+        query &= GatewayTransaction.transaction_date <= datetime.fromisoformat(end_date)
 
     if search:
-        query["$or"] = [
-            {"phone_number": {"$regex": search, "$options": "i"}},
-            {"account_reference": {"$regex": search, "$options": "i"}},
-            {"mpesa_receipt_no": {"$regex": search, "$options": "i"}},
-        ]
+        query &= (
+            (GatewayTransaction.phone_number.match(search, options="i"))
+            | (GatewayTransaction.account_reference.match(search, options="i"))
+            | (GatewayTransaction.mpesa_receipt_no.match(search, options="i"))
+        )
 
     skip = (page - 1) * limit
 
     transactions = (
         await GatewayTransaction.find(query)
-        .sort([("transaction_date", DESCENDING)])
+        .sort([("transactionDate", DESCENDING)])
         .skip(skip)
         .limit(limit)
         .to_list()
@@ -181,18 +180,11 @@ async def get_transactions(
     # Populate customer data
     result = []
     for tx in transactions:
-        tx_dict = {
-            "_id": str(tx.id),
-            "id": str(tx.id),
-            "amountKes": tx.amount_kes,
-            "status": tx.status,
-            "phoneNumber": tx.phone_number,
-            "accountReference": tx.account_reference,
-            "mpesaReceiptNo": tx.mpesa_receipt_no,
-            "transactionDate": tx.transaction_date,
-            "paymentMethod": tx.payment_method,
-            "customerId": None,
-        }
+        tx_dict = tx.model_dump(by_alias=True)
+        tx_dict["id"] = str(tx.id)
+        tx_dict["_id"] = str(tx.id)
+        tx_dict["customerId"] = None
+        
         if tx.customer_id:
             customer = await GatewayCustomer.get(tx.customer_id)
             if customer:
@@ -205,12 +197,12 @@ async def get_transactions(
 
     # Get stats
     pipeline = [
-        {"$match": {"owner_id": current_user.id}},
+        {"$match": {"ownerId": current_user.id}},
         {
             "$group": {
                 "_id": "$status",
                 "count": {"$sum": 1},
-                "total": {"$sum": "$amount_kes"},
+                "total": {"$sum": "$amountKes"},
             }
         },
     ]
@@ -226,12 +218,12 @@ async def get_transactions(
         if status_key in stats:
             stats[status_key] = {"count": s["count"], "total": s["total"]}
 
-    total = await GatewayTransaction.find({"owner_id": current_user.id}).count()
+    total = await GatewayTransaction.find(GatewayTransaction.owner_id == current_user.id).count()
 
     return {
         "data": result,
         "page": page,
-        "totalPages": (total + limit - 1) // limit,
+        "totalPages": (total + limit - 1) // limit if limit > 0 else 1,
         "total": total,
         "stats": stats,
     }
@@ -246,17 +238,9 @@ async def get_transaction(
     if not transaction or str(transaction.owner_id) != str(current_user.id):
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    result = {
-        "_id": str(transaction.id),
-        "id": str(transaction.id),
-        "amountKes": transaction.amount_kes,
-        "status": transaction.status,
-        "phoneNumber": transaction.phone_number,
-        "accountReference": transaction.account_reference,
-        "mpesaReceiptNo": transaction.mpesa_receipt_no,
-        "transactionDate": transaction.transaction_date,
-        "failureReason": transaction.failure_reason,
-    }
+    result = transaction.model_dump(by_alias=True)
+    result["id"] = str(transaction.id)
+    result["_id"] = str(transaction.id)
 
     if transaction.customer_id:
         customer = await GatewayCustomer.get(transaction.customer_id)
@@ -282,15 +266,15 @@ async def get_dashboard_stats(
     today_pipeline = [
         {
             "$match": {
-                "owner_id": current_user.id,
-                "transaction_date": {"$gte": today_start},
+                "ownerId": current_user.id,
+                "transactionDate": {"$gte": today_start},
             }
         },
         {
             "$group": {
                 "_id": "$status",
                 "count": {"$sum": 1},
-                "total": {"$sum": "$amount_kes"},
+                "total": {"$sum": "$amountKes"},
             }
         },
     ]
@@ -313,15 +297,15 @@ async def get_dashboard_stats(
     month_pipeline = [
         {
             "$match": {
-                "owner_id": current_user.id,
-                "transaction_date": {"$gte": month_start},
+                "ownerId": current_user.id,
+                "transactionDate": {"$gte": month_start},
             }
         },
         {
             "$group": {
                 "_id": "$status",
                 "count": {"$sum": 1},
-                "total": {"$sum": "$amount_kes"},
+                "total": {"$sum": "$amountKes"},
             }
         },
     ]
@@ -339,24 +323,19 @@ async def get_dashboard_stats(
 
     # Recent transactions
     recent = (
-        await GatewayTransaction.find({"owner_id": current_user.id})
-        .sort([("transaction_date", -1)])
+        await GatewayTransaction.find(GatewayTransaction.owner_id == current_user.id)
+        .sort([("transactionDate", -1)])
         .limit(5)
         .to_list()
     )
 
     recent_transactions = []
     for tx in recent:
-        tx_dict = {
-            "_id": str(tx.id),
-            "id": str(tx.id),
-            "amountKes": tx.amount_kes,
-            "status": tx.status,
-            "accountReference": tx.account_reference,
-            "transactionDate": tx.transaction_date,
-            "phoneNumber": tx.phone_number,
-            "customerId": None,
-        }
+        tx_dict = tx.model_dump(by_alias=True)
+        tx_dict["id"] = str(tx.id)
+        tx_dict["_id"] = str(tx.id)
+        tx_dict["customerId"] = None
+        
         if tx.customer_id:
             customer = await GatewayCustomer.get(tx.customer_id)
             if customer:
@@ -367,7 +346,7 @@ async def get_dashboard_stats(
         recent_transactions.append(tx_dict)
 
     # Total customers
-    total_customers = await GatewayCustomer.find({"owner_id": current_user.id}).count()
+    total_customers = await GatewayCustomer.find(GatewayCustomer.owner_id == current_user.id).count()
 
     return {
         "today": today,
@@ -376,6 +355,7 @@ async def get_dashboard_stats(
         "totalCustomers": total_customers,
         "customerCount": total_customers,
     }
+
 
 
 @router.post("/payment-links", response_model=dict)
@@ -448,15 +428,15 @@ async def get_payment_links(
     page: int = 1,
     status: Optional[str] = None,
 ):
-    query = {"owner_id": current_user.id}
+    query = PaymentLink.owner_id == current_user.id
     if status:
-        query["status"] = status
+        query &= PaymentLink.status == status
 
     skip = (page - 1) * limit
 
     links = (
         await PaymentLink.find(query)
-        .sort([("created_at", DESCENDING)])
+        .sort([("createdAt", DESCENDING)])
         .skip(skip)
         .limit(limit)
         .to_list()
@@ -464,29 +444,17 @@ async def get_payment_links(
 
     result = []
     for link in links:
-        result.append(
-            {
-                "_id": str(link.id),
-                "id": str(link.id),
-                "title": link.title,
-                "description": link.description,
-                "amount": link.amount,
-                "currency": link.currency,
-                "status": link.status,
-                "paymentLink": link.payment_link,
-                "currentUses": link.current_uses,
-                "maxUses": link.max_uses,
-                "expiresAt": link.expires_at,
-                "createdAt": link.created_at,
-            }
-        )
+        link_dict = link.model_dump(by_alias=True)
+        link_dict["id"] = str(link.id)
+        link_dict["_id"] = str(link.id)
+        result.append(link_dict)
 
-    total = await PaymentLink.find({"owner_id": current_user.id}).count()
+    total = await PaymentLink.find(PaymentLink.owner_id == current_user.id).count()
 
     return {
         "data": result,
         "page": page,
-        "totalPages": (total + limit - 1) // limit,
+        "totalPages": (total + limit - 1) // limit if limit > 0 else 1,
         "total": total,
     }
 
@@ -512,7 +480,7 @@ async def get_payment_link_by_code(
     code: str,
 ):
     # Public endpoint - no authentication required
-    link = await PaymentLink.find_one({"payment_link": {"$regex": code}})
+    link = await PaymentLink.find_one(PaymentLink.payment_link.match(code))
     if not link:
         raise HTTPException(status_code=404, detail="Payment link not found")
 
@@ -548,7 +516,7 @@ async def pay_payment_link(
     payment_data: dict,
 ):
     # Public endpoint - no authentication required
-    link = await PaymentLink.find_one({"payment_link": {"$regex": code}})
+    link = await PaymentLink.find_one(PaymentLink.payment_link.match(code))
     if not link:
         raise HTTPException(status_code=404, detail="Payment link not found")
 
@@ -645,13 +613,13 @@ async def get_customers(
     page: int = 1,
     search: Optional[str] = None,
 ):
-    query = {"ownerId": current_user.id}
+    query = GatewayCustomer.owner_id == current_user.id
     if search:
-        query["$or"] = [
-            {"name": {"$regex": search, "$options": "i"}},
-            {"phoneNumber": {"$regex": search, "$options": "i"}},
-            {"email": {"$regex": search, "$options": "i"}},
-        ]
+        query &= (
+            (GatewayCustomer.name.match(search, options="i"))
+            | (GatewayCustomer.phone_number.match(search, options="i"))
+            | (GatewayCustomer.email.match(search, options="i"))
+        )
 
     skip = (page - 1) * limit
 
@@ -665,22 +633,12 @@ async def get_customers(
 
     result = []
     for customer in customers:
-        result.append(
-            {
-                "_id": str(customer.id),
-                "id": str(customer.id),
-                "name": customer.name,
-                "email": customer.email,
-                "phoneNumber": customer.phone_number,
-                "totalTransactions": customer.total_transactions,
-                "totalAmount": customer.total_amount,
-                "lastTransactionDate": customer.last_transaction_date,
-                "notes": customer.notes,
-                "tags": customer.tags,
-            }
-        )
+        customer_dict = customer.model_dump(by_alias=True)
+        customer_dict["id"] = str(customer.id)
+        customer_dict["_id"] = str(customer.id)
+        result.append(customer_dict)
 
-    total = await GatewayCustomer.find({"ownerId": current_user.id}).count()
+    total = await GatewayCustomer.find(GatewayCustomer.owner_id == current_user.id).count()
 
     return {
         "data": result,
@@ -704,23 +662,23 @@ async def create_customer(
 
     # Check for existing customer
     existing = await GatewayCustomer.find_one(
-        {
-            "owner_id": current_user.id,
-            "phone_number": phone_number,
-        }
+        (GatewayCustomer.owner_id == current_user.id)
+        & (GatewayCustomer.phone_number == phone_number)
     )
     if existing:
         raise HTTPException(
             status_code=409, detail="Customer with this phone number already exists"
         )
 
-    new_customer = GatewayCustomer(
-        owner_id=current_user.id,
-        name=name,
-        email=email,
-        phone_number=phone_number,
-        notes=customer_data.get("notes"),
-        tags=customer_data.get("tags", []),
+    new_customer = GatewayCustomer.model_validate(
+        {
+            "ownerId": current_user.id,
+            "name": name,
+            "email": email,
+            "phoneNumber": phone_number,
+            "notes": customer_data.get("notes"),
+            "tags": customer_data.get("tags", []),
+        }
     )
     await new_customer.create()
 

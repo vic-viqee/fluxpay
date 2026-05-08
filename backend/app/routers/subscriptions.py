@@ -39,11 +39,9 @@ async def create_subscription(
 
     # Check if client already has an active subscription for this plan
     existing = await Subscription.find_one(
-        {
-            "client_id": subscription.client_id,
-            "plan_id": subscription.plan_id,
-            "status": "ACTIVE",
-        }
+        Subscription.client_id == subscription.client_id,
+        Subscription.plan_id == subscription.plan_id,
+        Subscription.status == "ACTIVE",
     )
     if existing:
         raise HTTPException(
@@ -90,7 +88,7 @@ async def create_subscription(
 async def get_subscriptions(
     current_user: User = Depends(get_current_user),
 ):
-    subscriptions = await Subscription.find({"owner_id": current_user.id}).to_list()
+    subscriptions = await Subscription.find(Subscription.owner_id == current_user.id).to_list()
 
     result = []
     for sub in subscriptions:

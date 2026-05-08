@@ -29,7 +29,7 @@ async def create_client(
 async def get_clients(
     current_user: User = Depends(get_current_user),
 ):
-    clients = await Client.find({"owner_id": current_user.id}).to_list()
+    clients = await Client.find(Client.owner_id == current_user.id).to_list()
     return [_serialize_client(c) for c in clients]
 
 
@@ -80,7 +80,7 @@ async def delete_client(
 
 
 def _serialize_client(client):
-    data = client.model_dump()
+    data = client.model_dump(by_alias=True)
     data["id"] = str(client.id)
     data["_id"] = str(client.id)
     return data

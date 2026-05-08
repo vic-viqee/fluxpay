@@ -29,7 +29,7 @@ async def create_plan(
 async def get_plans(
     current_user: User = Depends(get_current_user),
 ):
-    plans = await ServicePlan.find({"owner_id": current_user.id}).to_list()
+    plans = await ServicePlan.find(ServicePlan.owner_id == current_user.id).to_list()
     return [_serialize_plan(p) for p in plans]
 
 
@@ -80,7 +80,7 @@ async def delete_plan(
 
 
 def _serialize_plan(plan):
-    data = plan.model_dump()
+    data = plan.model_dump(by_alias=True)
     data["id"] = str(plan.id)
     data["_id"] = str(plan.id)
     return data

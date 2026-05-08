@@ -23,6 +23,6 @@ class Client(Document):
     @field_validator("phone_number")
     @classmethod
     def validate_phone(cls, v: str) -> str:
-        if not re.match(r"^2547\d{8}$", v):
-            raise ValueError("Phone number must be in format 2547XXXXXXXX")
+        if not re.match(r"^254(1|7)\d{8}$", v):
+            raise ValueError("Phone number must be in format 254XXXXXXXX")
         return v

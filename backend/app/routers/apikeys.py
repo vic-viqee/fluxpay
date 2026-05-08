@@ -52,7 +52,7 @@ async def get_api_keys(
     current_user: User = Depends(get_current_user),
 ):
     api_keys = await ApiKey.find(
-        {"ownerId": current_user.id, "isActive": True}
+        ApiKey.owner_id == current_user.id, ApiKey.is_active == True
     ).to_list()
     return {
         "data": [

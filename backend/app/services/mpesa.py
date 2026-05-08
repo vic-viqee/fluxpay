@@ -1,6 +1,8 @@
 import base64
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
+
+EAT = timezone(timedelta(hours=3))
 import httpx
 from aiocache import Cache
 
@@ -48,7 +50,7 @@ async def initiate_stk_push(
     settings = get_settings()
     token = await get_auth_token()
     formatted_phone = format_kenyan_phone(phone_number)
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    timestamp = datetime.now(EAT).strftime("%Y%m%d%H%M%S")
     password = base64.b64encode(
         f"{settings.mpesa_shortcode}{settings.mpesa_passkey}{timestamp}".encode()
     ).decode()
@@ -83,7 +85,7 @@ async def initiate_stk_push(
 async def get_account_balance() -> dict:
     settings = get_settings()
     token = await get_auth_token()
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    timestamp = datetime.now(EAT).strftime("%Y%m%d%H%M%S")
     password = base64.b64encode(
         f"{settings.mpesa_shortcode}{settings.mpesa_passkey}{timestamp}".encode()
     ).decode()
@@ -115,7 +117,7 @@ async def get_account_balance() -> dict:
 async def get_transaction_status(checkout_request_id: str) -> dict:
     settings = get_settings()
     token = await get_auth_token()
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    timestamp = datetime.now(EAT).strftime("%Y%m%d%H%M%S")
     password = base64.b64encode(
         f"{settings.mpesa_shortcode}{settings.mpesa_passkey}{timestamp}".encode()
     ).decode()
@@ -140,7 +142,7 @@ async def get_transaction_status(checkout_request_id: str) -> dict:
                 "transactionStatus": status_data.get("TransactionStatus", "Unknown"),
                 "amount": "0",
                 "recipient": status_data.get("RefNumber", ""),
-                "transactionDate": datetime.now(timezone.utc).isoformat(),
+                "transactionDate": datetime.now(EAT).isoformat(),
             }
         except httpx.HTTPError as e:
             logger.error(f"Failed to query transaction status: {e}")
@@ -184,7 +186,7 @@ async def reverse_transaction(
 ) -> dict:
     settings = get_settings()
     token = await get_auth_token()
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    timestamp = datetime.now(EAT).strftime("%Y%m%d%H%M%S")
     password = base64.b64encode(
         f"{settings.mpesa_shortcode}{settings.mpesa_passkey}{timestamp}".encode()
     ).decode()

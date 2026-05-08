@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from typing import Optional
 import re
 
@@ -22,7 +22,7 @@ class PaymentRequest(BaseModel):
 
 class SimulateStkPushRequest(BaseModel):
     amount: float
-    phone_number: str
+    phone_number: str = Field(alias="phoneNumber")
 
     @field_validator("amount")
     @classmethod
@@ -31,7 +31,13 @@ class SimulateStkPushRequest(BaseModel):
             raise ValueError("Minimum amount is 1")
         return v
 
+    class Config:
+        populate_by_name = True
+
 
 class PricingStkPushRequest(BaseModel):
-    phone_number: str
+    phone_number: str = Field(alias="phoneNumber")
     plan: str
+
+    class Config:
+        populate_by_name = True

@@ -16,19 +16,19 @@ async def get_transactions(
     limit: int = 20,
     page: int = 1,
 ):
-    query = {"owner_id": current_user.id}
+    query = [Transaction.owner_id == current_user.id]
     if status:
-        query["status"] = status
+        query.append(Transaction.status == status)
 
     skip = (page - 1) * limit
     transactions = (
-        await Transaction.find(query)
+        await Transaction.find(*query)
         .skip(skip)
         .limit(limit)
         .sort([("transactionDate", -1)])
         .to_list()
     )
-    total = await Transaction.find(query).count()
+    total = await Transaction.find(*query).count()
 
     result = []
     for tx in transactions:
