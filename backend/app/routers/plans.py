@@ -5,6 +5,7 @@ from app.dependencies import get_current_user
 from app.models.service_plan import ServicePlan
 from app.models.user import User
 from app.schemas.gateway import PlanCreate, PlanUpdate
+from app.utils.logger import logger
 
 router = APIRouter()
 
