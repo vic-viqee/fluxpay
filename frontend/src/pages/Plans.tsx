@@ -40,7 +40,7 @@ const Plans: React.FC = () => {
     setFetching(true);
     try {
       const fetchedPlans = await getServicePlans();
-      setPlans(fetchedPlans.data || []);
+      setPlans(fetchedPlans || []);
     } catch (error: any) {
       setMessage({ text: error.response?.data?.message || 'Failed to fetch service plans.', type: 'error' });
     } finally {

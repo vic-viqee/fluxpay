@@ -70,7 +70,7 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
     setPlansLoading(true);
     try {
       const fetchedPlans = await getServicePlans();
-      const plansData = fetchedPlans.data || [];
+      const plansData = fetchedPlans || [];
       setServicePlans(plansData);
       if (!selectedPlanId && plansData.length > 0) {
         setSelectedPlanId(plansData[0]._id);
@@ -85,7 +85,7 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
   const fetchClientsList = async () => {
     try {
       const fetchedClients = await getClients();
-      const clientsData = fetchedClients.data || [];
+      const clientsData = fetchedClients || [];
       setClients(clientsData);
       if (clientsData.length > 0 && !selectedClientId) {
         setSelectedClientId(clientsData[0]._id);
@@ -172,7 +172,7 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
       } catch (clientErr: any) {
         if (clientErr.response?.status === 409) {
           const allClientsResponse = await getClients();
-          const allClients = allClientsResponse.data || [];
+          const allClients = allClientsResponse || [];
           const existingClient = allClients.find(
             (client: any) => client.phoneNumber === clientPhoneNumber.trim()
           );
