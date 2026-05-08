@@ -176,7 +176,7 @@ async def initiate_button_payment(
         raise HTTPException(status_code=500, detail="Failed to initiate payment")
 
 
-@router.get("/buttons", response_model=List[dict])
+@router.get("/buttons", response_model=dict)
 async def get_button_stats(
     current_user: User = Depends(get_current_user),
 ):
@@ -193,15 +193,15 @@ async def get_button_stats(
         pipeline = [
             {
                 "$match": {
-                    "owner_id": current_user.id,
-                    "payment_source": "payment_link",
-                    "account_reference": f"BTN-{button.button_id[:8]}",
+                    "ownerId": current_user.id,
+                    "paymentSource": "payment_link",
+                    "accountReference": f"BTN-{button.button_id[:8]}",
                 }
             },
             {
                 "$group": {
                     "_id": None,
-                    "total": {"$sum": "$amount_kes"},
+                    "total": {"$sum": "$amountKes"},
                 }
             },
         ]

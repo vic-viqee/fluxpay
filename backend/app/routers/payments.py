@@ -56,8 +56,10 @@ async def simulate_stk_push(
         stk_response = await initiate_stk_push(
             phone_number=request.phone_number,
             amount=request.amount,
-            account_reference="FluxPay Simulation",
-            transaction_desc="FluxPay Simulation",
+            account_reference=current_user.business_name or "FluxPay",
+            transaction_desc=f"Test: {current_user.business_name}"
+            if current_user.business_name
+            else "FluxPay Simulation",
         )
 
         return {
@@ -73,6 +75,7 @@ async def simulate_stk_push(
 @router.post("/pricing-stk-push")
 async def pricing_stk_push(
     request: PricingStkPushRequest,
+    current_user: User = Depends(get_current_user),
 ):
     settings = get_settings()
     try:
@@ -88,7 +91,7 @@ async def pricing_stk_push(
         stk_response = await initiate_stk_push(
             phone_number=request.phone_number,
             amount=amount,
-            account_reference="FluxPay Pricing",
+            account_reference=current_user.business_name or "FluxPay",
             transaction_desc=f"FluxPay {request.plan.capitalize()} Plan",
         )
 

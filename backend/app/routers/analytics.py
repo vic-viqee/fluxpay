@@ -21,10 +21,10 @@ async def get_analytics(
     thirty_days_ago = now - timedelta(days=30)
     sixty_days_ago = now - timedelta(days=60)
 
-    transactions = await Transaction.find(Transaction.owner_id == current_user.id).to_list()
-    subscriptions = await Subscription.find(Subscription.owner_id == current_user.id).to_list()
-    clients = await Client.find(Client.owner_id == current_user.id).to_list()
-    total_plans = await ServicePlan.find(ServicePlan.owner_id == current_user.id).count()
+    transactions = await Transaction.find({"owner_id": current_user.id}).to_list()
+    subscriptions = await Subscription.find({"owner_id": current_user.id}).to_list()
+    clients = await Client.find({"owner_id": current_user.id}).to_list()
+    total_plans = await ServicePlan.find({"owner_id": current_user.id}).count()
 
     successful_transactions = [tx for tx in transactions if tx.status == "SUCCESS"]
     pending_transactions = [tx for tx in transactions if tx.status == "PENDING"]
@@ -70,7 +70,11 @@ async def get_analytics(
         [client for client in clients if client.created_at >= thirty_days_ago]
     )
     previous_customers = len(
-        [client for client in clients if sixty_days_ago <= client.created_at < thirty_days_ago]
+        [
+            client
+            for client in clients
+            if sixty_days_ago <= client.created_at < thirty_days_ago
+        ]
     )
     customers_trend = (
         ((recent_customers - previous_customers) / previous_customers) * 100
@@ -104,8 +108,7 @@ async def get_analytics(
     for sub in subscriptions:
         subscription_counts[sub.status] += 1
     subscription_status_breakdown = [
-        {"_id": status, "count": count}
-        for status, count in subscription_counts.items()
+        {"_id": status, "count": count} for status, count in subscription_counts.items()
     ]
 
     return {

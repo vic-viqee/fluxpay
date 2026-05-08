@@ -88,7 +88,10 @@ async def update_invoice(
         invoice.paid_date = datetime.utcnow()
     await invoice.save()
 
-    return {"message": "Invoice updated successfully", "data": _serialize_invoice(invoice)}
+    return {
+        "message": "Invoice updated successfully",
+        "data": _serialize_invoice(invoice),
+    }
 
 
 @router.delete("/{invoice_id}", response_model=dict)
@@ -104,7 +107,7 @@ async def delete_invoice(
 
 
 def _serialize_invoice(invoice: Invoice) -> dict:
-    data = invoice.model_dump()
+    data = invoice.model_dump(by_alias=True)
     data["id"] = str(invoice.id)
     data["_id"] = str(invoice.id)
     return data

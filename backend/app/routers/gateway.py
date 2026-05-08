@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
-from typing import List, Optional
+from typing import Any, List, Optional
 from datetime import datetime, timezone
 from beanie import PydanticObjectId
 from pymongo import DESCENDING
@@ -44,7 +44,7 @@ async def initiate_payment(
     customer_name = payment_data.get("customerName")
     customer_email = payment_data.get("customerEmail")
 
-    if not phone_number or not amount or not account_reference:
+    if not phone_number or not amount or account_reference is None:
         raise HTTPException(
             status_code=400,
             detail="phoneNumber, amount, and accountReference are required",
@@ -57,13 +57,11 @@ async def initiate_payment(
     if customer_email or formatted_phone:
         if customer_email:
             customer = await GatewayCustomer.find_one(
-                (GatewayCustomer.owner_id == current_user.id)
-                & (GatewayCustomer.email == customer_email)
+                {"owner_id": current_user.id, "email": customer_email}
             )
         else:
             customer = await GatewayCustomer.find_one(
-                (GatewayCustomer.owner_id == current_user.id)
-                & (GatewayCustomer.phone_number == formatted_phone)
+                {"owner_id": current_user.id, "phone_number": formatted_phone}
             )
 
         if not customer and (customer_name or customer_email):
@@ -83,7 +81,9 @@ async def initiate_payment(
         stk_response = await initiate_stk_push(
             phone_number=formatted_phone,
             amount=float(amount),
-            account_reference=account_reference,
+            account_reference=account_reference
+            or current_user.business_name
+            or "FluxPay",
             transaction_desc=transaction_desc
             or current_user.business_name
             or "FluxPay",
@@ -150,22 +150,25 @@ async def get_transactions(
     end_date: Optional[str] = None,
     search: Optional[str] = None,
 ):
-    query = GatewayTransaction.owner_id == current_user.id
+    query: dict[str, Any] = {"owner_id": current_user.id}
 
     if status:
-        query &= GatewayTransaction.status == status
+        query["status"] = status
 
+    date_range: dict[str, datetime] = {}
     if start_date:
-        query &= GatewayTransaction.transaction_date >= datetime.fromisoformat(start_date)
+        date_range["$gte"] = datetime.fromisoformat(start_date)
     if end_date:
-        query &= GatewayTransaction.transaction_date <= datetime.fromisoformat(end_date)
+        date_range["$lte"] = datetime.fromisoformat(end_date)
+    if date_range:
+        query["transaction_date"] = date_range
 
     if search:
-        query &= (
-            (GatewayTransaction.phone_number.match(search, options="i"))
-            | (GatewayTransaction.account_reference.match(search, options="i"))
-            | (GatewayTransaction.mpesa_receipt_no.match(search, options="i"))
-        )
+        query["$or"] = [
+            {"phone_number": {"$regex": search, "$options": "i"}},
+            {"account_reference": {"$regex": search, "$options": "i"}},
+            {"mpesa_receipt_no": {"$regex": search, "$options": "i"}},
+        ]
 
     skip = (page - 1) * limit
 
@@ -184,7 +187,7 @@ async def get_transactions(
         tx_dict["id"] = str(tx.id)
         tx_dict["_id"] = str(tx.id)
         tx_dict["customerId"] = None
-        
+
         if tx.customer_id:
             customer = await GatewayCustomer.get(tx.customer_id)
             if customer:
@@ -218,7 +221,7 @@ async def get_transactions(
         if status_key in stats:
             stats[status_key] = {"count": s["count"], "total": s["total"]}
 
-    total = await GatewayTransaction.find(GatewayTransaction.owner_id == current_user.id).count()
+    total = await GatewayTransaction.find({"owner_id": current_user.id}).count()
 
     return {
         "data": result,
@@ -323,7 +326,7 @@ async def get_dashboard_stats(
 
     # Recent transactions
     recent = (
-        await GatewayTransaction.find(GatewayTransaction.owner_id == current_user.id)
+        await GatewayTransaction.find({"owner_id": current_user.id})
         .sort([("transactionDate", -1)])
         .limit(5)
         .to_list()
@@ -335,7 +338,7 @@ async def get_dashboard_stats(
         tx_dict["id"] = str(tx.id)
         tx_dict["_id"] = str(tx.id)
         tx_dict["customerId"] = None
-        
+
         if tx.customer_id:
             customer = await GatewayCustomer.get(tx.customer_id)
             if customer:
@@ -346,7 +349,7 @@ async def get_dashboard_stats(
         recent_transactions.append(tx_dict)
 
     # Total customers
-    total_customers = await GatewayCustomer.find(GatewayCustomer.owner_id == current_user.id).count()
+    total_customers = await GatewayCustomer.find({"owner_id": current_user.id}).count()
 
     return {
         "today": today,
@@ -355,7 +358,6 @@ async def get_dashboard_stats(
         "totalCustomers": total_customers,
         "customerCount": total_customers,
     }
-
 
 
 @router.post("/payment-links", response_model=dict)
@@ -428,9 +430,9 @@ async def get_payment_links(
     page: int = 1,
     status: Optional[str] = None,
 ):
-    query = PaymentLink.owner_id == current_user.id
+    query: dict[str, Any] = {"owner_id": current_user.id}
     if status:
-        query &= PaymentLink.status == status
+        query["status"] = status
 
     skip = (page - 1) * limit
 
@@ -449,7 +451,7 @@ async def get_payment_links(
         link_dict["_id"] = str(link.id)
         result.append(link_dict)
 
-    total = await PaymentLink.find(PaymentLink.owner_id == current_user.id).count()
+    total = await PaymentLink.find({"owner_id": current_user.id}).count()
 
     return {
         "data": result,
@@ -479,8 +481,7 @@ async def delete_payment_link(
 async def get_payment_link_by_code(
     code: str,
 ):
-    # Public endpoint - no authentication required
-    link = await PaymentLink.find_one(PaymentLink.payment_link.match(code))
+    link = await PaymentLink.find_one({"payment_link": code})
     if not link:
         raise HTTPException(status_code=404, detail="Payment link not found")
 
@@ -494,7 +495,6 @@ async def get_payment_link_by_code(
             status_code=410, detail="Payment link has reached maximum uses"
         )
 
-    # Get owner info
     owner = await User.get(link.owner_id)
 
     return {
@@ -515,8 +515,7 @@ async def pay_payment_link(
     code: str,
     payment_data: dict,
 ):
-    # Public endpoint - no authentication required
-    link = await PaymentLink.find_one(PaymentLink.payment_link.match(code))
+    link = await PaymentLink.find_one({"payment_link": code})
     if not link:
         raise HTTPException(status_code=404, detail="Payment link not found")
 
@@ -543,13 +542,11 @@ async def pay_payment_link(
     if customer_email or formatted_phone:
         if customer_email:
             customer = await GatewayCustomer.find_one(
-                (GatewayCustomer.owner_id == link.owner_id)
-                & (GatewayCustomer.email == customer_email)
+                {"owner_id": link.owner_id, "email": customer_email}
             )
         else:
             customer = await GatewayCustomer.find_one(
-                (GatewayCustomer.owner_id == link.owner_id)
-                & (GatewayCustomer.phone_number == formatted_phone)
+                {"owner_id": link.owner_id, "phone_number": formatted_phone}
             )
 
         if not customer:
@@ -613,13 +610,13 @@ async def get_customers(
     page: int = 1,
     search: Optional[str] = None,
 ):
-    query = GatewayCustomer.owner_id == current_user.id
+    query: dict[str, Any] = {"owner_id": current_user.id}
     if search:
-        query &= (
-            (GatewayCustomer.name.match(search, options="i"))
-            | (GatewayCustomer.phone_number.match(search, options="i"))
-            | (GatewayCustomer.email.match(search, options="i"))
-        )
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"phone_number": {"$regex": search, "$options": "i"}},
+            {"email": {"$regex": search, "$options": "i"}},
+        ]
 
     skip = (page - 1) * limit
 
@@ -638,7 +635,7 @@ async def get_customers(
         customer_dict["_id"] = str(customer.id)
         result.append(customer_dict)
 
-    total = await GatewayCustomer.find(GatewayCustomer.owner_id == current_user.id).count()
+    total = await GatewayCustomer.find({"owner_id": current_user.id}).count()
 
     return {
         "data": result,
@@ -662,8 +659,7 @@ async def create_customer(
 
     # Check for existing customer
     existing = await GatewayCustomer.find_one(
-        (GatewayCustomer.owner_id == current_user.id)
-        & (GatewayCustomer.phone_number == phone_number)
+        {"owner_id": current_user.id, "phone_number": phone_number}
     )
     if existing:
         raise HTTPException(
