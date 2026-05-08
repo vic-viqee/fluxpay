@@ -45,6 +45,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+from app.middleware.request_log import RequestLoggingMiddleware
+from app.middleware.security_headers import SecurityHeadersMiddleware
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.parsed_allowed_origins,
@@ -52,6 +55,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
 )
+
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 
 uploads_dir = resolve_uploads_dir()
 app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
@@ -82,3 +88,32 @@ try:
     )
 except Exception as e:
     logger.error(f"Failed gateway_auth: {e}")
+
+# Load all routers
+router_configs = [
+    ("payments", "/api/payments", "Payments"),
+    ("subscriptions", "/api/subscriptions", "Subscriptions"),
+    ("clients", "/api/clients", "Clients"),
+    ("plans", "/api/plans", "Plans"),
+    ("customers", "/api/customers", "Customers"),
+    ("transactions", "/api/transactions", "Transactions"),
+    ("users", "/api/users", "Users"),
+    ("settings", "/api/settings", "Settings"),
+    ("analytics", "/api/analytics", "Analytics"),
+    ("apikeys", "/api/apikeys", "API Keys"),
+    ("thirdparty", "/api/v1", "Third Party"),
+    ("invoices", "/api/invoices", "Invoices"),
+    ("mpesa", "/api/mpesa", "M-Pesa"),
+    ("disbursements", "/api/disbursements", "Disbursements"),
+    ("admin", "/api/admin", "Admin"),
+    ("gateway", "/api/gateway", "Gateway"),
+    ("public_checkout", "/api/pay", "Public Checkout"),
+    ("docs", "/api/docs", "Docs"),
+]
+
+for module_name, prefix, tag in router_configs:
+    try:
+        mod = __import__(f"app.routers.{module_name}", fromlist=["router"])
+        app.include_router(mod.router, prefix=prefix, tags=[tag])
+    except Exception as e:
+        logger.error(f"Failed to load {module_name}: {e}")

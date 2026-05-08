@@ -1,4 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request, UploadFile, File, Form
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+    Request,
+    UploadFile,
+    File,
+    Form,
+)
 from typing import Optional
 from pathlib import Path
 import uuid
@@ -13,7 +22,7 @@ router = APIRouter()
 
 
 @router.get("/", response_model=dict)
-async def get_settings(
+async def get_user_settings(
     current_user: User = Depends(get_current_user),
 ):
     return {
@@ -38,6 +47,7 @@ async def update_settings(
     request: Request,
     current_user: User = Depends(get_current_user),
 ):
+    settings = get_settings()
     form = await request.form()
     update_map = {
         "username": "username",
@@ -66,15 +76,17 @@ async def update_settings(
         file_path = uploads_dir / filename
         with open(file_path, "wb") as buffer:
             buffer.write(await logo.read())
-        current_user.logo_url = f"{get_settings().backend_url}/uploads/{filename}"
+        current_user.logo_url = f"{settings.backend_url}/uploads/{filename}"
         updated_any = True
 
     if not updated_any:
-        raise HTTPException(status_code=400, detail="No valid settings fields provided.")
+        raise HTTPException(
+            status_code=400, detail="No valid settings fields provided."
+        )
 
     await current_user.save()
 
     return {
         "message": "User settings updated successfully",
-        "settings": await get_settings(current_user),
+        "settings": await get_user_settings(current_user),
     }
