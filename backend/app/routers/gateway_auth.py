@@ -124,9 +124,7 @@ async def gateway_signup(
             detail="Password must be at least 8 characters and include uppercase, lowercase, number, and special character",
         )
 
-    existing_user = await User.find_one(
-        {"email": body.email, "service_type": "gateway"}
-    )
+    existing_user = await User.find_one({"email": body.email, "serviceType": "gateway"})
 
     if existing_user:
         raise HTTPException(
@@ -183,7 +181,7 @@ async def gateway_login(
     prune_expired_stores()
 
     user = await User.find_one(
-        {"email": body.email, "service_type": "gateway"}, projection_model=None
+        {"email": body.email, "serviceType": "gateway"}, projection_model=None
     )
 
     if not user or not user.password_hash:

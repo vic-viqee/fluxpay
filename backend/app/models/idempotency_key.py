@@ -17,5 +17,5 @@ class IdempotencyKey(Document):
         indexes = [
             "key",
             "owner_id",
-            {"fields": [("expires_at", 1)], "expireAfterSeconds": 0},
+            [("expires_at", 1)],
         ]
