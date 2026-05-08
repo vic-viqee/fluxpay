@@ -13,6 +13,7 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 import os
+import secrets
 from pathlib import Path
 import uuid
 import time
@@ -243,8 +244,10 @@ async def login(
     prune_expired_stores()
 
     # Case-insensitive search
-    user = await User.find_one({"email": {"$regex": f"^{login_data.email}$", "$options": "i"}})
-    
+    user = await User.find_one(
+        {"email": {"$regex": f"^{login_data.email}$", "$options": "i"}}
+    )
+
     if not user or not user.password_hash:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
@@ -504,7 +507,9 @@ async def google_auth_callback(code: Optional[str] = None, state: Optional[str] 
         if user:
             access_token = generate_access_token(str(user.id), user.email)
             refresh_token = generate_refresh_token(str(user.id), user.email)
-            auth_code = generate_google_auth_code(str(user.id), access_token, refresh_token)
+            auth_code = generate_google_auth_code(
+                str(user.id), access_token, refresh_token
+            )
             return redirect_to_frontend(f"/auth/google/callback?code={auth_code}")
         else:
             ticket = generate_google_registration_ticket(mock_profile)
@@ -677,7 +682,7 @@ async def google_complete_registration(
         business_description=businessDescription,
         logo_url=logo_url,
         plan=plan,
-        webhook_secret=secrets.token_hex(32) # Generate and store webhook secret
+        webhook_secret=secrets.token_hex(32),  # Generate and store webhook secret
     )
     await new_user.create()
 
