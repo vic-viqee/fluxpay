@@ -24,6 +24,7 @@ class Transaction(Document):
 
     class Settings:
         name = "transactions"
+        populate_by_name = True
         indexes = [
             "owner_id",
             "daraja_request_id",

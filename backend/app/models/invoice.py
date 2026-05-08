@@ -27,6 +27,7 @@ class Invoice(Document):
 
     class Settings:
         name = "invoices"
+        populate_by_name = True
         indexes = [
             "owner_id",
             "invoice_number",

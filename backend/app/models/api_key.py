@@ -17,6 +17,7 @@ class ApiKey(Document):
 
     class Settings:
         name = "apikeys"
+        populate_by_name = True
         indexes = [
             "owner_id",
             "key",

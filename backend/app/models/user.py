@@ -53,6 +53,7 @@ class User(Document):
 
     class Settings:
         name = "users"
+        populate_by_name = True
         indexes = [
             "email",
             "google_id",

@@ -40,17 +40,23 @@ class GatewayCustomerUpdate(BaseModel):
 
 
 class SubscriptionCreate(BaseModel):
-    client_id: str
-    plan_id: str
+    client_id: str = Field(alias="clientId")
+    plan_id: str = Field(alias="planId")
     notes: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
 
 
 class SubscriptionUpdate(BaseModel):
-    client_id: Optional[str] = None
-    plan_id: Optional[str] = None
+    client_id: Optional[str] = Field(default=None, alias="clientId")
+    plan_id: Optional[str] = Field(default=None, alias="planId")
     status: Optional[str] = None
     next_billing_date: Optional[str] = None
     notes: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
 
 
 class ClientCreate(BaseModel):
