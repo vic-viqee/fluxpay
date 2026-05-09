@@ -19,8 +19,11 @@ const createApiInstance = (options: { skipRefresh?: boolean } = {}) => {
   instance.interceptors.request.use(
     (config) => {
       const token = localStorage.getItem('token');
-      if (token && !config.headers.Authorization) {
+      if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+        console.log("Adding Authorization header:", config.headers.Authorization);
+      } else {
+        console.warn("No token found in localStorage for request:", config.url);
       }
       return config;
     },
