@@ -27,11 +27,13 @@ async def get_current_user(
         payload = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
         user_id: Optional[str] = payload.get("id")
         if user_id is None:
+            logger.warning("JWT payload missing 'id'")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token is invalid",
             )
-    except JWTError:
+    except JWTError as e:
+        logger.warning(f"JWT decoding failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token is invalid or expired",
