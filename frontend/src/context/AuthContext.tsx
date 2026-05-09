@@ -37,9 +37,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!isInitialized.current) {
       isInitialized.current = true;
-      setLoading(false);
+      refreshAuth();
     }
-  }, []);
+  }, [refreshAuth]);
 
   const logout = useCallback(() => {
     setUser(null);
