@@ -62,27 +62,24 @@ async def get_transaction(
     if not transaction or str(transaction.owner_id) != str(current_user.id):
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    return {
-        "_id": str(transaction.id),
-        "id": str(transaction.id),
-        "subscriptionId": str(transaction.subscription_id)
-        if transaction.subscription_id
-        else None,
-        "ownerId": str(transaction.owner_id),
-        "amountKes": transaction.amount_kes,
-        "status": transaction.status,
-        "mpesaReceiptNo": transaction.mpesa_receipt_no,
-        "darajaRequestId": transaction.daraja_request_id,
-        "retryCount": transaction.retry_count,
-        "transactionDate": transaction.transaction_date,
-        "createdAt": transaction.created_at,
-        "updatedAt": transaction.updated_at,
-    }
+    data = transaction.model_dump(by_alias=True)
+    data["id"] = str(transaction.id)
+    data["_id"] = str(transaction.id)
+    return data
 
 
 @router.get("/dashboard/stats", response_model=dict)
 async def get_transaction_stats(
     current_user: User = Depends(get_current_user),
+):
+    # This would be implemented with proper aggregation
+    return {
+        "today": {"success": 0, "pending": 0, "failed": 0},
+        "month": {"success": 0, "pending": 0, "failed": 0},
+        "recentTransactions": [],
+        "customerCount": 0,
+    }
+User = Depends(get_current_user),
 ):
     # This would be implemented with proper aggregation
     return {

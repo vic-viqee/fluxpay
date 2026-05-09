@@ -45,7 +45,7 @@ async def get_plan(
     plan = await ServicePlan.get(plan_id)
     if not plan or str(plan.owner_id) != str(current_user.id):
         raise HTTPException(status_code=404, detail="Plan not found")
-    return _serialize_plan(plan)
+    return serialize_plan(plan)
 
 
 @router.put("/{plan_id}")
@@ -88,3 +88,4 @@ def _serialize_plan(plan):
     data["id"] = str(plan.id)
     data["_id"] = str(plan.id)
     return data
+ return data

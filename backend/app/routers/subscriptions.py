@@ -39,11 +39,9 @@ async def create_subscription(
 
     # Check if client already has an active subscription for this plan
     existing = await Subscription.find_one(
-        {
-            "client_id": subscription.client_id,
-            "plan_id": subscription.plan_id,
-            "status": "ACTIVE",
-        }
+        Subscription.client_id == subscription.client_id,
+        Subscription.plan_id == subscription.plan_id,
+        Subscription.status == "ACTIVE",
     )
     if existing:
         raise HTTPException(
@@ -90,27 +88,21 @@ async def create_subscription(
 async def get_subscriptions(
     current_user: User = Depends(get_current_user),
 ):
-    subscriptions = await Subscription.find({"owner_id": current_user.id}).to_list()
+    subscriptions = await Subscription.find(Subscription.owner_id == current_user.id).to_list()
 
     result = []
     for sub in subscriptions:
         client = await Client.get(sub.client_id)
         plan = await ServicePlan.get(sub.plan_id)
-        result.append(
-            {
-                "_id": str(sub.id),
-                "id": str(sub.id),
-                "clientId": str(sub.client_id),
-                "clientName": client.name if client else "Unknown",
-                "planId": str(sub.plan_id),
-                "planName": plan.name if plan else "Unknown",
-                "status": sub.status,
-                "startDate": sub.start_date,
-                "nextBillingDate": sub.next_billing_date,
-                "notes": sub.notes,
-                "paymentFailureCount": sub.payment_failure_count,
-            }
-        )
+        
+        sub_dict = sub.model_dump(by_alias=True)
+        sub_dict["id"] = str(sub.id)
+        sub_dict["_id"] = str(sub.id)
+        sub_dict["clientName"] = client.name if client else "Unknown"
+        # Hydrate planId with full object for dashboard
+        sub_dict["planId"] = serialize_plan(plan) if plan else None
+        
+        result.append(sub_dict)
 
     return result
 
@@ -211,6 +203,15 @@ async def delete_subscription(
     if subscription.status == "ACTIVE":
         raise HTTPException(
             status_code=400,
+            detail="Cannot delete active subscription. Cancel it first.",
+        )
+
+    await subscription.delete()
+
+    logger.info(f"Subscription deleted: {subscription_id}")
+
+    return {"id": subscription_id, "message": "Subscription deleted successfully"}
+,
             detail="Cannot delete active subscription. Cancel it first.",
         )
 
