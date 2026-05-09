@@ -20,3 +20,8 @@ class ServicePlan(Document):
             "owner_id",
             "name",
         ]
+
+    class Config:
+        json_encoders = {
+            PydanticObjectId: str
+        }

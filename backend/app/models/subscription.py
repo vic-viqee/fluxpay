@@ -32,3 +32,8 @@ class Subscription(Document):
             "status",
             "next_billing_date",
         ]
+
+    class Config:
+        json_encoders = {
+            PydanticObjectId: str
+        }

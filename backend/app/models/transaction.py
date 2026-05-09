@@ -29,3 +29,8 @@ class Transaction(Document):
             "owner_id",
             "daraja_request_id",
         ]
+
+    class Config:
+        json_encoders = {
+            PydanticObjectId: str
+        }
