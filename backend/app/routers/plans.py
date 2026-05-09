@@ -10,6 +10,13 @@ from app.utils.logger import logger
 router = APIRouter()
 
 
+def serialize_plan(plan: ServicePlan):
+    data = plan.model_dump(by_alias=True)
+    data["id"] = str(plan.id)
+    data["_id"] = str(plan.id)
+    return data
+
+
 @router.post("/")
 async def create_plan(
     plan: PlanCreate,
@@ -22,7 +29,7 @@ async def create_plan(
     return {
         "id": str(new_plan.id),
         "message": "Plan created successfully",
-        "plan": _serialize_plan(new_plan),
+        "plan": serialize_plan(new_plan),
     }
 
 
@@ -34,7 +41,7 @@ async def get_plans(
     # Use explicit database alias for maximum reliability
     plans = await ServicePlan.find({"ownerId": current_user.id}).to_list()
     logger.info(f"Found {len(plans)} plans in database")
-    return [_serialize_plan(p) for p in plans]
+    return [serialize_plan(p) for p in plans]
 
 
 @router.get("/{plan_id}")
@@ -66,7 +73,7 @@ async def update_plan(
     return {
         "id": str(plan.id),
         "message": "Plan updated successfully",
-        "plan": _serialize_plan(plan),
+        "plan": serialize_plan(plan),
     }
 
 
@@ -81,11 +88,3 @@ async def delete_plan(
 
     await plan.delete()
     return {"id": plan_id, "message": "Plan deleted successfully"}
-
-
-def _serialize_plan(plan):
-    data = plan.model_dump(by_alias=True)
-    data["id"] = str(plan.id)
-    data["_id"] = str(plan.id)
-    return data
- return data

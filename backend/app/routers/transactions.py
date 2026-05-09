@@ -32,23 +32,16 @@ async def get_transactions(
 
     result = []
     for tx in transactions:
-        result.append(
-            {
-                "_id": str(tx.id),
-                "id": str(tx.id),
-                "amountKes": tx.amount_kes,
-                "status": tx.status,
-                "mpesaReceiptNo": tx.mpesa_receipt_no,
-                "transactionDate": tx.transaction_date,
-                "darajaRequestId": tx.daraja_request_id,
-            }
-        )
+        tx_dict = tx.model_dump(by_alias=True)
+        tx_dict["id"] = str(tx.id)
+        tx_dict["_id"] = str(tx.id)
+        result.append(tx_dict)
 
     return {
         "data": result,
         "page": page,
         "limit": limit,
-        "totalPages": (total + limit - 1) // limit,
+        "totalPages": (total + limit - 1) // limit if limit > 0 else 1,
         "total": total,
     }
 
@@ -71,15 +64,6 @@ async def get_transaction(
 @router.get("/dashboard/stats", response_model=dict)
 async def get_transaction_stats(
     current_user: User = Depends(get_current_user),
-):
-    # This would be implemented with proper aggregation
-    return {
-        "today": {"success": 0, "pending": 0, "failed": 0},
-        "month": {"success": 0, "pending": 0, "failed": 0},
-        "recentTransactions": [],
-        "customerCount": 0,
-    }
-User = Depends(get_current_user),
 ):
     # This would be implemented with proper aggregation
     return {

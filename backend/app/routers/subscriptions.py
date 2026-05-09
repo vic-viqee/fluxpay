@@ -14,10 +14,8 @@ from app.utils.logger import logger
 from app.schemas.gateway import (
     SubscriptionCreate,
     SubscriptionUpdate,
-    ClientCreate,
-    PlanCreate,
-    PlanUpdate,
 )
+from app.routers.plans import serialize_plan
 
 router = APIRouter()
 
@@ -145,7 +143,7 @@ async def update_subscription(
     if not subscription or str(subscription.owner_id) != str(current_user.id):
         raise HTTPException(status_code=404, detail="Subscription not found")
 
-    update_data = subscription_update.dict(exclude_unset=True)
+    update_data = subscription_update.model_dump(exclude_unset=True)
 
     # If changing client or plan, verify ownership
     if "client_id" in update_data or "plan_id" in update_data:
@@ -190,6 +188,30 @@ async def update_subscription(
     }
 
 
+@router.get("/{subscription_id}/transactions", response_model=List[dict])
+async def get_subscription_transactions(
+    subscription_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    subscription = await Subscription.get(subscription_id)
+    if not subscription or str(subscription.owner_id) != str(current_user.id):
+        raise HTTPException(status_code=404, detail="Subscription not found")
+
+    transactions = await Transaction.find(Transaction.subscription_id == subscription.id).to_list()
+    
+    return [
+        {
+            "_id": str(tx.id),
+            "id": str(tx.id),
+            "amountKes": tx.amount_kes,
+            "status": tx.status,
+            "mpesaReceiptNo": tx.mpesa_receipt_no,
+            "transactionDate": tx.transaction_date,
+        }
+        for tx in transactions
+    ]
+
+
 @router.delete("/{subscription_id}", response_model=dict)
 async def delete_subscription(
     subscription_id: str,
@@ -203,15 +225,6 @@ async def delete_subscription(
     if subscription.status == "ACTIVE":
         raise HTTPException(
             status_code=400,
-            detail="Cannot delete active subscription. Cancel it first.",
-        )
-
-    await subscription.delete()
-
-    logger.info(f"Subscription deleted: {subscription_id}")
-
-    return {"id": subscription_id, "message": "Subscription deleted successfully"}
-,
             detail="Cannot delete active subscription. Cancel it first.",
         )
 
