@@ -34,37 +34,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [justLoggedIn, setJustLoggedIn] = useState<boolean>(false);
   const isInitialized = useRef(false);
 
-  useEffect(() => {
-    if (!isInitialized.current) {
-      isInitialized.current = true;
-      refreshAuth();
-    }
-  }, [refreshAuth]);
-
-  const logout = useCallback(() => {
-    setUser(null);
-    setIsAdmin(false);
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    setJustLoggedIn(false);
-  }, []);
-
-  const setUserData = useCallback((userData: IUser, token?: string) => {
-    setUser(userData);
-    setIsAdmin(userData.role === 'admin');
-    if (token) {
-      localStorage.setItem('token', token);
-    }
-    localStorage.setItem('user', JSON.stringify(userData));
-    setJustLoggedIn(true);
-    setLoading(false);
-    
-    setTimeout(() => {
-      setJustLoggedIn(false);
-    }, 3000);
-  }, []);
-
   const refreshAuth = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -87,6 +56,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   }, [logout]);
+
+  useEffect(() => {
+    if (!isInitialized.current) {
+      isInitialized.current = true;
+      refreshAuth();
+    }
+  }, [refreshAuth]);
 
   const isAuthenticated = !!user;
 
