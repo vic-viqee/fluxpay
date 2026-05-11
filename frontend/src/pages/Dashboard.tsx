@@ -117,8 +117,7 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  const handleSubscriptionAdded = (newSub: any) => {
-    setSubscriptions((prev) => [newSub, ...prev]);
+  const handleSubscriptionAdded = () => {
     setIsAddSubModalOpen(false);
     fetchData(true);
   };

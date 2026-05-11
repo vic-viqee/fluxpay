@@ -3,8 +3,24 @@ import api from '../services/api';
 import { SubscriptionsTable } from '../components/SubscriptionsTable';
 import { AddSubscriptionModal } from '../components/AddSubscriptionModal';
 
+interface ISubscription {
+  _id: string;
+  clientId: string;
+  planId?: {
+    _id: string;
+    name: string;
+    amountKes: number;
+    frequency: 'daily' | 'weekly' | 'monthly' | 'annually';
+  } | null;
+  ownerId: string;
+  status: 'PENDING_ACTIVATION' | 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
+  startDate: string;
+  nextBillingDate: string;
+  notes?: string;
+}
+
 const Subscriptions: React.FC = () => {
-  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [subscriptions, setSubscriptions] = useState<ISubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddSubModalOpen, setIsAddSubModalOpen] = useState(false);
@@ -13,7 +29,10 @@ const Subscriptions: React.FC = () => {
     try {
       setError(null);
       const response = await api.get('/subscriptions');
-      setSubscriptions(response.data.data);
+      const subscriptionsData = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data || [];
+      setSubscriptions(subscriptionsData);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch subscriptions.');
     } finally {

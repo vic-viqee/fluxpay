@@ -18,6 +18,13 @@ export interface ISubscription {
   notes?: string;
 }
 
+interface SubscriptionCreateResponse {
+  _id?: string;
+  id?: string;
+  message?: string;
+  subscription?: ISubscription;
+}
+
 type PlanFrequency = 'daily' | 'weekly' | 'monthly' | 'annually';
 
 interface ServicePlan {
@@ -38,7 +45,7 @@ interface ClientOption {
 interface AddSubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (newSubscription: ISubscription) => void;
+  onSuccess: (newSubscription: SubscriptionCreateResponse) => void;
 }
 
 export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({

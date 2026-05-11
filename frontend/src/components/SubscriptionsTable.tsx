@@ -65,11 +65,14 @@ export const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
             </thead>
             <tbody className="divide-y divide-gray-800">
               {subscriptions.map((sub) => {
+                const subscriptionId = typeof sub._id === 'string' ? sub._id : 'UNKNOWN';
                 const planName = sub.planId?.name || 'Deleted plan';
                 const planAmount = typeof sub.planId?.amountKes === 'number' ? `KES ${sub.planId.amountKes.toLocaleString()}` : 'N/A';
+                const statusLabel = typeof sub.status === 'string' ? sub.status.replace('_', ' ') : 'UNKNOWN';
+                const nextBillingLabel = sub.nextBillingDate ? moment(sub.nextBillingDate).format('MMM D, YYYY') : 'N/A';
                 
                 return (
-                  <tr key={sub._id} className="hover:bg-primary-bg/30 transition-colors group">
+                  <tr key={subscriptionId} className="hover:bg-primary-bg/30 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-main/10 rounded-lg text-main group-hover:bg-main group-hover:text-white transition-colors">
@@ -77,7 +80,7 @@ export const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-white">{planName}</p>
-                          <p className="text-xs text-gray-400">ID: {sub._id.slice(-6).toUpperCase()}</p>
+                          <p className="text-xs text-gray-400">ID: {subscriptionId.slice(-6).toUpperCase()}</p>
                         </div>
                       </div>
                     </td>
@@ -99,13 +102,13 @@ export const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
                           sub.status === 'ACTIVE' ? 'bg-secondary' : 
                           sub.status === 'PENDING_ACTIVATION' ? 'bg-yellow-500' : 'bg-red-500'
                         }`} />
-                        {sub.status.replace('_', ' ')}
+                        {statusLabel}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm text-gray-300">
                         <Calendar size={14} className="text-gray-500" />
-                        {moment(sub.nextBillingDate).format('MMM D, YYYY')}
+                        {nextBillingLabel}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
