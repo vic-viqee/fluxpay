@@ -1,13 +1,14 @@
 from datetime import datetime, timezone
 from typing import Optional, Any, List
-from beanie import Document, Link, PydanticObjectId
+from beanie import Link, PydanticObjectId
 from pydantic import Field
 import secrets # Import secrets module for token generation
+from app.models.base import BaseDocument
 
 from app.models.user import User
 from app.models.gateway_transaction import GatewayTransaction
 
-class Webhook(Document):
+class Webhook(BaseDocument):
     owner_id: PydanticObjectId = Field(alias="ownerId")
     url: str
     secret: str = Field(default=secrets.token_hex(32)) # Generate secret on creation

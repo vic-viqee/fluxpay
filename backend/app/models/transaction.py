@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional, Literal, Any
-from beanie import Document, Link, PydanticObjectId
+from beanie import Link, PydanticObjectId
 from pydantic import Field
+from app.models.base import BaseDocument
 
 
-class Transaction(Document):
+class Transaction(BaseDocument):
     subscription_id: Optional[PydanticObjectId] = Field(
         default=None, alias="subscriptionId"
     )

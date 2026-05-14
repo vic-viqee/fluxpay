@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional, Any, Literal
-from beanie import Document, PydanticObjectId
+from beanie import PydanticObjectId
 from pydantic import Field
+from app.models.base import BaseDocument
 
 
-class GatewayTransaction(Document):
+class GatewayTransaction(BaseDocument):
     owner_id: PydanticObjectId = Field(alias="ownerId")
     customer_id: Optional[PydanticObjectId] = Field(default=None, alias="customerId")
     payment_link_id: Optional[PydanticObjectId] = Field(

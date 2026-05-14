@@ -1,16 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Optional
+from typing import Optional, List
 
 from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.transaction import Transaction
 from app.services.disbursement import initiate_b2c_disbursement
+from app.schemas.common import StandardResponse
 from app.utils.logger import logger
 
 router = APIRouter()
 
 
-@router.post("/", response_model=dict)
+@router.post("/", response_model=StandardResponse)
 async def create_disbursement(
     disbursement_data: dict,
     current_user: User = Depends(get_current_user),
@@ -47,49 +48,35 @@ async def create_disbursement(
     )
     await transaction.create()
 
-    return {
-        "message": "Disbursement initiated successfully",
-        "data": {
-            "_id": str(transaction.id),
-            "id": str(transaction.id),
-            "conversationId": result.get("conversationId"),
-            "reference": reference,
-            "amount": float(amount),
-            "status": "PENDING",
-        },
-    }
+    data = transaction.to_dict()
+    data["conversationId"] = result.get("conversationId")
+
+    return StandardResponse(
+        message="Disbursement initiated successfully",
+        data=data
+    )
 
 
-@router.get("/", response_model=dict)
+@router.get("/", response_model=StandardResponse[dict])
 async def get_disbursements(
     current_user: User = Depends(get_current_user), limit: int = 20, page: int = 1
 ):
     skip = (page - 1) * limit
     transactions = (
-        await Transaction.find({"owner_id": current_user.id})
+        await Transaction.find(Transaction.owner_id == current_user.id)
         .sort([("created_at", -1)])
         .skip(skip)
         .limit(limit)
         .to_list()
     )
-    total = await Transaction.find({"owner_id": current_user.id}).count()
+    total = await Transaction.find(Transaction.owner_id == current_user.id).count()
 
-    return {
-        "data": [
-            {
-                "_id": str(tx.id),
-                "id": str(tx.id),
-                "amountKes": tx.amount_kes,
-                "status": tx.status,
-                "darajaRequestId": tx.daraja_request_id,
-                "mpesaReceiptNo": tx.mpesa_receipt_no,
-                "transactionDate": tx.transaction_date,
-                "createdAt": tx.created_at,
-                "updatedAt": tx.updated_at,
-            }
-            for tx in transactions
-        ],
-        "total": total,
-        "page": page,
-        "totalPages": (total + limit - 1) // limit,
-    }
+    return StandardResponse(
+        data={
+            "data": [tx.to_dict() for tx in transactions],
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "totalPages": (total + limit - 1) // limit if limit > 0 else 1,
+        }
+    )

@@ -15,12 +15,12 @@ from app.schemas.gateway import (
     SubscriptionCreate,
     SubscriptionUpdate,
 )
-from app.routers.plans import serialize_plan
+from app.schemas.common import StandardResponse
 
 router = APIRouter()
 
 
-@router.post("/", response_model=dict)
+@router.post("/", response_model=StandardResponse)
 async def create_subscription(
     subscription: SubscriptionCreate,
     current_user: User = Depends(get_current_user),
@@ -66,23 +66,13 @@ async def create_subscription(
 
     logger.info(f"Subscription created: {new_subscription.id} for client {client.name}")
 
-    return {
-        "_id": str(new_subscription.id),
-        "id": str(new_subscription.id),
-        "message": "Subscription created successfully",
-        "subscription": {
-            "_id": str(new_subscription.id),
-            "id": str(new_subscription.id),
-            "clientId": str(new_subscription.client_id),
-            "planId": str(new_subscription.plan_id),
-            "status": new_subscription.status,
-            "startDate": new_subscription.start_date,
-            "nextBillingDate": new_subscription.next_billing_date,
-        },
-    }
+    return StandardResponse(
+        message="Subscription created successfully",
+        data=new_subscription.to_dict()
+    )
 
 
-@router.get("/", response_model=List[dict])
+@router.get("/", response_model=StandardResponse[List[dict]])
 async def get_subscriptions(
     current_user: User = Depends(get_current_user),
 ):
@@ -93,19 +83,17 @@ async def get_subscriptions(
         client = await Client.get(sub.client_id)
         plan = await ServicePlan.get(sub.plan_id)
         
-        sub_dict = sub.model_dump(by_alias=True)
-        sub_dict["id"] = str(sub.id)
-        sub_dict["_id"] = str(sub.id)
+        sub_dict = sub.to_dict()
         sub_dict["clientName"] = client.name if client else "Unknown"
         # Hydrate planId with full object for dashboard
-        sub_dict["planId"] = serialize_plan(plan) if plan else None
+        sub_dict["planId"] = plan.to_dict() if plan else None
         
         result.append(sub_dict)
 
-    return result
+    return StandardResponse(data=result)
 
 
-@router.get("/{subscription_id}", response_model=dict)
+@router.get("/{subscription_id}", response_model=StandardResponse)
 async def get_subscription(
     subscription_id: str,
     current_user: User = Depends(get_current_user),
@@ -117,23 +105,15 @@ async def get_subscription(
     client = await Client.get(subscription.client_id)
     plan = await ServicePlan.get(subscription.plan_id)
 
-    return {
-        "_id": str(subscription.id),
-        "id": str(subscription.id),
-        "clientId": str(subscription.client_id),
-        "clientName": client.name if client else "Unknown",
-        "planId": str(subscription.plan_id),
-        "planName": plan.name if plan else "Unknown",
-        "status": subscription.status,
-        "startDate": subscription.start_date,
-        "nextBillingDate": subscription.next_billing_date,
-        "notes": subscription.notes,
-        "paymentFailureCount": subscription.payment_failure_count,
-        "lastPaymentAttempt": subscription.last_payment_attempt,
-    }
+    data = subscription.to_dict()
+    data["clientName"] = client.name if client else "Unknown"
+    data["planName"] = plan.name if plan else "Unknown"
+    data["plan"] = plan.to_dict() if plan else None
+
+    return StandardResponse(data=data)
 
 
-@router.put("/{subscription_id}", response_model=dict)
+@router.put("/{subscription_id}", response_model=StandardResponse)
 async def update_subscription(
     subscription_id: str,
     subscription_update: SubscriptionUpdate,
@@ -171,24 +151,13 @@ async def update_subscription(
 
     logger.info(f"Subscription updated: {subscription.id}")
 
-    return {
-        "_id": str(subscription.id),
-        "id": str(subscription.id),
-        "message": "Subscription updated successfully",
-        "subscription": {
-            "_id": str(subscription.id),
-            "id": str(subscription.id),
-            "clientId": str(subscription.client_id),
-            "planId": str(subscription.plan_id),
-            "status": subscription.status,
-            "startDate": subscription.start_date,
-            "nextBillingDate": subscription.next_billing_date,
-            "notes": subscription.notes,
-        },
-    }
+    return StandardResponse(
+        message="Subscription updated successfully",
+        data=subscription.to_dict()
+    )
 
 
-@router.get("/{subscription_id}/transactions", response_model=List[dict])
+@router.get("/{subscription_id}/transactions", response_model=StandardResponse[List[dict]])
 async def get_subscription_transactions(
     subscription_id: str,
     current_user: User = Depends(get_current_user),
@@ -199,20 +168,12 @@ async def get_subscription_transactions(
 
     transactions = await Transaction.find(Transaction.subscription_id == subscription.id).to_list()
     
-    return [
-        {
-            "_id": str(tx.id),
-            "id": str(tx.id),
-            "amountKes": tx.amount_kes,
-            "status": tx.status,
-            "mpesaReceiptNo": tx.mpesa_receipt_no,
-            "transactionDate": tx.transaction_date,
-        }
-        for tx in transactions
-    ]
+    return StandardResponse(
+        data=[tx.to_dict() for tx in transactions]
+    )
 
 
-@router.delete("/{subscription_id}", response_model=dict)
+@router.delete("/{subscription_id}", response_model=StandardResponse)
 async def delete_subscription(
     subscription_id: str,
     current_user: User = Depends(get_current_user),
@@ -232,4 +193,4 @@ async def delete_subscription(
 
     logger.info(f"Subscription deleted: {subscription_id}")
 
-    return {"id": subscription_id, "message": "Subscription deleted successfully"}
+    return StandardResponse(message="Subscription deleted successfully", data={"id": subscription_id})

@@ -1,11 +1,12 @@
 from datetime import datetime, timezone
 from typing import Optional
-from beanie import Document, PydanticObjectId
+from beanie import PydanticObjectId
 from pydantic import Field, field_validator
 import re
+from app.models.base import BaseDocument
 
 
-class Client(Document):
+class Client(BaseDocument):
     name: str
     phone_number: str = Field(alias="phoneNumber")
     email: Optional[str] = None
@@ -15,7 +16,6 @@ class Client(Document):
 
     class Settings:
         name = "clients"
-        populate_by_name = True
         indexes = [
             "owner_id",
             "phone_number",

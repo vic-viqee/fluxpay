@@ -25,10 +25,13 @@ class Subscription(Document):
 
     class Settings:
         name = "subscriptions"
-        populate_by_name = True
         indexes = [
             "owner_id",
             "client_id",
+            "status",
+            "next_billing_date",
+        ]
+,
             "status",
             "next_billing_date",
         ]

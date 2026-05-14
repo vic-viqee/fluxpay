@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional, Literal
-from beanie import Document, PydanticObjectId
+from beanie import PydanticObjectId
 from pydantic import Field
+from app.models.base import BaseDocument
 
 
-class Reversal(Document):
+class Reversal(BaseDocument):
     owner_id: PydanticObjectId = Field(alias="ownerId")
     original_transaction_id: PydanticObjectId = Field(alias="originalTransactionId")
     reversal_transaction_id: Optional[str] = Field(

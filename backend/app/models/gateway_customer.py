@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional, Literal
-from beanie import Document, PydanticObjectId
+from beanie import PydanticObjectId
 from pydantic import Field, field_validator # Import field_validator
 import re # Import re module for regex
+from app.models.base import BaseDocument
 
-class GatewayCustomer(Document):
+class GatewayCustomer(BaseDocument):
     owner_id: PydanticObjectId = Field(alias="ownerId")
     name: str
     email: Optional[str] = None
@@ -24,7 +25,6 @@ class GatewayCustomer(Document):
 
     class Settings:
         name = "gatewaycustomers"
-        populate_by_name = True
         indexes = [
             "owner_id",
             "phone_number",

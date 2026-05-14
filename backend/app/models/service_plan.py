@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Literal
-from beanie import Document, PydanticObjectId
+from beanie import PydanticObjectId
 from pydantic import Field
+from app.models.base import BaseDocument
 
 
-class ServicePlan(Document):
+class ServicePlan(BaseDocument):
     name: str
     amount_kes: float = Field(gt=0, alias="amountKes")
     frequency: Literal["daily", "weekly", "monthly", "quarterly", "annually"]
@@ -15,13 +16,7 @@ class ServicePlan(Document):
 
     class Settings:
         name = "serviceplans"
-        populate_by_name = True
         indexes = [
             "owner_id",
             "name",
         ]
-
-    class Config:
-        json_encoders = {
-            PydanticObjectId: str
-        }

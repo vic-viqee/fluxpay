@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional
-from beanie import Document, PydanticObjectId
+from beanie import PydanticObjectId
 from pydantic import Field
+from app.models.base import BaseDocument
 
 
-class PublicCheckoutButton(Document):
+class PublicCheckoutButton(BaseDocument):
     owner_id: PydanticObjectId = Field(alias="ownerId")
     button_id: str = Field(unique=True, alias="buttonId")
     title: str

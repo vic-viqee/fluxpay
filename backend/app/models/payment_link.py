@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional, Literal
-from beanie import Document, PydanticObjectId
+from beanie import PydanticObjectId
 from pydantic import Field
+from app.models.base import BaseDocument
 
 
-class PaymentLink(Document):
+class PaymentLink(BaseDocument):
     owner_id: PydanticObjectId = Field(alias="ownerId")
     title: str
     description: Optional[str] = None

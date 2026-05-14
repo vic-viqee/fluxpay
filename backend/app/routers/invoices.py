@@ -7,12 +7,13 @@ from app.models.user import User
 from app.models.invoice import Invoice
 from app.models.client import Client
 from app.services.invoice import create_invoice as create_invoice_record
+from app.schemas.common import StandardResponse
 from app.utils.logger import logger
 
 router = APIRouter()
 
 
-@router.post("/", response_model=dict)
+@router.post("/", response_model=StandardResponse)
 async def create_invoice(
     invoice_data: dict,
     current_user: User = Depends(get_current_user),
@@ -33,29 +34,38 @@ async def create_invoice(
         vat_rate=16.0 if invoice_data.get("applyVat", True) else 0.0,
         notes=invoice_data.get("notes"),
     )
-    return {
-        "message": "Invoice created successfully",
-        "data": _serialize_invoice(invoice),
-    }
+    return StandardResponse(
+        message="Invoice created successfully",
+        data=invoice.to_dict(),
+    )
 
 
-@router.get("/", response_model=dict)
+@router.get("/", response_model=StandardResponse[dict])
 async def get_invoices(
     current_user: User = Depends(get_current_user), limit: int = 20, page: int = 1
 ):
     skip = (page - 1) * limit
     invoices = (
-        await Invoice.find({"owner_id": current_user.id})
+        await Invoice.find(Invoice.owner_id == current_user.id)
         .sort([("created_at", -1)])
         .skip(skip)
         .limit(limit)
         .to_list()
     )
-    total = await Invoice.find({"owner_id": current_user.id}).count()
-    return {"data": [_serialize_invoice(inv) for inv in invoices], "total": total}
+    total = await Invoice.find(Invoice.owner_id == current_user.id).count()
+    
+    return StandardResponse(
+        data={
+            "data": [inv.to_dict() for inv in invoices],
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "totalPages": (total + limit - 1) // limit if limit > 0 else 1,
+        }
+    )
 
 
-@router.get("/{invoice_id}", response_model=dict)
+@router.get("/{invoice_id}", response_model=StandardResponse)
 async def get_invoice(
     invoice_id: str,
     current_user: User = Depends(get_current_user),
@@ -63,10 +73,10 @@ async def get_invoice(
     invoice = await Invoice.get(invoice_id)
     if not invoice or str(invoice.owner_id) != str(current_user.id):
         raise HTTPException(status_code=404, detail="Invoice not found")
-    return {"data": _serialize_invoice(invoice)}
+    return StandardResponse(data=invoice.to_dict())
 
 
-@router.put("/{invoice_id}", response_model=dict)
+@router.put("/{invoice_id}", response_model=StandardResponse)
 async def update_invoice(
     invoice_id: str,
     invoice_data: dict,
@@ -88,13 +98,13 @@ async def update_invoice(
         invoice.paid_date = datetime.utcnow()
     await invoice.save()
 
-    return {
-        "message": "Invoice updated successfully",
-        "data": _serialize_invoice(invoice),
-    }
+    return StandardResponse(
+        message="Invoice updated successfully",
+        data=invoice.to_dict(),
+    )
 
 
-@router.delete("/{invoice_id}", response_model=dict)
+@router.delete("/{invoice_id}", response_model=StandardResponse)
 async def delete_invoice(
     invoice_id: str,
     current_user: User = Depends(get_current_user),
@@ -103,11 +113,4 @@ async def delete_invoice(
     if not invoice or str(invoice.owner_id) != str(current_user.id):
         raise HTTPException(status_code=404, detail="Invoice not found")
     await invoice.delete()
-    return {"message": "Invoice deleted successfully"}
-
-
-def _serialize_invoice(invoice: Invoice) -> dict:
-    data = invoice.model_dump(by_alias=True)
-    data["id"] = str(invoice.id)
-    data["_id"] = str(invoice.id)
-    return data
+    return StandardResponse(message="Invoice deleted successfully")

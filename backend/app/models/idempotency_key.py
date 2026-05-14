@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
 from typing import Optional, Any
-from beanie import Document
 from pydantic import Field
+from app.models.base import BaseDocument
 
 
-class IdempotencyKey(Document):
+class IdempotencyKey(BaseDocument):
     key: str
     owner_id: str
     request_path: str

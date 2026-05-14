@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
 from typing import Optional, Literal
-from beanie import Document
 from pydantic import Field
+from app.models.base import BaseDocument
 
 
-class PublicCheckoutTransaction(Document):
+class PublicCheckoutTransaction(BaseDocument):
     plan: Literal["starter", "growth"]
     phone_number: str = Field(alias="phoneNumber")
     amount_kes: float = Field(alias="amountKes")

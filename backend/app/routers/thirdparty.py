@@ -11,6 +11,7 @@ from app.services.mpesa import initiate_stk_push
 from app.services.webhook import verify_api_key, find_api_key
 from app.utils.phone import is_valid_mpesa_phone, format_kenyan_phone
 from app.utils.logger import logger
+from app.schemas.common import StandardResponse
 
 router = APIRouter()
 
@@ -32,7 +33,7 @@ async def get_api_key_owner(
     return user
 
 
-@router.post("/payments", response_model=dict)
+@router.post("/payments", response_model=StandardResponse)
 async def initiate_third_party_payment(
     body: dict,
     owner: User = Depends(get_api_key_owner),
@@ -67,42 +68,34 @@ async def initiate_third_party_payment(
     )
     await transaction.create()
 
-    return {
-        "success": True,
-        "message": "STK push initiated",
-        "data": {
+    return StandardResponse(
+        message="STK push initiated",
+        data={
             "checkoutRequestId": transaction.daraja_request_id,
             "amount": transaction.amount_kes,
             "phoneNumber": formatted_phone,
             "reference": account_ref,
             "status": transaction.status,
-        },
-    }
+        }
+    )
 
 
-@router.get("/payments/{checkout_request_id}", response_model=dict)
+@router.get("/payments/{checkout_request_id}", response_model=StandardResponse)
 async def get_transaction_status(
     checkout_request_id: str,
     owner: User = Depends(get_api_key_owner),
 ):
     transaction = await Transaction.find_one(
-        {"daraja_request_id": checkout_request_id, "owner_id": owner.id}
+        Transaction.daraja_request_id == checkout_request_id,
+        Transaction.owner_id == owner.id
     )
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
-    return {
-        "data": {
-            "checkoutRequestId": transaction.daraja_request_id,
-            "amount": transaction.amount_kes,
-            "status": transaction.status,
-            "mpesaReceiptNo": transaction.mpesa_receipt_no,
-            "createdAt": transaction.created_at,
-            "updatedAt": transaction.updated_at,
-        }
-    }
+    
+    return StandardResponse(data=transaction.to_dict())
 
 
-@router.post("/webhooks", response_model=dict)
+@router.post("/webhooks", response_model=StandardResponse)
 async def register_webhook(
     body: dict,
     owner: User = Depends(get_api_key_owner),
@@ -120,48 +113,28 @@ async def register_webhook(
         events=body.get("events") or ["payment.success", "payment.failed"],
     )
     await webhook.create()
-    return {
-        "message": "Webhook registered successfully",
-        "data": {
-            "_id": str(webhook.id),
-            "id": str(webhook.id),
-            "name": webhook.name,
-            "url": webhook.url,
-            "events": webhook.events,
-            "secret": webhook.secret,
-            "isActive": webhook.is_active,
-        },
-    }
+    
+    return StandardResponse(
+        message="Webhook registered successfully",
+        data=webhook.to_dict()
+    )
 
 
-@router.get("/webhooks", response_model=dict)
+@router.get("/webhooks", response_model=StandardResponse[List[dict]])
 async def list_webhooks(
     owner: User = Depends(get_api_key_owner),
 ):
     webhooks = (
-        await Webhook.find({"owner_id": owner.id})
+        await Webhook.find(Webhook.owner_id == owner.id)
         .sort([("created_at", -1)])
         .to_list()
     )
-    return {
-        "data": [
-            {
-                "_id": str(webhook.id),
-                "id": str(webhook.id),
-                "name": webhook.name,
-                "url": webhook.url,
-                "events": webhook.events,
-                "isActive": webhook.is_active,
-                "lastTriggeredAt": webhook.last_triggered_at,
-                "failureCount": webhook.failure_count,
-                "createdAt": webhook.created_at,
-            }
-            for webhook in webhooks
-        ]
-    }
+    return StandardResponse(
+        data=[w.to_dict() for w in webhooks]
+    )
 
 
-@router.delete("/webhooks/{webhook_id}", response_model=dict)
+@router.delete("/webhooks/{webhook_id}", response_model=StandardResponse)
 async def delete_webhook(
     webhook_id: str,
     owner: User = Depends(get_api_key_owner),
@@ -170,17 +143,17 @@ async def delete_webhook(
     if not webhook or str(webhook.owner_id) != str(owner.id):
         raise HTTPException(status_code=404, detail="Webhook not found")
     await webhook.delete()
-    return {"message": "Webhook deleted successfully"}
+    return StandardResponse(message="Webhook deleted successfully", data={"id": webhook_id})
 
 
-@router.get("/business", response_model=dict)
+@router.get("/business", response_model=StandardResponse)
 async def get_business_info(
     owner: User = Depends(get_api_key_owner),
 ):
-    return {
-        "data": {
+    return StandardResponse(
+        data={
             "businessName": owner.business_name,
             "businessType": owner.business_type,
             "businessPhoneNumber": owner.business_phone_number,
         }
-    }
+    )

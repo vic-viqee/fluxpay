@@ -8,12 +8,13 @@ from app.models.transaction import Transaction
 from app.models.subscription import Subscription
 from app.models.client import Client
 from app.models.service_plan import ServicePlan
+from app.schemas.common import StandardResponse
 from app.utils.logger import logger
 
 router = APIRouter()
 
 
-@router.get("/", response_model=dict)
+@router.get("/", response_model=StandardResponse)
 async def get_analytics(
     current_user: User = Depends(get_current_user),
 ):
@@ -111,7 +112,7 @@ async def get_analytics(
         {"_id": status, "count": count} for status, count in subscription_counts.items()
     ]
 
-    return {
+    return StandardResponse(data={
         "totals": {
             "totalTransactions": len(transactions),
             "totalRevenue": total_revenue,
@@ -131,4 +132,4 @@ async def get_analytics(
         "transactionStatusBreakdown": transaction_status_breakdown,
         "subscriptionStatusBreakdown": subscription_status_breakdown,
         "monthlyRevenue": monthly_revenue,
-    }
+    })

@@ -14,6 +14,7 @@ import uuid
 
 from app.dependencies import get_current_user
 from app.models.user import User
+from app.schemas.common import StandardResponse
 from app.utils.logger import logger
 from app.utils.uploads import resolve_uploads_dir
 from app.config import get_settings
@@ -21,28 +22,14 @@ from app.config import get_settings
 router = APIRouter()
 
 
-@router.get("/", response_model=dict)
+@router.get("/", response_model=StandardResponse)
 async def get_user_settings(
     current_user: User = Depends(get_current_user),
 ):
-    return {
-        "businessName": current_user.business_name or "",
-        "businessType": current_user.business_type or "",
-        "kraPin": current_user.kra_pin or "",
-        "businessTillOrPaybill": current_user.business_till_or_paybill or "",
-        "businessPhoneNumber": current_user.business_phone_number or "",
-        "preferredPaymentMethod": current_user.preferred_payment_method
-        or "M-Pesa STK Push",
-        "businessDescription": current_user.business_description or "",
-        "logoUrl": current_user.logo_url or "",
-        "plan": current_user.plan or "",
-        "email": current_user.email,
-        "username": current_user.username or "",
-        "serviceType": current_user.service_type or "both",
-    }
+    return StandardResponse(data=current_user.to_dict())
 
 
-@router.put("/", response_model=dict)
+@router.put("/", response_model=StandardResponse)
 async def update_settings(
     request: Request,
     current_user: User = Depends(get_current_user),
@@ -86,7 +73,7 @@ async def update_settings(
 
     await current_user.save()
 
-    return {
-        "message": "User settings updated successfully",
-        "settings": await get_user_settings(current_user),
-    }
+    return StandardResponse(
+        message="User settings updated successfully",
+        data=current_user.to_dict()
+    )

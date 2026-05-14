@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional, Literal, Any
-from beanie import Document, PydanticObjectId
+from beanie import PydanticObjectId
 from pydantic import Field
+from app.models.base import BaseDocument
 
 
-class C2BTransaction(Document):
+class C2BTransaction(BaseDocument):
     owner_id: Optional[PydanticObjectId] = Field(default=None, alias="ownerId")
     transaction_id: str = Field(alias="transactionId")
     transaction_type: str = Field(default="Pay Bill", alias="transactionType")

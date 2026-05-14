@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
 from typing import Optional, Literal
-from beanie import Document, TimeSeriesConfig
+from beanie import TimeSeriesConfig
 from pydantic import Field, EmailStr
+from app.models.base import BaseDocument
 
 from app.models.utils import next_month_first_day
 
 
-class User(Document):
+class User(BaseDocument):
     username: Optional[str] = None
     email: EmailStr
     password_hash: Optional[str] = Field(default=None, exclude=True, alias="password")
@@ -53,7 +54,6 @@ class User(Document):
 
     class Settings:
         name = "users"
-        populate_by_name = True
         indexes = [
             "email",
             "google_id",

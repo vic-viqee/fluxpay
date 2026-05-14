@@ -5,11 +5,12 @@ from app.dependencies import get_current_user
 from app.models.client import Client
 from app.models.user import User
 from app.schemas.gateway import ClientCreate
+from app.schemas.common import StandardResponse
 
 router = APIRouter()
 
 
-@router.post("/")
+@router.post("/", response_model=StandardResponse)
 async def create_client(
     client: ClientCreate,
     current_user: User = Depends(get_current_user),
@@ -18,22 +19,21 @@ async def create_client(
     data["owner_id"] = current_user.id
     new_client = Client(**data)
     await new_client.create()
-    return {
-        "id": str(new_client.id),
-        "message": "Client created successfully",
-        "client": _serialize_client(new_client),
-    }
+    return StandardResponse(
+        message="Client created successfully",
+        data=new_client.to_dict()
+    )
 
 
-@router.get("/")
+@router.get("/", response_model=StandardResponse[List[dict]])
 async def get_clients(
     current_user: User = Depends(get_current_user),
 ):
     clients = await Client.find(Client.owner_id == current_user.id).to_list()
-    return [_serialize_client(c) for c in clients]
+    return StandardResponse(data=[c.to_dict() for c in clients])
 
 
-@router.get("/{client_id}")
+@router.get("/{client_id}", response_model=StandardResponse)
 async def get_client(
     client_id: str,
     current_user: User = Depends(get_current_user),
@@ -41,10 +41,10 @@ async def get_client(
     client = await Client.get(client_id)
     if not client or str(client.owner_id) != str(current_user.id):
         raise HTTPException(status_code=404, detail="Client not found")
-    return _serialize_client(client)
+    return StandardResponse(data=client.to_dict())
 
 
-@router.put("/{client_id}")
+@router.put("/{client_id}", response_model=StandardResponse)
 async def update_client(
     client_id: str,
     client_update: ClientCreate,
@@ -59,14 +59,27 @@ async def update_client(
         setattr(client, field, value)
     await client.save()
 
-    return {
-        "id": str(client.id),
-        "message": "Client updated successfully",
-        "client": _serialize_client(client),
-    }
+    return StandardResponse(
+        message="Client updated successfully",
+        data=client.to_dict()
+    )
 
 
-@router.delete("/{client_id}")
+@router.get("/phone/{phone_number}", response_model=StandardResponse)
+async def get_client_by_phone(
+    phone_number: str,
+    current_user: User = Depends(get_current_user),
+):
+    client = await Client.find_one(
+        Client.owner_id == current_user.id,
+        Client.phone_number == phone_number
+    )
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    return StandardResponse(data=client.to_dict())
+
+
+@router.delete("/{client_id}", response_model=StandardResponse)
 async def delete_client(
     client_id: str,
     current_user: User = Depends(get_current_user),
@@ -76,11 +89,7 @@ async def delete_client(
         raise HTTPException(status_code=404, detail="Client not found")
 
     await client.delete()
-    return {"id": client_id, "message": "Client deleted successfully"}
-
-
-def _serialize_client(client):
-    data = client.model_dump(by_alias=True)
-    data["id"] = str(client.id)
-    data["_id"] = str(client.id)
-    return data
+    return StandardResponse(
+        message="Client deleted successfully",
+        data={"id": client_id}
+    )

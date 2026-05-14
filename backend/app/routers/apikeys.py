@@ -7,12 +7,13 @@ from app.dependencies import get_current_user
 from app.models.api_key import ApiKey
 from app.models.user import User
 from app.utils.password import hash_password, verify_password
+from app.schemas.common import StandardResponse
 from app.utils.logger import logger
 
 router = APIRouter()
 
 
-@router.post("/", response_model=dict)
+@router.post("/", response_model=StandardResponse)
 async def create_api_key(
     current_user: User = Depends(get_current_user),
     body: dict = None,
@@ -33,47 +34,28 @@ async def create_api_key(
     )
     await new_api_key.create()
 
-    return {
-        "message": "API key created successfully. Save the secret now - it cannot be retrieved later.",
-        "data": {
-            "_id": str(new_api_key.id),
-            "id": str(new_api_key.id),
-            "key": new_api_key.key,
-            "secret": api_secret,
-            "name": new_api_key.name,
-            "isActive": new_api_key.is_active,
-            "createdAt": new_api_key.created_at.isoformat(),
-        },
-    }
+    # We return the raw secret ONLY at creation time
+    data = new_api_key.to_dict()
+    data["secret"] = api_secret
+
+    return StandardResponse(
+        message="API key created successfully. Save the secret now - it cannot be retrieved later.",
+        data=data
+    )
 
 
-@router.get("/", response_model=dict)
+@router.get("/", response_model=StandardResponse[List[dict]])
 async def get_api_keys(
     current_user: User = Depends(get_current_user),
 ):
     api_keys = await ApiKey.find(
         ApiKey.owner_id == current_user.id, ApiKey.is_active == True
     ).to_list()
-    return {
-        "data": [
-            {
-                "_id": str(key.id),
-                "id": str(key.id),
-                "name": key.name,
-                "key": key.key,
-                "createdAt": key.created_at.isoformat() if key.created_at else None,
-                "expiresAt": key.expires_at.isoformat() if key.expires_at else None,
-                "lastUsedAt": key.last_used_at.isoformat()
-                if key.last_used_at
-                else None,
-                "isActive": key.is_active,
-            }
-            for key in api_keys
-        ]
-    }
+    
+    return StandardResponse(data=[key.to_dict() for key in api_keys])
 
 
-@router.patch("/{key_id}/revoke", response_model=dict)
+@router.patch("/{key_id}/revoke", response_model=StandardResponse)
 async def revoke_api_key(
     key_id: str,
     current_user: User = Depends(get_current_user),
@@ -85,10 +67,10 @@ async def revoke_api_key(
     api_key.is_active = False
     await api_key.save()
 
-    return {"message": "API key revoked successfully"}
+    return StandardResponse(message="API key revoked successfully")
 
 
-@router.delete("/{key_id}", response_model=dict)
+@router.delete("/{key_id}", response_model=StandardResponse)
 async def delete_api_key(
     key_id: str,
     current_user: User = Depends(get_current_user),
@@ -99,4 +81,7 @@ async def delete_api_key(
 
     await api_key.delete()
 
-    return {"id": key_id, "message": "API key deleted successfully"}
+    return StandardResponse(
+        message="API key deleted successfully",
+        data={"id": key_id}
+    )

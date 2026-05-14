@@ -128,7 +128,7 @@ export const createServicePlan = async (planData: {
 export const getServicePlans = async (page = 1, limit = 20) => {
   try {
     const response = await api.get('/plans', { params: { page, limit } });
-    return response.data;
+    return response.data.data || response.data;
   } catch (error) {
     throw error;
   }

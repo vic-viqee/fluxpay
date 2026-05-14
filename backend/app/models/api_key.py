@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional
-from beanie import Document, PydanticObjectId
+from beanie import PydanticObjectId
 from pydantic import Field
+from app.models.base import BaseDocument
 
 
-class ApiKey(Document):
+class ApiKey(BaseDocument):
     key: str = Field(unique=True)
     secret: str
     name: str
@@ -17,7 +18,6 @@ class ApiKey(Document):
 
     class Settings:
         name = "apikeys"
-        populate_by_name = True
         indexes = [
             "owner_id",
             "key",

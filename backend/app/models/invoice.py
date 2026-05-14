@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional, Literal
-from beanie import Document, PydanticObjectId
+from beanie import PydanticObjectId
 from pydantic import Field
+from app.models.base import BaseDocument
 
 
-class Invoice(Document):
+class Invoice(BaseDocument):
     invoice_number: str = Field(unique=True, alias="invoiceNumber")
     owner_id: PydanticObjectId = Field(alias="ownerId")
     client_id: Optional[PydanticObjectId] = Field(default=None, alias="clientId")
@@ -27,7 +28,6 @@ class Invoice(Document):
 
     class Settings:
         name = "invoices"
-        populate_by_name = True
         indexes = [
             "owner_id",
             "invoice_number",

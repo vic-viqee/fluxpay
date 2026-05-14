@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional, Any
-from beanie import Document, PydanticObjectId
+from beanie import PydanticObjectId
 from pydantic import Field
+from app.models.base import BaseDocument
 
 
-class AuditLog(Document):
+class AuditLog(BaseDocument):
     admin_id: PydanticObjectId = Field(alias="adminId")
     action: str
     resource: str
