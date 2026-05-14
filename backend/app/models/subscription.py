@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional, Literal
-from beanie import Document, PydanticObjectId
+from beanie import PydanticObjectId
 from pydantic import Field
+from app.models.base import BaseDocument
 
 
-class Subscription(Document):
+class Subscription(BaseDocument):
     client_id: PydanticObjectId = Field(alias="clientId")
     plan_id: PydanticObjectId = Field(alias="planId")
     owner_id: PydanticObjectId = Field(alias="ownerId")
@@ -31,12 +32,3 @@ class Subscription(Document):
             "status",
             "next_billing_date",
         ]
-,
-            "status",
-            "next_billing_date",
-        ]
-
-    class Config:
-        json_encoders = {
-            PydanticObjectId: str
-        }
