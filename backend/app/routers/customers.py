@@ -19,12 +19,12 @@ async def get_customers(
     limit: int = 20,
     search: Optional[str] = None,
 ):
-    query = {"owner_id": current_user.id}
+    query = {"ownerId": current_user.id}
 
     if search:
         query["$or"] = [
             {"name": {"$regex": search, "$options": "i"}},
-            {"phone_number": {"$regex": search, "$options": "i"}},
+            {"phoneNumber": {"$regex": search, "$options": "i"}},
             {"email": {"$regex": search, "$options": "i"}},
         ]
 
@@ -33,8 +33,8 @@ async def get_customers(
     clients = (
         await Client.find(query)
         .sort([("created_at", -1)])
-        .skip(skip)
         .limit(limit)
+        .skip(skip)
         .to_list()
     )
 
@@ -53,11 +53,11 @@ async def get_customers(
         subscription_ids = [sub.id for sub in client_subscriptions]
         all_transactions = await Transaction.find(
             {
-                "owner_id": current_user.id,
-                "subscription_id": {"$in": subscription_ids},
+                "ownerId": current_user.id,
+                "subscriptionId": {"$in": subscription_ids},
             }
             if subscription_ids
-            else {"owner_id": current_user.id, "_id": {"$in": []}}
+            else {"ownerId": current_user.id, "_id": {"$in": []}}
         ).to_list()
         client_transactions = [tx for tx in all_transactions if tx.status == "SUCCESS"]
 
@@ -82,7 +82,7 @@ async def get_customers(
             }
         )
 
-    total = await Client.find({"owner_id": current_user.id}).count()
+    total = await Client.find({"ownerId": current_user.id}).count()
 
     return {
         "customers": result,

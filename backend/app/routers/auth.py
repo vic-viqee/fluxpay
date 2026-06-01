@@ -389,8 +389,8 @@ async def reset_password(
 
     user = await User.find_one(
         {
-            "password_reset_token": hashed_token,
-            "password_reset_expires": {"$gt": datetime.now(timezone.utc)},
+            "passwordResetToken": hashed_token,
+            "passwordResetExpires": {"$gt": datetime.now(timezone.utc)},
         },
     )
 
@@ -497,7 +497,7 @@ async def google_auth_callback(code: Optional[str] = None, state: Optional[str] 
             "picture": "https://example.com/avatar.jpg",
         }
 
-        user = await User.find_one({"google_id": mock_profile["id"]})
+        user = await User.find_one({"googleId": mock_profile["id"]})
         if not user:
             user = await User.find_one({"email": mock_profile["email"]})
             if user:
@@ -550,7 +550,7 @@ async def google_auth_callback(code: Optional[str] = None, state: Optional[str] 
             status_code=400, detail="Failed to get user info from Google"
         )
 
-    user = await User.find_one({"google_id": google_profile["id"]})
+    user = await User.find_one({"googleId": google_profile["id"]})
     if not user:
         user = await User.find_one({"email": google_profile["email"]})
         if user:
@@ -654,7 +654,7 @@ async def google_complete_registration(
             buffer.write(content)
         logo_url = f"{get_settings().backend_url}/uploads/{filename}"
 
-    existing = await User.find_one({"google_id": ticket_data["googleId"]})
+    existing = await User.find_one({"googleId": ticket_data["googleId"]})
     if existing:
         return make_auth_response(existing, "Logged in successfully")
 

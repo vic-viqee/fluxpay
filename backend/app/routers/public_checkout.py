@@ -53,7 +53,7 @@ async def track_button_click(
     button_id: str,
 ):
     # Public endpoint - no authentication required
-    button = await PublicCheckoutButton.find_one({"button_id": button_id})
+    button = await PublicCheckoutButton.find_one({"buttonId": button_id})
     if not button:
         raise HTTPException(status_code=404, detail="Payment button not found")
 
@@ -93,11 +93,11 @@ async def initiate_button_payment(
     # Find or create customer
     customer = None
     if customer_email or phone_number:
-        query = {"owner_id": button.owner_id}
+        query = {"ownerId": button.owner_id}
         if customer_email:
             query["email"] = customer_email
         else:
-            query["phone_number"] = phone_number
+            query["phoneNumber"] = phone_number
 
         customer = await GatewayCustomer.find_one(query)
 
@@ -182,7 +182,7 @@ async def get_button_stats(
 ):
     # Protected endpoint - requires authentication
     buttons = (
-        await PublicCheckoutButton.find({"owner_id": current_user.id})
+        await PublicCheckoutButton.find({"ownerId": current_user.id})
         .sort([("created_at", DESCENDING)])
         .to_list()
     )
@@ -290,7 +290,7 @@ async def update_button(
 ):
     # Protected endpoint - requires authentication
     button = await PublicCheckoutButton.find_one(
-        {"button_id": button_id, "owner_id": current_user.id}
+        {"buttonId": button_id, "ownerId": current_user.id}
     )
     if not button:
         raise HTTPException(status_code=404, detail="Button not found")
@@ -347,7 +347,7 @@ async def delete_button(
 ):
     # Protected endpoint - requires authentication
     button = await PublicCheckoutButton.find_one(
-        {"button_id": button_id, "owner_id": current_user.id}
+        {"buttonId": button_id, "ownerId": current_user.id}
     )
     if not button:
         raise HTTPException(status_code=404, detail="Button not found")

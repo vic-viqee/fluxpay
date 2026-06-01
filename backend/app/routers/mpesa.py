@@ -92,7 +92,7 @@ async def handle_mpesa_callback(
 
         # Find the transaction by checkoutRequestId (subscription transactions)
         transaction = await Transaction.find_one(
-            {"daraja_request_id": checkout_request_id}
+            {"darajaRequestId": checkout_request_id}
         )
 
         if not transaction:

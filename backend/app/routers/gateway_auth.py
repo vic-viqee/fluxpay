@@ -252,7 +252,7 @@ async def gateway_forgot_password(
 ):
     prune_expired_stores()
 
-    user = await User.find_one({"email": body.email, "service_type": "gateway"})
+    user = await User.find_one({"email": body.email, "serviceType": "gateway"})
 
     if not user:
         return Response(
@@ -313,9 +313,9 @@ async def gateway_reset_password(
 
     user = await User.find_one(
         {
-            "password_reset_token": hashed_token,
-            "password_reset_expires": {"$gt": datetime.now(timezone.utc)},
-            "service_type": "gateway",
+            "passwordResetToken": hashed_token,
+            "passwordResetExpires": {"$gt": datetime.now(timezone.utc)},
+            "serviceType": "gateway",
         },
         projection_model=None,
     )

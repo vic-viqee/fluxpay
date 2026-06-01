@@ -100,9 +100,9 @@ async def get_all_businesses(
     query = {"role": {"$ne": "admin"}}
     if search:
         query["$or"] = [
-            {"business_name": {"$regex": search, "$options": "i"}},
+            {"businessName": {"$regex": search, "$options": "i"}},
             {"email": {"$regex": search, "$options": "i"}},
-            {"business_phone_number": {"$regex": search, "$options": "i"}},
+            {"businessPhoneNumber": {"$regex": search, "$options": "i"}},
         ]
     businesses = (
         await User.find(query)
@@ -114,7 +114,7 @@ async def get_all_businesses(
     total = await User.find(query).count()
     data = []
     for business in businesses:
-        business_transactions = await Transaction.find({"owner_id": business.id}).to_list()
+        business_transactions = await Transaction.find({"ownerId": business.id}).to_list()
         revenue = sum(
             tx.amount_kes for tx in business_transactions if tx.status == "SUCCESS"
         )
@@ -122,10 +122,10 @@ async def get_all_businesses(
             [tx for tx in business_transactions if tx.status == "SUCCESS"]
         )
         active_subscriptions = await Subscription.find(
-            {"owner_id": business.id, "status": "ACTIVE"}
+            {"ownerId": business.id, "status": "ACTIVE"}
         ).count()
         active_api_keys = await ApiKey.find(
-            {"owner_id": business.id, "is_active": True}
+            {"ownerId": business.id, "isActive": True}
         ).count()
         data.append(
             {
