@@ -121,7 +121,7 @@ export const initiatePricingStkPushPayment = async (data: {
 export const createServicePlan = async (planData: {
   name: string;
   amountKes: number;
-  frequency: 'daily' | 'weekly' | 'monthly' | 'annually';
+  frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually';
   billingDay: number;
 }) => {
   try {
@@ -146,7 +146,7 @@ export const updateServicePlan = async (
   planData: {
     name: string;
     amountKes: number;
-    frequency: 'daily' | 'weekly' | 'monthly' | 'annually';
+    frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually';
     billingDay: number;
   }
 ) => {
