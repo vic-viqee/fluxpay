@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional
+from beanie import PydanticObjectId
 
 from app.dependencies import get_current_user
 from app.config import get_settings
 from app.models.user import User
+from app.models.transaction import Transaction
 from app.utils.logger import logger
 from app.services.mpesa import initiate_stk_push
 from app.schemas.payments import (
@@ -35,10 +37,21 @@ async def initiate_payment_stk_push(
             transaction_desc=request.transaction_desc or "FluxPay Payment",
         )
 
+        checkout_request_id = stk_response.get("CheckoutRequestID", "")
+
+        transaction = Transaction(
+            owner_id=PydanticObjectId(str(current_user.id)),
+            amount_kes=request.amount,
+            status="PENDING",
+            daraja_request_id=checkout_request_id,
+            retry_count=0,
+        )
+        await transaction.create()
+
         return {
             "message": "Payment initiated",
-            "transactionId": None,  # Would be created in real implementation
-            "checkoutRequestId": stk_response.get("CheckoutRequestID"),
+            "transactionId": str(transaction.id),
+            "checkoutRequestId": checkout_request_id,
             "status": "PENDING",
         }
     except Exception as e:
@@ -62,9 +75,21 @@ async def simulate_stk_push(
             else "FluxPay Simulation",
         )
 
+        checkout_request_id = stk_response.get("CheckoutRequestID", "")
+
+        transaction = Transaction(
+            owner_id=PydanticObjectId(str(current_user.id)),
+            amount_kes=request.amount,
+            status="PENDING",
+            daraja_request_id=checkout_request_id,
+            retry_count=0,
+        )
+        await transaction.create()
+
         return {
             "message": "STK push simulated",
-            "checkoutRequestId": stk_response.get("CheckoutRequestID"),
+            "transactionId": str(transaction.id),
+            "checkoutRequestId": checkout_request_id,
             "status": "PENDING",
         }
     except Exception as e:
@@ -95,9 +120,21 @@ async def pricing_stk_push(
             transaction_desc=f"FluxPay {request.plan.capitalize()} Plan",
         )
 
+        checkout_request_id = stk_response.get("CheckoutRequestID", "")
+
+        transaction = Transaction(
+            owner_id=PydanticObjectId(str(current_user.id)),
+            amount_kes=amount,
+            status="PENDING",
+            daraja_request_id=checkout_request_id,
+            retry_count=0,
+        )
+        await transaction.create()
+
         return {
             "message": "Payment initiated",
-            "checkoutRequestId": stk_response.get("CheckoutRequestID"),
+            "transactionId": str(transaction.id),
+            "checkoutRequestId": checkout_request_id,
             "status": "PENDING",
             "amount": amount,
         }

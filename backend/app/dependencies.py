@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from app.config import get_settings, Settings
 from app.models.user import User
+from app.utils.logger import logger
 
 
 async def get_current_user(

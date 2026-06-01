@@ -64,20 +64,48 @@ FluxPay is a dual-purpose platform: a **Subscription Billing Engine** and a **Pa
 
 ---
 
-## 🏦 Phase 4: Operations & Compliance (The Scale)
-*Goal: Automate business operations.*
+## 💰 Monetization & Growth Strategy (2026-2027)
+FluxPay transitions from a payment tool to a **Compliance & Billing Hub** for Kenyan SMEs.
 
-### 4.1 Settlement & Payouts
-- **What**: Move collected funds to merchant's bank/M-Pesa.
-- **Spec**: Develop a "Payout Request" flow and a system to track "Account Balance" vs "Available for Payout."
+### **Three-Tier Monetization Model**
+1.  **Starter (Free/Pay-as-you-go):** 
+    *   2.5% per transaction.
+    *   Basic STK Push & Dashboard access.
+    *   Best for solo entrepreneurs.
+2.  **Growth (KES 2,500/mo):** 
+    *   1.5% per transaction.
+    *   Includes **eTIMS Automation** (Compliance).
+    *   Webhooks & Developer API.
+3.  **Enterprise (Custom):** 
+    *   1.0% per transaction.
+    *   **USDT Settlement** (Inflation Hedge).
+    *   **WISP/ISP MikroTik Integration**.
 
-### 4.2 Tax Engine (VAT)
-- **What**: Automatically handle Kenyan tax laws.
-- **Spec**: Toggle-able VAT (16%) calculation on invoices and checkout totals.
+### **Specific Product Pricing**
+*   **Payment Gateway:** Focus on the volume-based transaction fee (1% - 2.5%).
+*   **Subscription Billing:** Focus on the platform fee (KES 2,500) + eTIMS Compliance Fee (KES 5 per virtual invoice).
+
+---
+
+## 🏗 Phase 5: Monetizable Features (High Value)
+*Goal: Solve the "Last Mile" of business operations in Kenya.*
+
+### 5.1 KRA eTIMS Automation (Feature A)
+*   **What:** Automated real-time syncing of every transaction with the KRA eTIMS system.
+*   **Spec:** Generate a Virtual Sales Signature for every payment and embed it in the automated invoice.
+
+### 5.2 "Lipa Polepole" Installment Logic (Feature C)
+*   **What:** Flexible partial payments for high-ticket items.
+*   **Spec:** Allow merchants to define "Grace Periods" and "Partial Collection" schedules. FluxPay manages the reminders and access restriction.
+
+### 5.3 WISP/ISP Automated Billing (Feature D)
+*   **What:** Direct MikroTik router integration for local internet providers.
+*   **Spec:** Auto-disable internet access via the MikroTik API when a subscription payment is missed.
 
 ---
 
 ## 📝 Implementation Notes for Future Agents
+
 - **Beanie / MongoDB**: Always use `alias` for camelCase compatibility with legacy data.
 - **Middleware**: `CORSMiddleware` must always be the outermost layer. `IdempotencyMiddleware` is placed after security headers but before CORS.
 - **Logging**: Use `logger.info` for critical production paths (Render defaults hide DEBUG).

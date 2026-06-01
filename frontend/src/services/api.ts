@@ -21,9 +21,6 @@ const createApiInstance = (options: { skipRefresh?: boolean } = {}) => {
       const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        console.log("Adding Authorization header:", config.headers.Authorization);
-      } else {
-        console.warn("No token found in localStorage for request:", config.url);
       }
       return config;
     },
@@ -34,7 +31,17 @@ const createApiInstance = (options: { skipRefresh?: boolean } = {}) => {
     type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
     instance.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        // Automatically unwrap the 'data' field from StandardResponse
+        // if it exists, but handle nested 'data' for paginated results.
+        if (response.data && response.data.success !== undefined) {
+          return {
+            ...response,
+            data: response.data.data
+          };
+        }
+        return response;
+      },
       async (error) => {
         const originalRequest = error.config as RetriableConfig;
         const status = error.response?.status;
@@ -58,7 +65,7 @@ const createApiInstance = (options: { skipRefresh?: boolean } = {}) => {
             {},
             { withCredentials: true }
           );
-          const newAccessToken = refreshResponse.data?.token;
+          const newAccessToken = refreshResponse.data?.data?.token || refreshResponse.data?.token;
           if (newAccessToken) {
             localStorage.setItem('token', newAccessToken);
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
@@ -128,7 +135,7 @@ export const createServicePlan = async (planData: {
 export const getServicePlans = async (page = 1, limit = 20) => {
   try {
     const response = await api.get('/plans', { params: { page, limit } });
-    return response.data.data || response.data;
+    return response.data;
   } catch (error) {
     throw error;
   }

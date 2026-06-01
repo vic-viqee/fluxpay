@@ -25,7 +25,7 @@ interface SubscriptionCreateResponse {
   subscription?: ISubscription;
 }
 
-type PlanFrequency = 'daily' | 'weekly' | 'monthly' | 'annually';
+type PlanFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually';
 
 interface ServicePlan {
   _id: string;
@@ -175,7 +175,7 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
             phoneNumber: clientPhoneNumber.trim(),
             email: clientEmail.trim() || undefined,
           });
-          clientId = clientResponse.client._id;
+          clientId = clientResponse.id || clientResponse._id;
       } catch (clientErr: any) {
         if (clientErr.response?.status === 409) {
           const allClientsResponse = await getClients();

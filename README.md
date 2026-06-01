@@ -191,6 +191,19 @@ Features:
 - API Keys for integration
 - Webhooks for real-time notifications
 
+## Known Limitations (Render Free Tier)
+
+The live site runs on Render's free tier. This imposes several constraints:
+
+- **Cold starts**: Services spin down after 15 minutes of inactivity. The first request after idle takes 30-60 seconds to respond.
+- **M-Pesa callback timing**: If an M-Pesa callback arrives while the backend is sleeping, it will fail (502/503). Safaricom retries callbacks, but this can delay payment confirmation.
+- **No persistent cache**: M-Pesa auth tokens are cached in-memory and lost on cold start. A fresh token is fetched on the next request.
+- **Ephemeral filesystem**: Any uploaded files are lost on service restart. Not suitable for persistent file storage.
+- **Shared resources**: CPU and memory are limited. Under concurrent load, response times may degrade.
+- **No dedicated Redis**: In-memory caching only (aiocache). An upgrade to a paid plan enables Redis-backed caching for better performance.
+
+**Workaround for M-Pesa callbacks**: A keep-alive service (e.g., cronjob.org or UptimeRobot) can ping the backend every 10 minutes to prevent cold starts during business hours.
+
 ## Security Notes
 
 - Signup enforces strong passwords (minimum 8 chars with uppercase, lowercase, number, and symbol)
