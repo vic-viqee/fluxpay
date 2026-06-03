@@ -4,9 +4,12 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import './index.css';
 
 import { AuthProvider } from './context/AuthContext';
+import { PortalAuthProvider } from './context/PortalAuthContext';
 import PrivateRoute from './components/PrivateRoute';
+import PortalPrivateRoute from './components/PortalPrivateRoute';
 import MainLayout from './layouts/MainLayout';
 import GatewayLayout from './layouts/GatewayLayout';
+import PortalLayout from './layouts/PortalLayout';
 import DocsLayout from './layouts/DocsLayout';
 
 const Index = lazy(() => import('./pages/Index'));
@@ -58,6 +61,15 @@ const DocsIntegration = lazy(() => import('./pages/docs/Integration'));
 
 const PublicPayment = lazy(() => import('./pages/public/PublicPayment'));
 const PublicPaymentButton = lazy(() => import('./pages/public/PublicPaymentButton'));
+
+const PortalLogin = lazy(() => import('./pages/portal/PortalLogin'));
+const PortalRegister = lazy(() => import('./pages/portal/PortalRegister'));
+const PortalDashboard = lazy(() => import('./pages/portal/PortalDashboard'));
+const PortalSubscriptions = lazy(() => import('./pages/portal/PortalSubscriptions'));
+const PortalSubscriptionDetail = lazy(() => import('./pages/portal/PortalSubscriptionDetail'));
+const PortalTransactions = lazy(() => import('./pages/portal/PortalTransactions'));
+const PortalInvoices = lazy(() => import('./pages/portal/PortalInvoices'));
+const PortalProfile = lazy(() => import('./pages/portal/PortalProfile'));
 
 const DocsRedirect = () => {
   const navigate = useNavigate();
@@ -147,6 +159,22 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
+          <PortalAuthProvider>
+            <Routes>
+              <Route path="/portal/login" element={<PortalLogin />} />
+              <Route path="/portal/register" element={<PortalRegister />} />
+              <Route element={<PortalPrivateRoute />}>
+                <Route element={<PortalLayout />}>
+                  <Route path="/portal/dashboard" element={<PortalDashboard />} />
+                  <Route path="/portal/subscriptions" element={<PortalSubscriptions />} />
+                  <Route path="/portal/subscriptions/:id" element={<PortalSubscriptionDetail />} />
+                  <Route path="/portal/transactions" element={<PortalTransactions />} />
+                  <Route path="/portal/invoices" element={<PortalInvoices />} />
+                  <Route path="/portal/profile" element={<PortalProfile />} />
+                </Route>
+              </Route>
+            </Routes>
+          </PortalAuthProvider>
         </Suspense>
       </BrowserRouter>
     </AuthProvider>

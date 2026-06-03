@@ -14,6 +14,7 @@ from app.models.reversal import Reversal
 from app.models.public_checkout_button import PublicCheckoutButton
 from app.models.public_checkout_transaction import PublicCheckoutTransaction
 from app.models.c2b_transaction import C2BTransaction
+from app.models.portal_user import PortalUser
 
 __all__ = [
     "User",
@@ -32,4 +33,5 @@ __all__ = [
     "PublicCheckoutButton",
     "PublicCheckoutTransaction",
     "C2BTransaction",
+    "PortalUser",
 ]

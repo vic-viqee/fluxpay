@@ -13,7 +13,7 @@ from app.routers import (
     auth, gateway_auth, payments, subscriptions, clients, plans,
     customers, transactions, users, settings as settings_router, analytics, apikeys,
     thirdparty, invoices, mpesa, disbursements, admin, gateway,
-    public_checkout, docs
+    public_checkout, docs, customer_portal
 )
 
 @asynccontextmanager
@@ -96,3 +96,4 @@ app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(gateway.router, prefix="/api/gateway", tags=["Gateway"])
 app.include_router(public_checkout.router, prefix="/api/pay", tags=["Public Checkout"])
 app.include_router(docs.router, prefix="/api/docs", tags=["Docs"])
+app.include_router(customer_portal.router, prefix="/api/portal", tags=["Customer Portal"])

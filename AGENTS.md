@@ -13,6 +13,7 @@
 - Beanie `Field(alias="...")` means raw dict queries must use MongoDB field names (e.g. `ownerId`), not Python attribute names (`owner_id`). Use Beanie expression syntax (e.g. `Model.owner_id == x`) for automatic alias conversion.
 - Notification system uses a channel abstraction: `EmailChannel` (real), `SmsChannel`/`WhatsappChannel` (stubs for future). Templates live in `backend/app/notifications/templates/`.
 - Grace Period: After 3 failed payments, subscription → `SUSPENDED` with 7-day grace. Auto-cancels after grace expires. Dunning reminders sent on days 1, 3, 5.
+- Customer Self-Service Portal: Separate auth from merchant auth. Uses `PortalUser` model (email + password) with JWT using `sub: "portal_{id}"`. API at `/api/portal/*`, frontend at `/portal/*`. Data linked by matching customer email across `Client`, `GatewayCustomer`, `Subscription`, `GatewayTransaction`, and `Invoice` models.
 
 ## Build & Test
 - Frontend: `tsc && vite build`

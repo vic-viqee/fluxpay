@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from app.config import get_settings, Settings
 from app.models.user import User
+from app.models.portal_user import PortalUser
 from app.utils.logger import logger
 
 
@@ -83,6 +84,45 @@ async def get_optional_user(
 
     user = await User.get(user_id)
     return user
+
+
+async def get_current_portal_user(
+    authorization: Optional[str] = Header(default=None),
+) -> PortalUser:
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ", 1)[1]
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No token, authorization denied",
+        )
+
+    settings = get_settings()
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+        subject: Optional[str] = payload.get("sub")
+        if not subject or not subject.startswith("portal_"):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token",
+            )
+        portal_user_id = subject.replace("portal_", "", 1)
+    except JWTError as e:
+        logger.warning(f"Portal JWT decoding failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token is invalid or expired",
+        )
+
+    portal_user = await PortalUser.get(portal_user_id)
+    if not portal_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+    return portal_user
 
 
 async def get_client_ip(request: Request) -> str:
