@@ -93,74 +93,71 @@ if (persistedTheme === 'light') {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AuthProvider>
-      <BrowserRouter>
-        <Suspense fallback={<Loading />}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/documentation" element={<DocsRedirect />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/subscribe" element={<SubscriptionCheckout />} />
-            <Route path="/auth/google/callback" element={<GoogleCallback />} />
-            <Route path="/google-register-complete" element={<GoogleRegistrationCompletion />} />
-            <Route path="/pay/:code" element={<PublicPayment />} />
-            <Route path="/paybtn/:buttonId" element={<PublicPaymentButton />} />
-            
-            <Route element={<PrivateRoute />}>
-              <Route element={<MainLayout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/payments" element={<Payments />} />
-                <Route path="/customers" element={<Customers />} />
-                <Route path="/subscriptions" element={<Subscriptions />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/plans" element={<Plans />} />
-              </Route>
-            </Route>
-
-            <Route path="/admin" element={<Admin />} />
-
-            <Route path="/gateway/login" element={<GatewayLogin />} />
-            <Route path="/gateway/signup" element={<GatewaySignup />} />
-
-            <Route element={<GatewayLayout />}>
-              <Route path="/gateway" element={<GatewayDashboard />} />
-              <Route path="/gateway/till" element={<GatewayDynamicTill />} />
-              <Route path="/gateway/c2b" element={<GatewayC2B />} />
-              <Route path="/gateway/transactions" element={<GatewayTransactions />} />
-              <Route path="/gateway/payment-links" element={<GatewayPaymentLinks />} />
-              <Route path="/gateway/payment-buttons" element={<GatewayPaymentButtons />} />
-              <Route path="/gateway/customers" element={<GatewayCustomers />} />
-              <Route path="/gateway/receipts" element={<GatewayReceipts />} />
-              <Route path="/gateway/api-keys" element={<GatewayApiKeys />} />
-              <Route path="/gateway/webhooks" element={<GatewayWebhooks />} />
-            </Route>
-
-            <Route element={<DocsLayout />}>
-              <Route path="/docs" element={<DocsIndex />} />
-              <Route path="/docs/getting-started" element={<DocsGettingStarted />} />
-              <Route path="/docs/quick-start" element={<DocsQuickStart />} />
-              <Route path="/docs/api" element={<DocsApiReference />} />
-              <Route path="/docs/dynamic-till" element={<DocsDynamicTill />} />
-              <Route path="/docs/payment-links" element={<DocsPaymentLinks />} />
-              <Route path="/docs/payment-buttons" element={<DocsPaymentButtons />} />
-              <Route path="/docs/transactions" element={<DocsTransactions />} />
-              <Route path="/docs/customers" element={<DocsCustomers />} />
-              <Route path="/docs/receipts" element={<DocsReceipts />} />
-              <Route path="/docs/api-keys" element={<DocsApiKeys />} />
-              <Route path="/docs/webhooks" element={<DocsWebhooks />} />
-              <Route path="/docs/integration" element={<DocsIntegration />} />
-            </Route>
-
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-          <PortalAuthProvider>
+      <PortalAuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<Loading />}>
             <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/documentation" element={<DocsRedirect />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/subscribe" element={<SubscriptionCheckout />} />
+              <Route path="/auth/google/callback" element={<GoogleCallback />} />
+              <Route path="/google-register-complete" element={<GoogleRegistrationCompletion />} />
+              <Route path="/pay/:code" element={<PublicPayment />} />
+              <Route path="/paybtn/:buttonId" element={<PublicPaymentButton />} />
+              
+              <Route element={<PrivateRoute />}>
+                <Route element={<MainLayout />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/payments" element={<Payments />} />
+                  <Route path="/customers" element={<Customers />} />
+                  <Route path="/subscriptions" element={<Subscriptions />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/plans" element={<Plans />} />
+                </Route>
+              </Route>
+
+              <Route path="/admin" element={<Admin />} />
+
+              <Route path="/gateway/login" element={<GatewayLogin />} />
+              <Route path="/gateway/signup" element={<GatewaySignup />} />
+
+              <Route element={<GatewayLayout />}>
+                <Route path="/gateway" element={<GatewayDashboard />} />
+                <Route path="/gateway/till" element={<GatewayDynamicTill />} />
+                <Route path="/gateway/c2b" element={<GatewayC2B />} />
+                <Route path="/gateway/transactions" element={<GatewayTransactions />} />
+                <Route path="/gateway/payment-links" element={<GatewayPaymentLinks />} />
+                <Route path="/gateway/payment-buttons" element={<GatewayPaymentButtons />} />
+                <Route path="/gateway/customers" element={<GatewayCustomers />} />
+                <Route path="/gateway/receipts" element={<GatewayReceipts />} />
+                <Route path="/gateway/api-keys" element={<GatewayApiKeys />} />
+                <Route path="/gateway/webhooks" element={<GatewayWebhooks />} />
+              </Route>
+
+              <Route element={<DocsLayout />}>
+                <Route path="/docs" element={<DocsIndex />} />
+                <Route path="/docs/getting-started" element={<DocsGettingStarted />} />
+                <Route path="/docs/quick-start" element={<DocsQuickStart />} />
+                <Route path="/docs/api" element={<DocsApiReference />} />
+                <Route path="/docs/dynamic-till" element={<DocsDynamicTill />} />
+                <Route path="/docs/payment-links" element={<DocsPaymentLinks />} />
+                <Route path="/docs/payment-buttons" element={<DocsPaymentButtons />} />
+                <Route path="/docs/transactions" element={<DocsTransactions />} />
+                <Route path="/docs/customers" element={<DocsCustomers />} />
+                <Route path="/docs/receipts" element={<DocsReceipts />} />
+                <Route path="/docs/api-keys" element={<DocsApiKeys />} />
+                <Route path="/docs/webhooks" element={<DocsWebhooks />} />
+                <Route path="/docs/integration" element={<DocsIntegration />} />
+              </Route>
+
               <Route path="/portal/login" element={<PortalLogin />} />
               <Route path="/portal/register" element={<PortalRegister />} />
               <Route element={<PortalPrivateRoute />}>
@@ -173,10 +170,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   <Route path="/portal/profile" element={<PortalProfile />} />
                 </Route>
               </Route>
+
+              <Route path="*" element={<Navigate to="/" />} />
             </Routes>
-          </PortalAuthProvider>
-        </Suspense>
-      </BrowserRouter>
+          </Suspense>
+        </BrowserRouter>
+      </PortalAuthProvider>
     </AuthProvider>
   </React.StrictMode>
 );
