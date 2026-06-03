@@ -6,7 +6,7 @@ from app.services.mpesa import (
     register_c2b_urls,
     reverse_transaction,
 )
-from app.services.billing import process_due_payments, process_failed_transactions
+from app.services.billing import process_due_payments, process_failed_transactions, process_grace_periods
 from app.services.email import (
     send_reset_password_email,
     send_payment_failure_email,
@@ -38,6 +38,7 @@ __all__ = [
     "reverse_transaction",
     "process_due_payments",
     "process_failed_transactions",
+    "process_grace_periods",
     "send_reset_password_email",
     "send_payment_failure_email",
     "send_subscription_suspended_email",

@@ -1,0 +1,13 @@
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e1e1e1; border-radius: 10px;">
+  <h2 style="color: #28a745;">Payment Received</h2>
+  <p>Hello,</p>
+  <p>A payment of <strong>KES {{ amount }}</strong> has been successfully received.</p>
+  <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+    <p style="margin: 5px 0;"><strong>Customer:</strong> {{ client_name }}</p>
+    <p style="margin: 5px 0;"><strong>Amount:</strong> KES {{ amount }}</p>
+    <p style="margin: 5px 0;"><strong>M-Pesa Receipt:</strong> {{ mpesa_receipt_no }}</p>
+  </div>
+  <p>Thank you for using FluxPay!</p>
+  <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+  <p style="font-size: 12px; color: #777;">&copy; 2026 FluxPay. All rights reserved.</p>
+</div>

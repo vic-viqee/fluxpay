@@ -1,0 +1,10 @@
+Hi {{ customer_name }},
+
+FINAL NOTICE: Your {{ plan_name }} subscription will be CANCELLED in 2 days.
+
+We have been unable to collect KES {{ amount }} despite multiple attempts.
+
+Please fund your M-Pesa immediately to avoid losing access to the service.
+
+Thanks,
+FluxPay

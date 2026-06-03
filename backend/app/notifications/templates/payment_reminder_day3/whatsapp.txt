@@ -1,0 +1,10 @@
+Hi {{ customer_name }},
+
+This is your LAST reminder about the unpaid KES {{ amount }} for {{ plan_name }}.
+
+Your subscription will be suspended in {{ grace_period_days }} days. After suspension, you'll lose access.
+
+Please fund your M-Pesa now so the next billing attempt succeeds.
+
+Thanks,
+FluxPay

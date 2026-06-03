@@ -1,0 +1,1 @@
+Hi {{ customer_name }}, we tried to charge KES {{ amount }} for {{ plan_name }} but it failed. Your sub will be suspended in {{ grace_period_days }} days. Please ensure M-Pesa is funded. - FluxPay

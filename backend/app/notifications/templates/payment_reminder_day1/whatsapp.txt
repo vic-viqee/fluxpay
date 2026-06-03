@@ -1,0 +1,10 @@
+Hi {{ customer_name }},
+
+We tried to bill you KES {{ amount }} for {{ plan_name }} but the payment didn't go through.
+
+Your subscription will be suspended in {{ grace_period_days }} days unless we receive a successful payment.
+
+Please make sure your M-Pesa is funded so the next attempt succeeds.
+
+Thanks,
+FluxPay

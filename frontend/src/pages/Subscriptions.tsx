@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { SubscriptionsTable } from '../components/SubscriptionsTable';
 import { AddSubscriptionModal } from '../components/AddSubscriptionModal';
+import { ReactivateSubscriptionModal } from '../components/ReactivateSubscriptionModal';
 
 interface ISubscription {
   _id: string;
@@ -13,10 +14,12 @@ interface ISubscription {
     frequency: 'daily' | 'weekly' | 'monthly' | 'annually';
   } | null;
   ownerId: string;
-  status: 'PENDING_ACTIVATION' | 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
+  status: 'PENDING_ACTIVATION' | 'ACTIVE' | 'PAUSED' | 'CANCELLED' | 'EXPIRED' | 'FAILED' | 'SUSPENDED';
   startDate: string;
   nextBillingDate: string;
   notes?: string;
+  suspendedAt?: string;
+  gracePeriodEndsAt?: string;
 }
 
 const Subscriptions: React.FC = () => {
@@ -24,6 +27,7 @@ const Subscriptions: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddSubModalOpen, setIsAddSubModalOpen] = useState(false);
+  const [subscriptionToReactivate, setSubscriptionToReactivate] = useState<ISubscription | null>(null);
 
   const fetchSubscriptions = async () => {
     try {
@@ -49,6 +53,16 @@ const Subscriptions: React.FC = () => {
     fetchSubscriptions();
   };
 
+  const handleReactivate = async (subscriptionId: string) => {
+    try {
+      await api.put(`/subscriptions/${subscriptionId}/reactivate`);
+      setSubscriptionToReactivate(null);
+      fetchSubscriptions();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to reactivate subscription.');
+    }
+  };
+
   if (loading) {
     return <div className="text-center">Loading subscriptions...</div>;
   }
@@ -71,11 +85,17 @@ const Subscriptions: React.FC = () => {
       <SubscriptionsTable
         subscriptions={subscriptions}
         onCreateSubscription={() => setIsAddSubModalOpen(true)}
+        onReactivate={(sub) => setSubscriptionToReactivate(sub)}
       />
       <AddSubscriptionModal
         isOpen={isAddSubModalOpen}
         onClose={() => setIsAddSubModalOpen(false)}
         onSuccess={handleSubscriptionAdded}
+      />
+      <ReactivateSubscriptionModal
+        subscription={subscriptionToReactivate}
+        onConfirm={handleReactivate}
+        onClose={() => setSubscriptionToReactivate(null)}
       />
     </div>
   );

@@ -10,7 +10,7 @@ class Subscription(BaseDocument):
     plan_id: PydanticObjectId = Field(alias="planId")
     owner_id: PydanticObjectId = Field(alias="ownerId")
     status: Literal[
-        "PENDING_ACTIVATION", "ACTIVE", "PAUSED", "CANCELLED", "EXPIRED", "FAILED"
+        "PENDING_ACTIVATION", "ACTIVE", "PAUSED", "CANCELLED", "EXPIRED", "FAILED", "SUSPENDED"
     ] = "PENDING_ACTIVATION"
     start_date: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), alias="startDate"
@@ -20,6 +20,15 @@ class Subscription(BaseDocument):
     payment_failure_count: int = Field(default=0, alias="paymentFailureCount")
     last_payment_attempt: Optional[datetime] = Field(
         default=None, alias="lastPaymentAttempt"
+    )
+    suspended_at: Optional[datetime] = Field(
+        default=None, alias="suspendedAt"
+    )
+    grace_period_ends_at: Optional[datetime] = Field(
+        default=None, alias="gracePeriodEndsAt"
+    )
+    dunning_reminders_sent: dict = Field(
+        default_factory=dict, alias="dunningRemindersSent"
     )
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -31,4 +40,6 @@ class Subscription(BaseDocument):
             "client_id",
             "status",
             "next_billing_date",
+            "suspended_at",
+            "grace_period_ends_at",
         ]

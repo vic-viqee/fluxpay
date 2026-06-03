@@ -173,6 +173,46 @@ async def get_subscription_transactions(
     )
 
 
+@router.put("/{subscription_id}/reactivate", response_model=StandardResponse)
+async def reactivate_subscription(
+    subscription_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    subscription = await Subscription.get(subscription_id)
+    if not subscription or str(subscription.owner_id) != str(current_user.id):
+        raise HTTPException(status_code=404, detail="Subscription not found")
+
+    if subscription.status != "SUSPENDED":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot reactivate subscription with status '{subscription.status}'. Only SUSPENDED subscriptions can be reactivated.",
+        )
+
+    plan = await ServicePlan.get(subscription.plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="Associated plan not found")
+
+    from app.utils.billing import calculate_next_billing_date
+
+    subscription.status = "ACTIVE"
+    subscription.payment_failure_count = 0
+    subscription.suspended_at = None
+    subscription.grace_period_ends_at = None
+    subscription.dunning_reminders_sent = {}
+    subscription.next_billing_date = calculate_next_billing_date(
+        datetime.now(timezone.utc), plan.frequency, plan.billing_day
+    )
+    subscription.last_payment_attempt = datetime.now(timezone.utc)
+    await subscription.save()
+
+    logger.info(f"Subscription {subscription.id} reactivated by owner {current_user.id}")
+
+    return StandardResponse(
+        message="Subscription reactivated successfully",
+        data=subscription.to_dict(),
+    )
+
+
 @router.delete("/{subscription_id}", response_model=StandardResponse)
 async def delete_subscription(
     subscription_id: str,

@@ -1,6 +1,6 @@
 import React from 'react';
 import moment from 'moment';
-import { CreditCard, Plus, Calendar, User, ArrowRight } from 'lucide-react';
+import { CreditCard, Plus, Calendar, User, ArrowRight, RefreshCw } from 'lucide-react';
 
 interface ISubscription {
   _id: string;
@@ -12,23 +12,37 @@ interface ISubscription {
     frequency: 'daily' | 'weekly' | 'monthly' | 'annually';
   } | null;
   ownerId: string;
-  status: 'PENDING_ACTIVATION' | 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
+  status: 'PENDING_ACTIVATION' | 'ACTIVE' | 'PAUSED' | 'CANCELLED' | 'EXPIRED' | 'FAILED' | 'SUSPENDED';
   startDate: string;
   nextBillingDate: string;
   notes?: string;
   client?: { name: string; phoneNumber: string; email?: string };
+  suspendedAt?: string;
+  gracePeriodEndsAt?: string;
 }
 
 interface SubscriptionsTableProps {
   subscriptions: ISubscription[];
   isLoading?: boolean;
   onCreateSubscription?: () => void;
+  onReactivate?: (subscription: ISubscription) => void;
 }
 
-export const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({ 
-  subscriptions, 
-  isLoading, 
-  onCreateSubscription 
+const statusConfig: Record<string, { bg: string; dot: string; label: string }> = {
+  ACTIVE: { bg: 'bg-secondary/10 text-secondary border-secondary/20', dot: 'bg-secondary', label: 'Active' },
+  PENDING_ACTIVATION: { bg: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20', dot: 'bg-yellow-500', label: 'Pending Activation' },
+  SUSPENDED: { bg: 'bg-amber-500/10 text-amber-500 border-amber-500/20', dot: 'bg-amber-500', label: 'Suspended' },
+  FAILED: { bg: 'bg-red-500/10 text-red-500 border-red-500/20', dot: 'bg-red-500', label: 'Failed' },
+  CANCELLED: { bg: 'bg-gray-500/10 text-gray-400 border-gray-500/20', dot: 'bg-gray-400', label: 'Cancelled' },
+  EXPIRED: { bg: 'bg-gray-500/10 text-gray-400 border-gray-500/20', dot: 'bg-gray-400', label: 'Expired' },
+  PAUSED: { bg: 'bg-blue-500/10 text-blue-400 border-blue-500/20', dot: 'bg-blue-400', label: 'Paused' },
+};
+
+export const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
+  subscriptions,
+  isLoading,
+  onCreateSubscription,
+  onReactivate,
 }) => {
   if (isLoading) {
     return (
@@ -68,9 +82,9 @@ export const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
                 const subscriptionId = typeof sub._id === 'string' ? sub._id : 'UNKNOWN';
                 const planName = sub.planId?.name || 'Deleted plan';
                 const planAmount = typeof sub.planId?.amountKes === 'number' ? `KES ${sub.planId.amountKes.toLocaleString()}` : 'N/A';
-                const statusLabel = typeof sub.status === 'string' ? sub.status.replace('_', ' ') : 'UNKNOWN';
+                const config = statusConfig[sub.status] || { bg: 'bg-gray-500/10 text-gray-400 border-gray-500/20', dot: 'bg-gray-400', label: sub.status.replace('_', ' ') };
                 const nextBillingLabel = sub.nextBillingDate ? moment(sub.nextBillingDate).format('MMM D, YYYY') : 'N/A';
-                
+
                 return (
                   <tr key={subscriptionId} className="hover:bg-primary-bg/30 transition-colors group">
                     <td className="px-6 py-4">
@@ -90,19 +104,10 @@ export const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium border ${
-                          sub.status === 'ACTIVE'
-                            ? 'bg-secondary/10 text-secondary border-secondary/20'
-                            : sub.status === 'PENDING_ACTIVATION'
-                              ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
-                              : 'bg-red-500/10 text-red-500 border-red-500/20'
-                        }`}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium border ${config.bg}`}
                       >
-                        <div className={`w-1.5 h-1.5 rounded-full ${
-                          sub.status === 'ACTIVE' ? 'bg-secondary' : 
-                          sub.status === 'PENDING_ACTIVATION' ? 'bg-yellow-500' : 'bg-red-500'
-                        }`} />
-                        {statusLabel}
+                        <div className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
+                        {config.label}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -112,9 +117,20 @@ export const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="text-gray-400 hover:text-white transition-colors">
-                        <ArrowRight size={18} />
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        {sub.status === 'SUSPENDED' && onReactivate && (
+                          <button
+                            onClick={() => onReactivate(sub)}
+                            className="inline-flex items-center gap-1 text-xs font-medium text-amber-400 hover:text-amber-300 transition-colors"
+                          >
+                            <RefreshCw size={14} />
+                            Reactivate
+                          </button>
+                        )}
+                        <button className="text-gray-400 hover:text-white transition-colors">
+                          <ArrowRight size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

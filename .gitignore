@@ -58,24 +58,13 @@ connection_test.txt
 FEATURES.md
 # GEMINI.md removed from ignore
 
-# Dependency lock files (uncomment if you want to ignore them)
-# package-lock.json
-# yarn.lock
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
 
-# IDEs
-.idea/
-.vscode/
-*.swp
-*.bak
-*.swo
-
-
-# Dependency lock files (uncomment if you want to ignore them)
-# package-lock.json
-# yarn.lock
-
-# IDEs
-.idea/
+# OS
+.DS_Store
 .vscode/
 *.swp
 *.bak

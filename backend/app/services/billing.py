@@ -1,5 +1,4 @@
 from datetime import datetime, timezone, timedelta
-from bson import ObjectId
 from beanie import PydanticObjectId
 
 from app.models.subscription import Subscription
@@ -14,6 +13,9 @@ from app.services.email import (
 )
 from app.utils.billing import calculate_next_billing_date
 from app.utils.logger import logger
+from app.notifications.service import get_notification_service
+
+GRACE_PERIOD_DAYS = 7
 
 
 async def process_due_payments():
@@ -72,8 +74,13 @@ async def process_due_payments():
                 subscription.payment_failure_count = failure_count
 
                 if failure_count >= 3:
-                    subscription.status = "FAILED"
-                    logger.warning(f"Subscription {subscription.id} marked as FAILED")
+                    subscription.status = "SUSPENDED"
+                    now = datetime.now(timezone.utc)
+                    subscription.suspended_at = now
+                    subscription.grace_period_ends_at = now + timedelta(days=GRACE_PERIOD_DAYS)
+
+                    logger.warning(f"Subscription {subscription.id} suspended with grace period until {subscription.grace_period_ends_at}")
+
                     if owner:
                         await send_subscription_suspended_email(
                             owner_email=owner.email,
@@ -157,3 +164,79 @@ async def process_failed_transactions():
                 await transaction.save()
     except Exception as e:
         logger.error(f"Error processing failed transactions: {e}")
+
+
+async def process_grace_periods():
+    logger.info("Running process_grace_periods...")
+    now = datetime.now(timezone.utc)
+
+    try:
+        suspended_subs = await Subscription.find(
+            {"status": "SUSPENDED"}
+        ).to_list()
+
+        for sub in suspended_subs:
+            if not sub.suspended_at:
+                continue
+
+            days_in_grace = (now - sub.suspended_at).days
+            client = await Client.get(sub.client_id)
+            plan = await ServicePlan.get(sub.plan_id)
+            owner = await User.get(sub.owner_id)
+
+            if not client or not plan or not owner:
+                continue
+
+            if sub.grace_period_ends_at and now >= sub.grace_period_ends_at:
+                sub.status = "CANCELLED"
+                logger.info(f"Subscription {sub.id} cancelled after grace period")
+                await sub.save()
+                continue
+
+            if not sub.dunning_reminders_sent:
+                sub.dunning_reminders_sent = {}
+
+            context = {
+                "customer_name": client.name or "Valued Customer",
+                "plan_name": plan.name or "Subscription",
+                "amount": f"{plan.amount_kes:,.0f}",
+                "grace_period_days": str(GRACE_PERIOD_DAYS),
+            }
+
+            svc = get_notification_service()
+
+            if days_in_grace >= 1 and not sub.dunning_reminders_sent.get("day1"):
+                await svc.notify(
+                    "REMINDER_DAY1",
+                    owner.email,
+                    {"subject": "Payment Failed - Please Update Payment Method", **context},
+                )
+                if client.phone_number:
+                    await svc.notify("REMINDER_DAY1", client.phone_number, context)
+                sub.dunning_reminders_sent["day1"] = True
+                await sub.save()
+
+            if days_in_grace >= 3 and not sub.dunning_reminders_sent.get("day3"):
+                await svc.notify(
+                    "REMINDER_DAY3",
+                    owner.email,
+                    {"subject": "Last Chance - Update Payment Method", **context},
+                )
+                if client.phone_number:
+                    await svc.notify("REMINDER_DAY3", client.phone_number, context)
+                sub.dunning_reminders_sent["day3"] = True
+                await sub.save()
+
+            if days_in_grace >= 5 and not sub.dunning_reminders_sent.get("day5"):
+                await svc.notify(
+                    "REMINDER_DAY5",
+                    owner.email,
+                    {"subject": "Subscription Will Be Cancelled Soon", **context},
+                )
+                if client.phone_number:
+                    await svc.notify("REMINDER_DAY5", client.phone_number, context)
+                sub.dunning_reminders_sent["day5"] = True
+                await sub.save()
+
+    except Exception as e:
+        logger.error(f"Error processing grace periods: {e}")

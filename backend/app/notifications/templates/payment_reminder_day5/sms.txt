@@ -1,0 +1,1 @@
+Hi {{ customer_name }}, FINAL notice! Your {{ plan_name }} sub will be CANCELLED in 2 days due to unpaid KES {{ amount }}. Fund M-Pesa now or contact the business. - FluxPay

@@ -1,0 +1,1 @@
+Hi {{ customer_name }}, last reminder! Your KES {{ amount }} payment for {{ plan_name }} is still due. Your sub will be suspended in {{ grace_period_days }} days. Please fund M-Pesa now. - FluxPay
