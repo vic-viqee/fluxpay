@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  CreditCard,
-  FileText,
   Receipt,
   AlertCircle,
   CheckCircle,
   Clock,
-  XCircle,
   Loader2,
 } from 'lucide-react';
 import api from '../../services/api';

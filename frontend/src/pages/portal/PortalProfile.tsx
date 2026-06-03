@@ -3,7 +3,7 @@ import { Loader2, User, Mail, Phone } from 'lucide-react';
 import { usePortalAuth } from '../../context/PortalAuthContext';
 
 const PortalProfile = () => {
-  const { user, updateProfile, refreshProfile } = usePortalAuth();
+  const { user, updateProfile } = usePortalAuth();
   const [name, setName] = useState(user?.name || '');
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '');
   const [loading, setLoading] = useState(false);
