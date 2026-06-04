@@ -52,18 +52,16 @@ async def initiate_third_party_payment(
     formatted_phone = format_kenyan_phone(phone_number)
     account_ref = reference or f"TXN-{int(datetime.now(timezone.utc).timestamp())}"
 
-    stk_response = await initiate_stk_push(
-        formatted_phone,
-        float(amount),
-        owner.business_name or "FluxPay",
-        body.get("description") or owner.business_name or "FluxPay",
-    )
+    checkout_request_id = stk_response.get("CheckoutRequestID", str(uuid.uuid4()))
 
     transaction = Transaction(
         owner_id=owner.id,
-        daraja_request_id=stk_response.get("CheckoutRequestID", str(uuid.uuid4())),
+        daraja_request_id=checkout_request_id,
+        checkout_request_id=checkout_request_id,
         amount_kes=float(amount),
         status="PENDING",
+        phone_number=formatted_phone,
+        account_reference=account_ref,
         retry_count=0,
     )
     await transaction.create()
@@ -71,7 +69,7 @@ async def initiate_third_party_payment(
     return StandardResponse(
         message="STK push initiated",
         data={
-            "checkoutRequestId": transaction.daraja_request_id,
+            "checkoutRequestId": checkout_request_id,
             "amount": transaction.amount_kes,
             "phoneNumber": formatted_phone,
             "reference": account_ref,

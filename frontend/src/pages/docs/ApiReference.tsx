@@ -18,35 +18,129 @@ const ApiReference: React.FC = () => {
         {
           method: 'POST',
           endpoint: '/auth/login',
-          description: 'Authenticate user and get tokens',
+          description: 'Authenticate user and get JWT token',
           params: ['email', 'password'],
-          response: '{ token, user }'
+          response: '{ token, user }',
+          auth: 'none',
         },
         {
           method: 'POST',
           endpoint: '/auth/signup',
           description: 'Create new gateway account',
           params: ['email', 'password', 'businessName', 'businessPhoneNumber'],
-          response: '{ token, user }'
+          response: '{ token, user }',
+          auth: 'none',
         },
       ]
     },
     {
-      category: 'Payments',
+      category: 'Gateway Payments (JWT Auth)',
       items: [
         {
           method: 'POST',
           endpoint: '/payments/initiate',
-          description: 'Initiate a new payment',
-          params: ['phoneNumber', 'amount', 'accountReference'],
-          response: '{ checkoutRequestId, status }'
+          description: 'Initiate a new STK Push payment',
+          params: ['phoneNumber', 'amount', 'accountReference', 'transactionDesc'],
+          response: '{ checkoutRequestId, status }',
+          auth: 'Bearer',
         },
         {
           method: 'GET',
           endpoint: '/payments/:checkoutRequestId',
           description: 'Check payment status',
           params: ['checkoutRequestId'],
-          response: '{ status, amount, mpesaReceiptNo }'
+          response: '{ status, amount, mpesaReceiptNo }',
+          auth: 'Bearer',
+        },
+      ]
+    },
+    {
+      category: 'Third-Party API Payments (API Key Auth)',
+      items: [
+        {
+          method: 'POST',
+          endpoint: '/v1/payments',
+          description: 'Initiate payment via API key (for external clients)',
+          params: ['phoneNumber', 'amount', 'accountReference', 'transactionDesc'],
+          response: '{ transactionId, status }',
+          auth: 'API Key',
+        },
+        {
+          method: 'GET',
+          endpoint: '/v1/transactions',
+          description: 'List transactions via API key',
+          params: ['page', 'limit', 'status'],
+          response: '{ data, total }',
+          auth: 'API Key',
+        },
+        {
+          method: 'GET',
+          endpoint: '/v1/transactions/:id',
+          description: 'Get transaction details via API key',
+          params: ['id'],
+          response: '{ transaction object }',
+          auth: 'API Key',
+        },
+        {
+          method: 'GET',
+          endpoint: '/v1/webhooks',
+          description: 'List webhooks (API key auth)',
+          params: [],
+          response: '{ data }',
+          auth: 'API Key',
+        },
+      ]
+    },
+    {
+      category: 'Webhook Management (JWT Auth)',
+      items: [
+        {
+          method: 'GET',
+          endpoint: '/gateway/webhooks',
+          description: 'List all webhooks',
+          params: [],
+          response: '{ data }',
+          auth: 'Bearer',
+        },
+        {
+          method: 'POST',
+          endpoint: '/gateway/webhooks',
+          description: 'Create a new webhook',
+          params: ['url', 'name', 'events'],
+          response: '{ secret, id }',
+          auth: 'Bearer',
+        },
+        {
+          method: 'PATCH',
+          endpoint: '/gateway/webhooks/:id',
+          description: 'Update webhook URL, events, or active status',
+          params: ['url', 'events', 'isActive'],
+          response: '{ success }',
+          auth: 'Bearer',
+        },
+        {
+          method: 'DELETE',
+          endpoint: '/gateway/webhooks/:id',
+          description: 'Delete a webhook',
+          params: ['id'],
+          response: '{ success }',
+          auth: 'Bearer',
+        },
+        {
+          method: 'POST',
+          endpoint: '/gateway/webhooks/:id/test',
+          description: 'Send a test ping to verify webhook endpoint',
+          params: ['id'],
+          response: '{ status, statusCode }',
+          auth: 'Bearer',
+        },
+        {
+          method: 'POST',
+          endpoint: '/gateway/webhooks/:id/rotate-secret',
+          description: 'Rotate webhook signing secret',
+          params: ['id'],
+          response: '{ newSecret }',
+          auth: 'Bearer',
         },
       ]
     },
@@ -58,21 +152,24 @@ const ApiReference: React.FC = () => {
           endpoint: '/payment-links',
           description: 'Create a payment link',
           params: ['title', 'amount', 'expiresAt'],
-          response: '{ paymentLink, id }'
+          response: '{ paymentLink, id }',
+          auth: 'Bearer',
         },
         {
           method: 'GET',
           endpoint: '/payment-links',
           description: 'List all payment links',
           params: ['page', 'limit'],
-          response: '{ data, total }'
+          response: '{ data, total }',
+          auth: 'Bearer',
         },
         {
           method: 'DELETE',
           endpoint: '/payment-links/:id',
           description: 'Delete a payment link',
           params: ['id'],
-          response: '{ success }'
+          response: '{ success }',
+          auth: 'Bearer',
         },
       ]
     },
@@ -83,15 +180,17 @@ const ApiReference: React.FC = () => {
           method: 'GET',
           endpoint: '/transactions',
           description: 'List all transactions',
-          params: ['page', 'limit', 'status', 'startDate', 'endDate'],
-          response: '{ data, page, total }'
+          params: ['page', 'limit', 'status', 'startDate', 'endDate', 'search'],
+          response: '{ data, page, total }',
+          auth: 'Bearer',
         },
         {
           method: 'GET',
           endpoint: '/transactions/:id',
           description: 'Get transaction details',
           params: ['id'],
-          response: '{ transaction object }'
+          response: '{ transaction object }',
+          auth: 'Bearer',
         },
       ]
     },
@@ -103,21 +202,24 @@ const ApiReference: React.FC = () => {
           endpoint: '/customers',
           description: 'List all customers',
           params: ['page', 'limit', 'search'],
-          response: '{ data, total }'
+          response: '{ data, total }',
+          auth: 'Bearer',
         },
         {
           method: 'POST',
           endpoint: '/customers',
           description: 'Create a customer',
           params: ['name', 'phoneNumber', 'email'],
-          response: '{ customer object }'
+          response: '{ customer object }',
+          auth: 'Bearer',
         },
         {
           method: 'PUT',
           endpoint: '/customers/:id',
           description: 'Update a customer',
           params: ['id', 'name', 'email', 'notes'],
-          response: '{ customer object }'
+          response: '{ customer object }',
+          auth: 'Bearer',
         },
       ]
     },
@@ -134,6 +236,7 @@ const ApiReference: React.FC = () => {
       case 'GET': return 'bg-green-100 text-green-700';
       case 'POST': return 'bg-blue-100 text-blue-700';
       case 'PUT': return 'bg-yellow-100 text-yellow-700';
+      case 'PATCH': return 'bg-purple-100 text-purple-700';
       case 'DELETE': return 'bg-red-100 text-red-700';
       default: return 'bg-gray-100 text-gray-700';
     }
@@ -167,13 +270,26 @@ const ApiReference: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900">Authentication</h2>
           <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">Required</span>
         </div>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
-          <p className="text-sm text-yellow-700">
-            All endpoints (except auth) require the following headers:
-          </p>
-          <div className="mt-2 font-mono text-sm bg-white rounded p-2">
-            Authorization: Bearer &#123;token&#125;<br />
-            X-API-Key: your_api_key
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <h3 className="font-semibold text-blue-800 mb-2">JWT Auth (Dashboard & Merchant API)</h3>
+            <p className="text-sm text-blue-700 mb-2">
+              Used by the dashboard and all gateway endpoints. Obtain a token via <code className="bg-white px-1 rounded">/auth/login</code>.
+            </p>
+            <div className="font-mono text-sm bg-white rounded p-2 text-gray-700">
+              Authorization: Bearer &#123;jwt_token&#125;
+            </div>
+          </div>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+            <h3 className="font-semibold text-yellow-800 mb-2">API Key Auth (Third-Party API)</h3>
+            <p className="text-sm text-yellow-700 mb-2">
+              Used by external clients integrating via the <code className="bg-white px-1 rounded">/api/v1/*</code> endpoints.
+              Generate keys from the dashboard.
+            </p>
+            <div className="font-mono text-sm bg-white rounded p-2 text-gray-700">
+              X-API-Key: your_api_key<br />
+              X-API-Secret: your_api_secret
+            </div>
           </div>
         </div>
       </section>
@@ -201,6 +317,13 @@ const ApiReference: React.FC = () => {
                         <Copy size={16} className="text-gray-400" />
                       )}
                     </button>
+                    <span className={`ml-auto px-2 py-0.5 rounded text-xs font-medium ${
+                      endpoint.auth === 'none' ? 'bg-gray-100 text-gray-500'
+                      : endpoint.auth === 'Bearer' ? 'bg-blue-100 text-blue-700'
+                      : 'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {endpoint.auth === 'none' ? 'No Auth' : endpoint.auth}
+                    </span>
                   </div>
                   <p className="text-gray-600">{endpoint.description}</p>
                 </div>

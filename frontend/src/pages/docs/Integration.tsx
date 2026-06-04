@@ -79,31 +79,31 @@ const Integration: React.FC = () => {
           <li className="flex gap-4">
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">1</div>
             <div className="p-4 bg-white border border-gray-200 rounded-xl flex-1">
-              <p className="text-gray-700">Create a FluxPay account and get API keys</p>
+              <p className="text-gray-700">Create a FluxPay account and generate API keys from the dashboard</p>
             </div>
           </li>
           <li className="flex gap-4">
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">2</div>
             <div className="p-4 bg-white border border-gray-200 rounded-xl flex-1">
-              <p className="text-gray-700">Set up your webhook URL to receive payment notifications</p>
+              <p className="text-gray-700">Configure webhooks in the dashboard — manage, test, and enable them from the UI</p>
             </div>
           </li>
           <li className="flex gap-4">
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">3</div>
             <div className="p-4 bg-white border border-gray-200 rounded-xl flex-1">
-              <p className="text-gray-700">Add a payment form to your checkout page</p>
+              <p className="text-gray-700">Add a payment form to your checkout page using our REST API</p>
             </div>
           </li>
           <li className="flex gap-4">
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">4</div>
             <div className="p-4 bg-white border border-gray-200 rounded-xl flex-1">
-              <p className="text-gray-700">Redirect customer to FluxPay for payment, then back to your site</p>
+              <p className="text-gray-700">Initiate payments via STK Push — FluxPay sends the M-Pesa prompt to your customer</p>
             </div>
           </li>
           <li className="flex gap-4">
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">5</div>
             <div className="p-4 bg-white border border-gray-200 rounded-xl flex-1">
-              <p className="text-gray-700">Receive webhook notification and fulfill the order</p>
+              <p className="text-gray-700">Receive webhook notification with signature verification and fulfill the order</p>
             </div>
           </li>
         </ol>

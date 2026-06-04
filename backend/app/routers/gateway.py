@@ -11,11 +11,13 @@ from app.models.gateway_customer import GatewayCustomer
 from app.models.payment_link import PaymentLink
 from app.models.c2b_transaction import C2BTransaction
 from app.models.reversal import Reversal
+from app.models.webhook import Webhook
 from app.services.mpesa import (
     initiate_stk_push,
     register_c2b_urls,
     reverse_transaction,
 )
+from app.services.webhook import forward_webhook
 from app.utils.logger import logger
 from app.utils.phone import format_kenyan_phone
 from app.utils.idempotency import check_idempotency, save_idempotency
@@ -402,3 +404,186 @@ async def delete_payment_link(
 
     await link.delete()
     return {"id": link_id, "message": "Payment link deleted successfully"}
+
+
+@router.get("/webhooks", response_model=dict)
+async def list_webhooks(
+    current_user: User = Depends(get_current_user),
+):
+    webhooks = (
+        await Webhook.find(Webhook.owner_id == current_user.id)
+        .sort([("created_at", -1)])
+        .to_list()
+    )
+    return {
+        "data": [
+            {
+                "id": str(w.id),
+                "_id": str(w.id),
+                "name": w.name,
+                "url": w.url,
+                "events": w.events,
+                "isActive": w.is_active,
+                "secret": w.secret,
+                "lastTriggeredAt": w.last_triggered_at.isoformat() if w.last_triggered_at else None,
+                "failureCount": w.failure_count,
+                "createdAt": w.created_at.isoformat(),
+            }
+            for w in webhooks
+        ]
+    }
+
+
+@router.post("/webhooks", response_model=dict)
+async def create_webhook(
+    body: dict,
+    current_user: User = Depends(get_current_user),
+):
+    url = body.get("url")
+    if not url:
+        raise HTTPException(status_code=400, detail="Webhook URL is required")
+
+    import uuid
+    secret = uuid.uuid4().hex + uuid.uuid4().hex
+    webhook = Webhook(
+        owner_id=current_user.id,
+        name=body.get("name"),
+        url=url,
+        secret=secret,
+        events=body.get("events") or ["payment.success", "payment.failed"],
+    )
+    await webhook.create()
+
+    return {
+        "message": "Webhook created successfully",
+        "data": {
+            "id": str(webhook.id),
+            "_id": str(webhook.id),
+            "name": webhook.name,
+            "url": webhook.url,
+            "events": webhook.events,
+            "isActive": webhook.is_active,
+            "secret": webhook.secret,
+        }
+    }
+
+
+@router.patch("/webhooks/{webhook_id}", response_model=dict)
+async def update_webhook(
+    webhook_id: str,
+    body: dict,
+    current_user: User = Depends(get_current_user),
+):
+    webhook = await Webhook.get(webhook_id)
+    if not webhook or str(webhook.owner_id) != str(current_user.id):
+        raise HTTPException(status_code=404, detail="Webhook not found")
+
+    if "url" in body:
+        webhook.url = body["url"]
+    if "name" in body:
+        webhook.name = body["name"]
+    if "events" in body:
+        webhook.events = body["events"]
+    if "isActive" in body:
+        webhook.is_active = body["isActive"]
+
+    webhook.updated_at = datetime.now(timezone.utc)
+    await webhook.save()
+
+    return {
+        "message": "Webhook updated successfully",
+        "data": {
+            "id": str(webhook.id),
+            "url": webhook.url,
+            "events": webhook.events,
+            "isActive": webhook.is_active,
+        }
+    }
+
+
+@router.delete("/webhooks/{webhook_id}", response_model=dict)
+async def delete_webhook(
+    webhook_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    webhook = await Webhook.get(webhook_id)
+    if not webhook or str(webhook.owner_id) != str(current_user.id):
+        raise HTTPException(status_code=404, detail="Webhook not found")
+
+    await webhook.delete()
+    return {"message": "Webhook deleted successfully", "data": {"id": webhook_id}}
+
+
+@router.post("/webhooks/{webhook_id}/test", response_model=dict)
+async def test_webhook(
+    webhook_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    webhook = await Webhook.get(webhook_id)
+    if not webhook or str(webhook.owner_id) != str(current_user.id):
+        raise HTTPException(status_code=404, detail="Webhook not found")
+
+    payload = {
+        "event": "ping",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "data": {"message": "This is a test webhook from FluxPay"},
+    }
+
+    from app.services.webhook import sign_payload
+    import json, httpx
+
+    payload_string = json.dumps(payload)
+    signature = sign_payload(payload_string, webhook.secret)
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                webhook.url,
+                json=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "X-Webhook-Signature": signature,
+                    "X-Webhook-Event": "ping",
+                },
+                timeout=30,
+            )
+
+        webhook.last_triggered_at = datetime.now(timezone.utc)
+        webhook.failure_count = 0
+        await webhook.save()
+
+        return {
+            "status": "delivered",
+            "statusCode": response.status_code,
+        }
+    except Exception as e:
+        webhook.failure_count = (webhook.failure_count or 0) + 1
+        await webhook.save()
+
+        return {
+            "status": "failed",
+            "error": str(e),
+        }
+
+
+@router.post("/webhooks/{webhook_id}/rotate-secret", response_model=dict)
+async def rotate_webhook_secret(
+    webhook_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    webhook = await Webhook.get(webhook_id)
+    if not webhook or str(webhook.owner_id) != str(current_user.id):
+        raise HTTPException(status_code=404, detail="Webhook not found")
+
+    import uuid
+    webhook.secret = uuid.uuid4().hex + uuid.uuid4().hex
+    webhook.updated_at = datetime.now(timezone.utc)
+    await webhook.save()
+
+    return {
+        "message": "Webhook secret rotated successfully",
+        "data": {
+            "id": str(webhook.id),
+            "secret": webhook.secret,
+        }
+    }

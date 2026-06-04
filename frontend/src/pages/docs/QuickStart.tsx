@@ -13,17 +13,17 @@ const QuickStart: React.FC = () => {
     {
       number: 1,
       title: 'Get Your API Keys',
-      description: 'Sign up and get your API key and secret from the dashboard.',
+      description: 'Sign up and generate API keys from the dashboard. API keys authenticate external clients.',
     },
     {
       number: 2,
       title: 'Set Up Webhooks',
-      description: 'Configure your webhook URL to receive payment notifications.',
+      description: 'Configure webhook URLs in the dashboard. Enable/disable, test, and manage secrets from the UI.',
     },
     {
       number: 3,
       title: 'Integrate',
-      description: 'Add the payment form to your website.',
+      description: 'Add the payment form to your website using our REST API.',
     },
     {
       number: 4,
@@ -32,8 +32,8 @@ const QuickStart: React.FC = () => {
     },
   ];
 
-  const codeExample = `// Example: Initiate a payment
-const response = await fetch('https://api.fluxpay.com/payments', {
+  const codeExample = `// Example: Initiate a payment via third-party API
+const response = await fetch('https://api.fluxpay.com/v1/payments', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -49,16 +49,27 @@ const response = await fetch('https://api.fluxpay.com/payments', {
 });
 
 const data = await response.json();
-console.log(data.checkoutRequestId);`;
+console.log(data.transactionId);`;
 
   const webhookExample = `// Example: Webhook handler (Node.js)
 app.post('/webhook/fluxpay', (req, res) => {
-  const event = req.body.event;
+  const signature = req.headers['x-webhook-signature'];
+  const event = req.headers['x-webhook-event'];
   
+  // Verify signature (always do this!)
+  const expected = crypto
+    .createHmac('sha256', process.env.WEBHOOK_SECRET)
+    .update(JSON.stringify(req.body))
+    .digest('hex');
+  
+  if (signature !== expected) {
+    return res.status(401).send('Invalid signature');
+  }
+
   if (event === 'payment.success') {
-    const { transactionId, amount, phoneNumber } = req.body;
+    const { transactionId, amount, phoneNumber, accountReference } = req.body;
     // Update your database
-    updateOrderStatus(transactionId, 'paid');
+    updateOrderStatus(accountReference, 'paid');
   }
   
   res.status(200).send('OK');
@@ -153,6 +164,10 @@ app.post('/webhook/fluxpay', (req, res) => {
                 <code>{codeExample}</code>
               </pre>
             </div>
+            <p className="text-sm text-gray-500 mt-2">
+              Use the <code className="bg-gray-100 px-1 rounded">/api/v1/payments</code> endpoint with API key auth for external clients,
+              or the <code className="bg-gray-100 px-1 rounded">/api/payments/initiate</code> endpoint with JWT auth from the dashboard.
+            </p>
           </div>
 
           <div>
@@ -184,7 +199,7 @@ app.post('/webhook/fluxpay', (req, res) => {
           >
             <Webhook size={24} className="text-blue-600 mb-3" />
             <h3 className="font-semibold text-gray-900 mb-1">Webhooks</h3>
-            <p className="text-gray-600 text-sm">Set up real-time payment notifications.</p>
+            <p className="text-gray-600 text-sm">Set up real-time payment notifications with signature verification.</p>
           </Link>
           <Link
             to="/docs/api"
@@ -192,7 +207,7 @@ app.post('/webhook/fluxpay', (req, res) => {
           >
             <Code size={24} className="text-blue-600 mb-3" />
             <h3 className="font-semibold text-gray-900 mb-1">API Reference</h3>
-            <p className="text-gray-600 text-sm">View all endpoints and parameters.</p>
+            <p className="text-gray-600 text-sm">View all endpoints and parameters including webhook management.</p>
           </Link>
         </div>
       </section>

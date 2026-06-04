@@ -58,6 +58,9 @@ connection_test.txt
 FEATURES.md
 # GEMINI.md removed from ignore
 
+# User scenarios (local only)
+docs/scenarios/
+
 # Python
 __pycache__/
 *.py[cod]

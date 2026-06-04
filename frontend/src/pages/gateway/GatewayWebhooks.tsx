@@ -1,16 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Send } from 'lucide-react';
+import { Plus, Trash2, Send, Eye, EyeOff, ToggleLeft, ToggleRight } from 'lucide-react';
+import api from '../../services/api';
+
+interface Webhook {
+  _id: string;
+  id: string;
+  name: string;
+  url: string;
+  events: string[];
+  isActive: boolean;
+  secret: string;
+  lastTriggeredAt: string | null;
+  failureCount: number;
+  createdAt: string;
+}
 
 const GatewayWebhooks: React.FC = () => {
-  const [webhooks, setWebhooks] = useState<any[]>([]);
+  const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [testResult, setTestResult] = useState<any>(null);
-  
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string; webhookId: string } | null>(null);
+  const [revealedSecrets, setRevealedSecrets] = useState<Set<string>>(new Set());
+  const [savingId, setSavingId] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     url: '',
     name: '',
-    events: ['payment.success', 'payment.failed']
+    events: ['payment.success', 'payment.failed'] as string[],
   });
 
   useEffect(() => {
@@ -20,16 +36,9 @@ const GatewayWebhooks: React.FC = () => {
   const fetchWebhooks = async () => {
     setLoading(true);
     try {
-      // This would call a webhook listing endpoint
-      // For now, we'll use the thirdparty webhooks
-      const response = await fetch('/api/v1/webhooks', {
-        headers: {
-          'X-API-Key': localStorage.getItem('gatewayApiKey') || '',
-          'X-API-Secret': localStorage.getItem('gatewayApiSecret') || ''
-        }
-      });
-      const data = await response.json();
-      setWebhooks(data.data || []);
+      const response = await api.get('/gateway/webhooks');
+      const data = response.data?.data || response.data || [];
+      setWebhooks(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to fetch webhooks:', err);
     } finally {
@@ -40,15 +49,7 @@ const GatewayWebhooks: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await fetch('/api/v1/webhooks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': localStorage.getItem('gatewayApiKey') || '',
-          'X-API-Secret': localStorage.getItem('gatewayApiSecret') || ''
-        },
-        body: JSON.stringify(formData)
-      });
+      await api.post('/gateway/webhooks', formData);
       setShowModal(false);
       setFormData({ url: '', name: '', events: ['payment.success', 'payment.failed'] });
       fetchWebhooks();
@@ -57,41 +58,67 @@ const GatewayWebhooks: React.FC = () => {
     }
   };
 
+  const handleToggle = async (webhook: Webhook) => {
+    setSavingId(webhook._id);
+    try {
+      await api.patch(`/gateway/webhooks/${webhook._id}`, { isActive: !webhook.isActive });
+      fetchWebhooks();
+    } catch (err) {
+      console.error('Failed to toggle webhook:', err);
+    } finally {
+      setSavingId(null);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this webhook?')) return;
     try {
-      await fetch(`/api/v1/webhooks/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'X-API-Key': localStorage.getItem('gatewayApiKey') || '',
-          'X-API-Secret': localStorage.getItem('gatewayApiSecret') || ''
-        }
-      });
+      await api.delete(`/gateway/webhooks/${id}`);
       fetchWebhooks();
     } catch (err) {
       console.error('Failed to delete webhook:', err);
     }
   };
 
-  const testWebhook = async (webhook: any) => {
+  const testWebhook = async (webhook: Webhook) => {
+    setTestResult(null);
+    setSavingId(webhook._id);
     try {
-      const response = await fetch(webhook.url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          event: 'test',
-          timestamp: new Date().toISOString()
-        })
-      });
+      const response = await api.post(`/gateway/webhooks/${webhook._id}/test`);
+      const data = response.data || response;
       setTestResult({
-        success: response.ok,
-        status: response.status,
-        webhookId: webhook._id
+        success: data.status === 'delivered',
+        message: data.status === 'delivered'
+          ? `Test sent! Webhook responded with status ${data.statusCode}`
+          : `Failed: ${data.error}`,
+        webhookId: webhook._id,
       });
-      setTimeout(() => setTestResult(null), 5000);
     } catch (err: any) {
-      setTestResult({ success: false, error: err?.message || 'Failed to send test' });
+      setTestResult({
+        success: false,
+        message: err.response?.data?.detail || 'Failed to send test',
+        webhookId: webhook._id,
+      });
+    } finally {
+      setSavingId(null);
+      setTimeout(() => setTestResult(null), 5000);
     }
+  };
+
+  const toggleSecret = (id: string) => {
+    setRevealedSecrets((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const eventLabels: Record<string, string> = {
+    'payment.success': 'Payment Success',
+    'payment.failed': 'Payment Failed',
+    'payment.pending': 'Payment Pending',
+    'payment.cancelled': 'Payment Cancelled',
   };
 
   return (
@@ -110,41 +137,26 @@ const GatewayWebhooks: React.FC = () => {
         </button>
       </div>
 
-      {/* Test Result */}
       {testResult && (
         <div className={`p-4 rounded-xl ${testResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
           <p className={testResult.success ? 'text-green-700' : 'text-red-700'}>
-            {testResult.success 
-              ? `Test sent! Webhook responded with status ${testResult.status}`
-              : 'Failed to send test to webhook URL'}
+            {testResult.message}
           </p>
         </div>
       )}
 
-      {/* Info Box */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
         <h3 className="font-medium text-blue-800 mb-2">Webhook Events</h3>
         <div className="grid md:grid-cols-2 gap-2 text-sm">
-          <div className="bg-white rounded-lg p-3">
-            <code className="text-blue-600">payment.success</code>
-            <p className="text-xs text-gray-500 mt-1">Triggered when payment is successful</p>
-          </div>
-          <div className="bg-white rounded-lg p-3">
-            <code className="text-blue-600">payment.failed</code>
-            <p className="text-xs text-gray-500 mt-1">Triggered when payment fails</p>
-          </div>
-          <div className="bg-white rounded-lg p-3">
-            <code className="text-blue-600">payment.pending</code>
-            <p className="text-xs text-gray-500 mt-1">Triggered when payment is initiated</p>
-          </div>
-          <div className="bg-white rounded-lg p-3">
-            <code className="text-blue-600">payment.cancelled</code>
-            <p className="text-xs text-gray-500 mt-1">Triggered when payment is cancelled</p>
-          </div>
+          {Object.entries(eventLabels).map(([event, label]) => (
+            <div key={event} className="bg-white rounded-lg p-3">
+              <code className="text-blue-600">{event}</code>
+              <p className="text-xs text-gray-500 mt-1">{label}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Webhooks Table */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -153,6 +165,7 @@ const GatewayWebhooks: React.FC = () => {
                 <th className="text-left p-4 text-xs font-semibold text-gray-500 uppercase">Name</th>
                 <th className="text-left p-4 text-xs font-semibold text-gray-500 uppercase">URL</th>
                 <th className="text-left p-4 text-xs font-semibold text-gray-500 uppercase">Events</th>
+                <th className="text-left p-4 text-xs font-semibold text-gray-500 uppercase">Secret</th>
                 <th className="text-left p-4 text-xs font-semibold text-gray-500 uppercase">Status</th>
                 <th className="text-left p-4 text-xs font-semibold text-gray-500 uppercase">Actions</th>
               </tr>
@@ -160,13 +173,13 @@ const GatewayWebhooks: React.FC = () => {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center">
+                  <td colSpan={6} className="p-8 text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mx-auto"></div>
                   </td>
                 </tr>
               ) : webhooks.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500">
+                  <td colSpan={6} className="p-8 text-center text-gray-500">
                     No webhooks configured
                   </td>
                 </tr>
@@ -187,17 +200,47 @@ const GatewayWebhooks: React.FC = () => {
                       </div>
                     </td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        webhook.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                      }`}>
+                      <div className="flex items-center gap-2">
+                        <code className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
+                          {revealedSecrets.has(webhook._id)
+                            ? webhook.secret
+                            : `${webhook.secret?.slice(0, 8)}...`}
+                        </code>
+                        <button
+                          onClick={() => toggleSecret(webhook._id)}
+                          className="text-gray-400 hover:text-gray-600"
+                          title={revealedSecrets.has(webhook._id) ? 'Hide secret' : 'Reveal secret'}
+                        >
+                          {revealedSecrets.has(webhook._id) ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <button
+                        onClick={() => handleToggle(webhook)}
+                        disabled={savingId === webhook._id}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+                          webhook.isActive
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                            : 'bg-red-100 text-red-700 hover:bg-red-200'
+                        }`}
+                      >
+                        {savingId === webhook._id ? (
+                          <span className="animate-spin">...</span>
+                        ) : webhook.isActive ? (
+                          <ToggleRight size={14} />
+                        ) : (
+                          <ToggleLeft size={14} />
+                        )}
                         {webhook.isActive ? 'Active' : 'Disabled'}
-                      </span>
+                      </button>
                     </td>
                     <td className="p-4">
                       <div className="flex gap-2">
                         <button
                           onClick={() => testWebhook(webhook)}
-                          className="p-2 hover:bg-gray-100 rounded-lg"
+                          disabled={savingId === webhook._id}
+                          className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50"
                           title="Send Test"
                         >
                           <Send size={16} />
@@ -218,7 +261,6 @@ const GatewayWebhooks: React.FC = () => {
         </div>
       </div>
 
-      {/* Create Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-md p-6">
@@ -235,7 +277,7 @@ const GatewayWebhooks: React.FC = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Webhook URL</label>
                 <input
@@ -251,7 +293,7 @@ const GatewayWebhooks: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Events</label>
                 <div className="space-y-2">
-                  {['payment.success', 'payment.failed', 'payment.pending', 'payment.cancelled'].map((event) => (
+                  {Object.entries(eventLabels).map(([event, label]) => (
                     <label key={event} className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -265,7 +307,10 @@ const GatewayWebhooks: React.FC = () => {
                         }}
                         className="rounded"
                       />
-                      <span className="text-sm">{event}</span>
+                      <span className="text-sm">
+                        <code className="text-blue-600">{event}</code>
+                        <span className="text-gray-500 ml-1">— {label}</span>
+                      </span>
                     </label>
                   ))}
                 </div>

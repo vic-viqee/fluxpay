@@ -78,7 +78,7 @@ async def get_transaction_status(
 async def handle_mpesa_callback(
     callback_data: dict,
 ):
-    """Handle M-Pesa callbacks for subscription payments"""
+    """Handle M-Pesa callbacks for all payment types (subscription + third-party API)"""
     try:
         body = callback_data.get("Body", {})
         stk_callback = body.get("stkCallback", {})
@@ -90,7 +90,6 @@ async def handle_mpesa_callback(
         result_code = stk_callback.get("ResultCode")
         result_desc = stk_callback.get("ResultDesc")
 
-        # Find the transaction by checkoutRequestId (subscription transactions)
         transaction = await Transaction.find_one(
             {"darajaRequestId": checkout_request_id}
         )
@@ -107,7 +106,7 @@ async def handle_mpesa_callback(
 
             transaction.status = "SUCCESS"
             transaction.mpesa_receipt_no = get_item("MpesaReceiptNumber")
-            transaction.daraja_request_id = get_item("TransactionId")
+            transaction.checkout_request_id = checkout_request_id
             transaction.callback_data = callback_data
         else:
             transaction.status = "FAILED"
@@ -116,7 +115,31 @@ async def handle_mpesa_callback(
 
         await transaction.save()
 
-        # If subscription transaction, update subscription
+        # ALWAYS fire webhook for third-party and subscription payments
+        if result_code == 0:
+            await trigger_payment_success(
+                transaction.owner_id,
+                {
+                    "checkoutRequestId": checkout_request_id,
+                    "status": "SUCCESS",
+                    "amount": transaction.amount_kes,
+                    "mpesaReceiptNo": transaction.mpesa_receipt_no,
+                    "phoneNumber": transaction.phone_number,
+                    "reference": transaction.account_reference,
+                },
+            )
+        else:
+            await trigger_payment_failed(
+                transaction.owner_id,
+                {
+                    "checkoutRequestId": checkout_request_id,
+                    "status": "FAILED",
+                    "amount": transaction.amount_kes,
+                    "failureReason": result_desc,
+                },
+            )
+
+        # If subscription transaction, update subscription state
         if transaction.subscription_id:
             subscription = await Subscription.get(transaction.subscription_id)
             if subscription:
@@ -125,7 +148,6 @@ async def handle_mpesa_callback(
                     subscription.last_payment_attempt = datetime.now(timezone.utc)
                     subscription.payment_failure_count = 0
 
-                    # Calculate next billing date
                     from app.utils.billing import calculate_next_billing_date
 
                     plan = await ServicePlan.get(subscription.plan_id)
@@ -135,7 +157,6 @@ async def handle_mpesa_callback(
                         )
                     await subscription.save()
 
-                    # Trigger webhook
                     await trigger_payment_success(
                         subscription.owner_id,
                         {

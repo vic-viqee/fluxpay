@@ -14,6 +14,9 @@ class Transaction(BaseDocument):
     status: Literal["PENDING", "SUCCESS", "FAILED"] = "PENDING"
     mpesa_receipt_no: Optional[str] = Field(default=None, alias="mpesaReceiptNo")
     daraja_request_id: str = Field(alias="darajaRequestId")
+    checkout_request_id: Optional[str] = Field(default=None, alias="checkoutRequestId")
+    phone_number: Optional[str] = Field(default=None, alias="phoneNumber")
+    account_reference: Optional[str] = Field(default=None, alias="accountReference")
     retry_count: int = Field(default=0, alias="retryCount")
     transaction_date: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), alias="transactionDate"
