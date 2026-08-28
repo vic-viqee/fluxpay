@@ -52,6 +52,12 @@ async def initiate_third_party_payment(
     formatted_phone = format_kenyan_phone(phone_number)
     account_ref = reference or f"TXN-{int(datetime.now(timezone.utc).timestamp())}"
 
+    stk_response = await initiate_stk_push(
+        formatted_phone,
+        float(amount),
+        owner.business_name or "FluxPay",
+        body.get("description") or owner.business_name or "FluxPay",
+    )
     checkout_request_id = stk_response.get("CheckoutRequestID", str(uuid.uuid4()))
 
     transaction = Transaction(
