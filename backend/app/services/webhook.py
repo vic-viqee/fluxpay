@@ -18,7 +18,7 @@ def sign_payload(payload: str, secret: str) -> str:
 
 
 async def find_api_key(key: str) -> dict | None:
-    api_key = await ApiKey.find_one({"key": key, "is_active": True})
+    api_key = await ApiKey.find_one(ApiKey.key == key, ApiKey.is_active == True)
     if not api_key:
         return None
     return {"api_key": api_key, "owner_id": api_key.owner_id}
@@ -26,7 +26,9 @@ async def find_api_key(key: str) -> dict | None:
 
 async def forward_webhook(owner_id: Any, event: str, data: dict[str, Any]):
     webhooks = await Webhook.find(
-        {"owner_id": owner_id, "is_active": True, "events": event}
+        Webhook.owner_id == owner_id,
+        Webhook.is_active == True,
+        Webhook.events == event,
     ).to_list()
 
     if not webhooks:
@@ -89,7 +91,7 @@ async def trigger_subscription_created(
 
 
 async def verify_api_key(key: str, secret: str) -> bool:
-    api_key = await ApiKey.find_one({"key": key, "is_active": True})
+    api_key = await ApiKey.find_one(ApiKey.key == key, ApiKey.is_active == True)
     if not api_key:
         return False
     return verify_password(secret, api_key.secret)
