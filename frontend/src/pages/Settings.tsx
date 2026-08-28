@@ -109,7 +109,7 @@ const Settings: React.FC = () => {
     setApiKeyError(null);
     try {
       const response = await api.get('/apikeys');
-      setApiKeys(response.data.data || []);
+      setApiKeys(response.data || []); // FIXED: Remove .data
     } catch (err: any) {
       console.error('Failed to fetch API keys:', err);
       setApiKeyError(err.response?.data?.message || 'Failed to load API keys');
@@ -124,7 +124,7 @@ const Settings: React.FC = () => {
     setApiKeyError(null);
     try {
       const response = await api.post('/apikeys', { name: newKeyName });
-      const newKey = response.data.data;
+      const newKey = response.data; // FIXED: Remove .data
       setApiKeys(prev => [newKey, ...prev]);
       setNewlyCreatedKey({ key: newKey.key, secret: newKey.secret, name: newKey.name });
       setNewKeyName('');
@@ -364,7 +364,7 @@ const Settings: React.FC = () => {
                     rows={3}
                     value={settingsData.businessDescription}
                     onChange={(e) => setField('businessDescription', e.target.value)}
-                    className="w-full bg-primary-bg border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-main/50 outline-none transition-all"
+                    className="w-full bg-primary-bg border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-main/50 outline-none"
                     placeholder="Tell us a bit about what you do..."
                   />
                 </div>
@@ -450,7 +450,7 @@ const Settings: React.FC = () => {
                   {apiKeyError}
                 </div>
               )}
-              
+
               <div className="mb-8">
                 <h2 className="text-xl font-bold text-white mb-2">API Keys</h2>
                 <p className="text-sm text-gray-400">
@@ -465,7 +465,7 @@ const Settings: React.FC = () => {
                   value={newKeyName}
                   onChange={(e) => setNewKeyName(e.target.value)}
                   placeholder="e.g., Production App, Test Environment"
-                  className="flex-1 bg-primary-bg border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-main/50 outline-none"
+                  className="flex-1 bg-primary-bg border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus-ring-2 focus:ring-main/50 outline-none"
                 />
                 <button
                   onClick={handleCreateApiKey}
