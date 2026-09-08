@@ -173,7 +173,17 @@ All endpoints are under `/api`.
 | **Transactions** | `GET /transactions` |
 | **Analytics** | `GET /analytics` |
 | **API Keys** | `POST/GET /apikeys`, `PATCH /apikeys/:id/revoke`, `DELETE /apikeys/:id` |
+| **Consumer Gateway** | `/v1/business`, `/v1/payments`, `/v1/payments/:id/status`, `/v1/payments/:id/reverse`, `/v1/webhooks/*` (API-key auth) |
 | **Admin** | `/admin/overview`, `/admin/businesses`, `/admin/transactions`, `/admin/subscriptions`, `/admin/apikeys`, `/admin/webhooks`, `/admin/plan-limits`, `/admin/audit-logs` |
+
+## Consumer Gateway (SDKs)
+
+External businesses integrate directly through the shared `/api/v1` gateway (API-key auth), with official SDKs:
+
+- **Integration guide**: see [`docs/integration/README.md`](docs/integration/README.md) — auth, idempotency, reversals, webhooks with HMAC verification.
+- **JavaScript/TypeScript SDK** (`clients/fluxpay-js`): zero-dependency, Node >=18 and browsers; `initiatePayment`, status, reverse, webhook CRUD/test/replay/deliveries, `verifyWebhookSignature`.
+- **Python SDK** (`clients/fluxpay-py`): async httpx client plus a FastAPI `Webhook` verification dependency.
+- **Keep-alive** (`scripts/keepalive.py`): pings the `/health` endpoint every 8 minutes to prevent Render cold starts.
 
 ## Gateway Portal
 
@@ -202,7 +212,7 @@ The live site runs on Render's free tier. This imposes several constraints:
 - **Shared resources**: CPU and memory are limited. Under concurrent load, response times may degrade.
 - **No dedicated Redis**: In-memory caching only (aiocache). An upgrade to a paid plan enables Redis-backed caching for better performance.
 
-**Workaround for M-Pesa callbacks**: A keep-alive service (e.g., cronjob.org or UptimeRobot) can ping the backend every 10 minutes to prevent cold starts during business hours.
+**Workaround for M-Pesa callbacks**: Keep the backend warm with `scripts/keepalive.py` (every 8 minutes) or an external uptime service such as cronjob.org or UptimeRobot pinging every 10 minutes during business hours.
 
 ## Security Notes
 
@@ -234,12 +244,19 @@ fluxpay/
 │   │   ├── services/  # Business logic
 │   │   ├── utils/     # Helper functions
 │   │   └── middleware/# Middleware
+│   ├── tests/         # pytest suite (TestClient-driven)
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   └── run.py
 ├── frontend/          # React frontend
 │   ├── src/
 │   └── Dockerfile
+├── clients/
+│   ├── fluxpay-js/    # TypeScript SDK (consumer gateway)
+│   └── fluxpay-py/    # Python SDK (consumer gateway)
+├── docs/integration/  # Consumer integration guide
+├── scripts/
+│   └── keepalive.py   # Render cold-start pinger
 ├── docker-compose.yml
 └── README.md
 ```

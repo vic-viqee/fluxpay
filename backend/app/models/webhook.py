@@ -10,6 +10,7 @@ from app.models.gateway_transaction import GatewayTransaction
 
 class Webhook(BaseDocument):
     owner_id: PydanticObjectId = Field(alias="ownerId")
+    name: Optional[str] = None
     url: str
     secret: str = Field(default=secrets.token_hex(32)) # Generate secret on creation
     events: List[str] = Field(default=["payment.success", "payment.failed"])

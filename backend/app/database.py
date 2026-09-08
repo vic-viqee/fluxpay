@@ -12,6 +12,7 @@ from app.models.api_key import ApiKey
 from app.models.audit_log import AuditLog
 from app.models.invoice import Invoice
 from app.models.webhook import Webhook
+from app.models.webhook_delivery import WebhookDelivery
 from app.models.gateway_transaction import GatewayTransaction
 from app.models.gateway_customer import GatewayCustomer
 from app.models.payment_link import PaymentLink
@@ -50,6 +51,7 @@ async def init_db():
                 AuditLog,
                 Invoice,
                 Webhook,
+                WebhookDelivery,
                 GatewayTransaction,
                 GatewayCustomer,
                 PaymentLink,

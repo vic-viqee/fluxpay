@@ -1,0 +1,20 @@
+{
+  "name": "fluxpay-js",
+  "version": "0.1.0",
+  "description": "FluxPay M-Pesa payment gateway client (JavaScript / TypeScript)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": ["mpesa", "fluxpay", "payments", "stk", "webhook"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}

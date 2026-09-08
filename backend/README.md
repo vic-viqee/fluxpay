@@ -141,6 +141,17 @@ The Python backend maintains **exact API compatibility** with the original Node.
 
 This means the existing frontend will work without modification when pointed to the Python backend.
 
+## Consumer Gateway (`/api/v1`)
+
+External businesses integrate through a shared, API-key-authenticated gateway mounted at `/api/v1` (see `app/routers/thirdparty.py`). It is distinct from the JWT-authenticated merchant/dashboard API:
+
+- **Payments**: `POST /v1/payments` (STK push, supports `X-Idempotency-Key`), `GET /v1/payments/{checkoutRequestId}/status`, `POST /v1/payments/{checkoutRequestId}/reverse` (guarded to SUCCESS transactions with a receipt).
+- **Webhooks**: `POST/GET/DELETE /v1/webhooks`, `POST /v1/webhooks/{id}/test` (test ping), `GET /v1/webhooks/{id}/deliveries`, `POST /v1/webhooks/{id}/replay`. Payloads are signed with HMAC-SHA256 (raw body); headers `X-Webhook-Signature` / `X-Webhook-Event`.
+- **Business**: `GET /v1/business` to validate API credentials.
+- **Health**: `GET /health`.
+
+Official SDKs wrapping this surface live in `clients/fluxpay-js` and `clients/fluxpay-py`; the full consumption guide is `docs/integration/README.md`. The pytest suite in `tests/` (`test_webhook_service.py`, `test_thirdparty_api.py`) covers idempotency, reversal guards, webhook signing, test/replay/deliveries, and auto-disable after consecutive failures.
+
 ## Getting Started
 
 ### Prerequisites
