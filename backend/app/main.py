@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -73,6 +74,21 @@ async def root():
 @app.get("/health")
 async def health():
     import time
+    from app.database import client, db
+
+    # Check MongoDB connectivity — return 503 if unreachable.
+    if db is None or client is None:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "unhealthy", "detail": "Database not initialized"},
+        )
+    try:
+        await client.admin.command("ping", timeoutMS=3000)
+    except Exception as e:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "unhealthy", "detail": f"MongoDB unreachable: {e}"},
+        )
     return {"status": "healthy", "timestamp": time.time()}
 
 # Include routers
